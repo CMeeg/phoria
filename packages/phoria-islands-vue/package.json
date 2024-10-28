@@ -1,0 +1,21 @@
+{
+	"name": "phoria-islands-vue",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"build": "vue-tsc -b && vite build",
+		"dev": "vite",
+		"lint": "biome check",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"vue": "catalog:"
+	},
+	"devDependencies": {
+		"@vitejs/plugin-vue": "^5.1.4",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vue-tsc": "^2.1.6"
+	}
+}

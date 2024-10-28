@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "packages", "packages", "{F822651F-A85B-44B2-9BFC-68CED068F0E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.AppHost", "packages\Phoria.AppHost\Phoria.AppHost.csproj", "{DE04CFD9-5DB6-4C86-BAE8-4576761E1ED8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.ServiceDefaults", "packages\Phoria.ServiceDefaults\Phoria.ServiceDefaults.csproj", "{8A69FB0F-76C3-4333-93FD-17E03DE05AD2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.ApiService", "packages\Phoria.ApiService\Phoria.ApiService.csproj", "{8F0599A8-6D77-417D-A971-891BF3CF79F7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.Web", "packages\Phoria.Web\Phoria.Web.csproj", "{E1C48032-61F9-47CE-AFF8-861D019706A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.Tests", "packages\Phoria.Tests\Phoria.Tests.csproj", "{ADF9826F-6441-4C03-B374-81674201DD40}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DE04CFD9-5DB6-4C86-BAE8-4576761E1ED8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE04CFD9-5DB6-4C86-BAE8-4576761E1ED8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE04CFD9-5DB6-4C86-BAE8-4576761E1ED8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE04CFD9-5DB6-4C86-BAE8-4576761E1ED8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A69FB0F-76C3-4333-93FD-17E03DE05AD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A69FB0F-76C3-4333-93FD-17E03DE05AD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A69FB0F-76C3-4333-93FD-17E03DE05AD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A69FB0F-76C3-4333-93FD-17E03DE05AD2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F0599A8-6D77-417D-A971-891BF3CF79F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F0599A8-6D77-417D-A971-891BF3CF79F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F0599A8-6D77-417D-A971-891BF3CF79F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F0599A8-6D77-417D-A971-891BF3CF79F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1C48032-61F9-47CE-AFF8-861D019706A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1C48032-61F9-47CE-AFF8-861D019706A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1C48032-61F9-47CE-AFF8-861D019706A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1C48032-61F9-47CE-AFF8-861D019706A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADF9826F-6441-4C03-B374-81674201DD40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADF9826F-6441-4C03-B374-81674201DD40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADF9826F-6441-4C03-B374-81674201DD40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADF9826F-6441-4C03-B374-81674201DD40}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DE04CFD9-5DB6-4C86-BAE8-4576761E1ED8} = {F822651F-A85B-44B2-9BFC-68CED068F0E9}
+		{8A69FB0F-76C3-4333-93FD-17E03DE05AD2} = {F822651F-A85B-44B2-9BFC-68CED068F0E9}
+		{8F0599A8-6D77-417D-A971-891BF3CF79F7} = {F822651F-A85B-44B2-9BFC-68CED068F0E9}
+		{E1C48032-61F9-47CE-AFF8-861D019706A0} = {F822651F-A85B-44B2-9BFC-68CED068F0E9}
+		{ADF9826F-6441-4C03-B374-81674201DD40} = {F822651F-A85B-44B2-9BFC-68CED068F0E9}
+	EndGlobalSection
+EndGlobal

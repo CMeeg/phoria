@@ -1,0 +1,21 @@
+{
+	"dotnet.defaultSolution": "Phoria.sln",
+	"editor.defaultFormatter": "biomejs.biome",
+	"html.format.enable": true,
+	"html.format.extraLiners": "",
+	"[aspnetcorerazor]": {
+		"editor.defaultFormatter": "ms-dotnettools.csharp"
+	},
+	"[csharp]": {
+		"editor.defaultFormatter": "ms-dotnettools.csharp"
+	},
+	"[html]": {
+		"editor.defaultFormatter": "vscode.html-language-features"
+	},
+	"[xml]": {
+		"editor.defaultFormatter": "DotJoshJohnson.xml"
+	},
+	"[yaml]": {
+		"editor.defaultFormatter": "redhat.vscode-yaml"
+	}
+}

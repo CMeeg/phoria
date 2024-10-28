@@ -1,0 +1,10 @@
+{
+	"recommendations": [
+		"aaron-bond.better-comments",
+		"biomejs.biome",
+		"EditorConfig.EditorConfig",
+		"redhat.vscode-yaml",
+		"vitest.explorer",
+		"Vue.volar"
+	]
+}

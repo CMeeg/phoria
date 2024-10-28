@@ -1,0 +1,9 @@
+.nx/cache
+.nx/workspace-data
+bin/
+dist/
+node_modules/
+obj/
+
+*.tsbuildinfo
+TODO.md
