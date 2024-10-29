@@ -25,6 +25,7 @@ indent_size = 4
 indent_size = 4
 
 # dotnet code style modified from dotnet runtime project (https://github.com/dotnet/runtime/blob/main/.editorconfig)
+# For more info about available rules see https://learn.microsoft.com/en-gb/dotnet/fundamentals/code-analysis/configuration-files#editorconfig
 [*.cs]
 # New line preferences
 csharp_new_line_before_open_brace = all

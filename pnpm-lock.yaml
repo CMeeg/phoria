@@ -39,6 +39,31 @@ importers:
         specifier: ^8.1.8
         version: 8.1.8(encoding@0.1.13)
 
+  packages/Phoria.Web:
+    dependencies:
+      react:
+        specifier: 'catalog:'
+        version: 18.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@types/react':
+        specifier: 'catalog:'
+        version: 18.3.12
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 18.3.1
+      '@vitejs/plugin-react':
+        specifier: ^4.3.3
+        version: 4.3.3(vite@5.4.10)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.6.3
+      vite:
+        specifier: 'catalog:'
+        version: 5.4.10
+
   packages/phoria-islands-react:
     dependencies:
       react:

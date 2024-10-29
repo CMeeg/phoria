@@ -1,0 +1,23 @@
+{
+	"name": "phoria.web",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"build": "tsc -b && vite build",
+		"dev": "vite",
+		"lint": "biome check",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"react": "catalog:",
+		"react-dom": "catalog:"
+	},
+	"devDependencies": {
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@vitejs/plugin-react": "^4.3.3",
+		"typescript": "catalog:",
+		"vite": "catalog:"
+	}
+}

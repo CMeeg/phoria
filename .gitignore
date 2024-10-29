@@ -4,6 +4,7 @@ bin/
 dist/
 node_modules/
 obj/
+**/wwwroot/ui/
 
 *.tsbuildinfo
 TODO.md

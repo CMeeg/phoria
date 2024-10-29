@@ -1,7 +1,7 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
 	"files": {
-		"ignore": [],
+		"ignore": ["**/*.min.css", "**/*.min.css.map"],
 		"ignoreUnknown": false
 	},
 	"vcs": {
@@ -34,7 +34,8 @@
 		},
 		"formatter": {
 			"enabled": true,
-			"semicolons": "asNeeded"
+			"semicolons": "asNeeded",
+			"trailingCommas": "none"
 		}
 	},
 	"json": {

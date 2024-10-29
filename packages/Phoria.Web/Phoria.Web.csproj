@@ -8,6 +8,26 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Phoria.ServiceDefaults\Phoria.ServiceDefaults.csproj" />
+		<ProjectReference Include="..\Phoria.Vite\Phoria.Vite.csproj" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<Content Remove="package.json" />
+		<Content Remove="tsconfig.json" />
+		<Content Remove="tsconfig.app.json" />
+		<Content Remove="tsconfig.node.json" />
+		<!-- Don't remove this line or the manifest.json file won't be copied on publish -->
+		<Content Include="wwwroot\ui\.vite\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="wwwroot\" />
+	</ItemGroup>
+
+	<!-- Build the final assets -->
+	<Target Name="PublishBuildAssets" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Release' ">
+		<!-- Build the final assets -->
+		<Exec Command="pnpm run build" />
+	</Target>
 
 </Project>
