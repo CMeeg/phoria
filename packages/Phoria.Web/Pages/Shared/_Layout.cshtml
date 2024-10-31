@@ -4,14 +4,18 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>@ViewData["Title"] - Phoria.Web</title>
-	<link rel="stylesheet" vite-href="~/src/main.tsx" asp-append-version="true" />
+	<link rel="stylesheet" href="~/css/global.css" asp-append-version="true" />
+
+	@await RenderSectionAsync("Styles", required: false)
+
+	<link rel="stylesheet" vite-href="~/src/entry-client.tsx" asp-append-version="true" />
 </head>
 <body>
 	<main role="main" id="root">
 		@RenderBody()
 	</main>
 
-	<script type="module" vite-src="~/src/main.tsx"></script>
+	<script type="module" vite-src="~/src/entry-client.tsx"></script>
 
 	@await RenderSectionAsync("Scripts", required: false)
 </body>

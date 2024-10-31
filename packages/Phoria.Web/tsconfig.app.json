@@ -15,7 +15,11 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true,
-		"noUncheckedSideEffectImports": true
+		"noUncheckedSideEffectImports": true,
+		"verbatimModuleSyntax": true,
+		"sourceMap": true,
+		"esModuleInterop": true,
+		"resolveJsonModule": true
 	},
-	"include": ["ui/src"]
+	"include": ["ui/src/**/*.ts", "ui/src/**/*.tsx", "ui/src/**/*.vue", "src/**/*.svelte"]
 }

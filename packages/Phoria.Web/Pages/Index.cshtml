@@ -4,4 +4,23 @@
 	ViewData["Title"] = "Home page";
 }
 
-<p>Loading...</p>
+@section Styles {
+	<link rel="stylesheet" href="~/css/index.css" asp-append-version="true" />
+}
+
+<div>
+	<a href="https://vite.dev" target="_blank" rel="noreferrer">
+		<img src="~/img/vite.svg" class="logo" alt="Vite logo" />
+	</a>
+</div>
+<h1>Phoria Islands</h1>
+<div class="card">
+	<phoria-island component="ReactCounter"></phoria-island>
+</div>
+<div class="card">
+	<phoria-island component="VueCounter"></phoria-island>
+</div>
+<div class="card">
+	<phoria-island component="SvelteCounter"></phoria-island>
+</div>
+<p class="read-the-docs">Click on the logos to learn more</p>

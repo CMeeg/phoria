@@ -15,7 +15,12 @@ builder.Services.AddHttpClient<WeatherApiClient>(client =>
 
 // Add services to the container
 
-builder.Services.AddRazorPages();
+IMvcBuilder mvcBuilder = builder.Services.AddRazorPages();
+
+if (builder.Environment.IsDevelopment())
+{
+	mvcBuilder.AddRazorRuntimeCompilation();
+}
 
 // TODO: Configure https on the dev server
 // TODO(docs): If using React, you must enable React Refresh for HMR to work (you will see this error in the console if you don't https://github.com/vitejs/vite-plugin-react/pull/79)

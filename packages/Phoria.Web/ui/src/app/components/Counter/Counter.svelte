@@ -1,0 +1,26 @@
+<script lang="ts">
+// biome-ignore lint/style/useConst: svelte
+let count = 0
+</script>
+
+<div class="svelte-counter">
+	<a href="https://svelte.dev" target="_blank" rel="noreferrer">
+		<img src="/svelte.svg" class="logo svelte" alt="Svelte Logo" />
+	</a>
+	<button type="button" on:click={() => count++}>count is { count }</button>
+	<p>
+		Edit
+		<code>ui/app/components/Counter/Counter.svelte</code> to test HMR
+	</p>
+</div>
+
+<style>
+.logo.svelte:hover {
+	filter: drop-shadow(0 0 2em #ff3e00aa);
+}
+
+button {
+	display: block;
+	margin: auto;
+}
+</style>

@@ -1,14 +1,19 @@
+import { svelte } from "@sveltejs/vite-plugin-svelte"
 import react from "@vitejs/plugin-react"
+import vue from "@vitejs/plugin-vue"
 import { defineConfig } from "vite"
-import appsettings from "./appsettings.json" with { type: "json" }
 import appsettingsDev from "./appsettings.Development.json" with { type: "json" }
+import appsettings from "./appsettings.json" with { type: "json" }
 
 // https://vite.dev/config/
 export default defineConfig({
 	appType: "custom",
 	root: "ui",
 	publicDir: "public",
-	plugins: [react()],
+	plugins: [react(), svelte(), vue()],
+	resolve: {
+		dedupe: ["react", "react-dom", "vue", "svelte"]
+	},
 	optimizeDeps: {
 		include: []
 	},
@@ -18,7 +23,7 @@ export default defineConfig({
 		outDir: "../wwwroot/ui",
 		assetsDir: appsettings.Vite.Base,
 		rollupOptions: {
-			input: "ui/src/main.tsx"
+			input: "ui/src/entry-client.tsx"
 		}
 	},
 	server: {
