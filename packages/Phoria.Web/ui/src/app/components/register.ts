@@ -1,4 +1,4 @@
-import { registerComponents } from "../../islands/phoria-island-registry"
+import { registerComponents } from "@phoria/islands"
 
 registerComponents({
 	ReactCounter: {

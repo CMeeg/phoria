@@ -3,6 +3,7 @@
 	"editor.defaultFormatter": "biomejs.biome",
 	"html.format.enable": true,
 	"html.format.extraLiners": "",
+	"svelte.enable-ts-plugin": true,
 	"[aspnetcorerazor]": {
 		"editor.defaultFormatter": "ms-dotnettools.csharp"
 	},

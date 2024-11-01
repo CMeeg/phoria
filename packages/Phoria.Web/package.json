@@ -10,6 +10,7 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"@phoria/islands": "workspace:*",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"svelte": "catalog:",
@@ -23,6 +24,7 @@
 		"@vitejs/plugin-vue": "^5.0.3",
 		"postcss-preset-env": "^10.0.8",
 		"typescript": "catalog:",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"vite-tsconfig-paths": "catalog:"
 	}
 }

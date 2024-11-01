@@ -2,14 +2,14 @@
 const base = import.meta.env.BASE_URL
 
 // biome-ignore lint/style/useConst: svelte
-let count = 0
+let count = $state(0)
 </script>
 
 <div class="svelte-counter">
 	<a href="https://svelte.dev" target="_blank" rel="noreferrer">
 		<img src="{base}/svelte.svg" class="logo svelte" alt="Svelte Logo" />
 	</a>
-	<button type="button" on:click={() => count++}>count is {count}</button>
+	<button type="button" onclick={() => count++}>count is {count}</button>
 	<p>
 		Edit
 		<code>ui/app/components/Counter/Counter.svelte</code> to test HMR

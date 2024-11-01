@@ -23,6 +23,12 @@ class PhoriaIsland extends HTMLElement {
 			console.error(`Error loading "${componentName}" component:`, error)
 		}
 	}
+
+	static register(tagName?: string) {
+		if ("customElements" in window) {
+			customElements.define(tagName || "phoria-island", PhoriaIsland)
+		}
+	}
 }
 
-customElements.define("phoria-island", PhoriaIsland)
+export { PhoriaIsland }

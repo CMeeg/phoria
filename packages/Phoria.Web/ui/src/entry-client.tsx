@@ -1,5 +1,7 @@
-import "./islands/react/register"
-import "./islands/vue/register"
-import "./islands/svelte/register"
+import "@phoria/islands/react"
+import "@phoria/islands/vue"
+import "@phoria/islands/svelte"
 import "./app/components/register"
-import "./islands/phoria-island"
+import { PhoriaIsland } from "@phoria/islands"
+
+PhoriaIsland.register()
