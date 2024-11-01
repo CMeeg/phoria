@@ -11,13 +11,18 @@
 		<ProjectReference Include="..\Phoria.Vite\Phoria.Vite.csproj" />
 	</ItemGroup>
 
+	<PropertyGroup>
+		<!-- These files are included in the project and are copied to the output directory on publish - we want them in the project but not in the output directory so we need to exclude them before including them again below -->
+		<DefaultItemExcludes>$(DefaultItemExcludes);*.config.cjs;*.config.js;*.config.ts;tsconfig.json;tsconfig.*.json</DefaultItemExcludes>
+	</PropertyGroup>
+
 	<ItemGroup>
-		<Content Remove="package.json" />
-		<Content Remove="tsconfig.json" />
-		<Content Remove="tsconfig.app.json" />
-		<Content Remove="tsconfig.node.json" />
-		<!-- Don't remove this line or the manifest.json file won't be copied on publish -->
-		<Content Include="wwwroot\ui\.vite\**" />
+		<!-- These files are excluded via `DefaultItemExcludes` above and are included here so they are in the project but not copied to the output directory on publish -->
+		<Content Include="*.config.cjs" CopyToOutputDirectory="Never" />
+		<Content Include="*.config.js" CopyToOutputDirectory="Never" />
+		<Content Include="*.config.ts" CopyToOutputDirectory="Never" />
+		<Content Include="tsconfig.json" CopyToOutputDirectory="Never" />
+		<Content Include="tsconfig.*.json" CopyToOutputDirectory="Never" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -25,13 +30,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.10" />
 	</ItemGroup>
-
-	<!-- Build the final assets -->
-	<Target Name="PublishBuildAssets" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Release' ">
-		<!-- Build the final assets -->
-		<Exec Command="pnpm run build" />
-	</Target>
 
 </Project>

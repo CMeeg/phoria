@@ -1,3 +1,4 @@
+.azure/
 .nx/cache
 .nx/workspace-data
 bin/
@@ -6,5 +7,6 @@ node_modules/
 obj/
 **/wwwroot/ui/
 
+*.tmp
 *.tsbuildinfo
 TODO.md

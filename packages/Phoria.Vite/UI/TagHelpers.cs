@@ -204,18 +204,39 @@ public class ViteTagHelper(
 					return;
 				}
 
+				string filePath = cssFiles!.First();
+				// If the base path is not null, remove it from the value.
+				if (
+					!string.IsNullOrEmpty(basePath)
+					&& filePath.StartsWith(basePath, StringComparison.InvariantCulture)
+				)
+				{
+					filePath = filePath[basePath.Length..].TrimStart('/');
+				}
+
 				// Get the file path from the 'manifest.json' file
 				file = urlHelper.Content(
-					$"~/{(string.IsNullOrEmpty(basePath) ? string.Empty : $"{basePath}/")}{cssFiles!.First()}"
+					$"~/{(string.IsNullOrEmpty(basePath) ? string.Empty : $"{basePath}/")}{filePath}"
 				);
 
 				// TODO: Handle multiple css files
 			}
 			else
 			{
+				// TODO: Put this into a method as it's duplicated code
+				string filePath = entry.File;
+				// If the base path is not null, remove it from the value.
+				if (
+					!string.IsNullOrEmpty(basePath)
+					&& filePath.StartsWith(basePath, StringComparison.InvariantCulture)
+				)
+				{
+					filePath = filePath[basePath.Length..].TrimStart('/');
+				}
+
 				// Get the real file path from the 'manifest.json' file
 				file = urlHelper.Content(
-					$"~/{(string.IsNullOrEmpty(basePath) ? string.Empty : $"{basePath}/")}{entry.File}"
+					$"~/{(string.IsNullOrEmpty(basePath) ? string.Empty : $"{basePath}/")}{filePath}"
 				);
 			}
 		}

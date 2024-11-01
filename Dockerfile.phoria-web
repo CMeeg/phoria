@@ -1,0 +1,47 @@
+# Build stage
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG TARGETARCH
+WORKDIR /src
+
+# Install node and npm
+
+ENV NODE_VERSION=22.11.0
+ENV NODE_DOWNLOAD_URL=https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz
+
+RUN wget "$NODE_DOWNLOAD_URL" -O nodejs.tar.gz \
+	&& tar -xzf "nodejs.tar.gz" -C /usr/local --strip-components=1 \
+	&& rm nodejs.tar.gz \
+	&& apt update \
+	&& apt-get install -y nodejs
+
+# Copy source code
+COPY --link . .
+
+# Build UI assets
+ENV NODE_ENV=development
+
+RUN npm install -g corepack
+RUN corepack install
+RUN corepack enable
+
+RUN pnpm install --frozen-lockfile
+RUN pnpm lerna run build
+RUN pnpm prune --prod
+
+# Install Aspire workload
+RUN dotnet workload restore packages/Phoria.AppHost/Phoria.AppHost.csproj
+
+# Restore all projects
+RUN dotnet restore -a $TARGETARCH
+
+# Publish web app
+RUN dotnet publish packages/Phoria.Web/Phoria.Web.csproj -c Release -a $TARGETARCH --no-restore -o /app
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+EXPOSE 8080
+WORKDIR /app
+COPY --link --from=build /app .
+COPY --link --from=build /src/packages/Phoria.Web/ui/dist ./wwwroot/ui
+USER $APP_UID
+ENTRYPOINT ["./Phoria.Web"]

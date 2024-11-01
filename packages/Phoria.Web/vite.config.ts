@@ -9,6 +9,7 @@ import appsettings from "./appsettings.json" with { type: "json" }
 export default defineConfig({
 	appType: "custom",
 	root: "ui",
+	base: `/${appsettings.Vite.Base}`,
 	publicDir: "public",
 	plugins: [react(), svelte(), vue()],
 	resolve: {
@@ -19,9 +20,6 @@ export default defineConfig({
 	},
 	build: {
 		manifest: appsettings.Vite.Manifest,
-		emptyOutDir: true,
-		outDir: "../wwwroot/ui",
-		assetsDir: appsettings.Vite.Base,
 		rollupOptions: {
 			input: "ui/src/entry-client.tsx"
 		}
