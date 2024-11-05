@@ -4,7 +4,7 @@ interface PhoriaIslandFramework<T> {
 	createComponent: (component: PhoriaIslandComponentOptions<T>) => PhoriaIslandComponent
 }
 
-// TODO: Can I get rid of the "unknown" type here?
+// TODO: Can I get rid of the "unknown" types here?
 const frameworkRegistry = new Map<string, PhoriaIslandFramework<unknown>>()
 
 function registerFramework<T>(name: string, framework: PhoriaIslandFramework<T>) {
@@ -22,8 +22,27 @@ interface PhoriaIslandComponentOptions<T> {
 
 const componentRegistry = new Map<string, PhoriaIslandComponent>()
 
+interface HttpResponse {
+	status: (code: number) => HttpResponse
+	setHeader: (name: string, value: number | string | readonly string[]) => HttpResponse
+	send: (body: unknown) => void
+	write(chunk: unknown, callback?: (error: Error | null | undefined) => void): boolean
+	write(chunk: unknown, encoding: BufferEncoding, callback?: (error: Error | null | undefined) => void): boolean
+	closed: boolean
+	end(cb?: () => void): HttpResponse
+	end(chunk: unknown, cb?: () => void): HttpResponse
+	end(chunk: unknown, encoding: BufferEncoding, cb?: () => void): HttpResponse
+}
+
 interface PhoriaIslandComponent {
-	mountComponent: (container: HTMLElement) => Promise<void>
+	framework: string
+	mount: <P extends Record<string, unknown> | null>(container: HTMLElement, props?: P, hydrate?: boolean) => Promise<void>
+	renderToString: <P extends Record<string, unknown> | null>(props?: P) => Promise<string>
+	streamHttpResponse?: <P extends Record<string, unknown> | null>(
+		res: HttpResponse,
+		props: P,
+		options?: { timeout?: number }
+	) => Promise<void>
 }
 
 function registerComponent<T>(name: string, component: PhoriaIslandComponentOptions<T>) {
@@ -52,4 +71,4 @@ function getComponent(name: string) {
 
 export { registerFramework, getFramework, registerComponent, registerComponents, getComponent }
 
-export type { PhoriaIslandFramework, PhoriaIslandComponent }
+export type { PhoriaIslandFramework, PhoriaIslandComponent, HttpResponse }

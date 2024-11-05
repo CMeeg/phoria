@@ -144,6 +144,7 @@ public class ViteTagHelper(
 
 				// Add the script tag to the output
 
+				// TODO: Would be good to only inject this if needed e.g. if a react component is used
 				if (useReactRefresh)
 				{
 					string viteReactRefreshUrl =

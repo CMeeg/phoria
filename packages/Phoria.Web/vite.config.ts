@@ -14,27 +14,19 @@ export default defineConfig({
 	publicDir: "public",
 	plugins: [
 		tsconfigPaths({
-			root: "../"
+			root: "../" // The tsconfig is in the root of the project, not the "Vite root"
 		}),
 		react(),
 		svelte(),
 		vue()
 	],
-	resolve: {
-		dedupe: ["react", "react-dom", "vue", "svelte"]
+	server: {
+		port: appsettingsDev.Vite.Server.Port
 	},
 	build: {
 		manifest: appsettings.Vite.Manifest,
 		rollupOptions: {
 			input: "ui/src/entry-client.tsx"
-		}
-	},
-	server: {
-		port: appsettingsDev.Vite.Server.Port,
-		strictPort: true,
-		hmr: {
-			host: appsettingsDev.Vite.Server.Host,
-			clientPort: appsettingsDev.Vite.Server.Port
 		}
 	}
 })

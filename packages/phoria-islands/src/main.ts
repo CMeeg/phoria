@@ -1,4 +1,3 @@
-import { PhoriaIsland } from "./phoria-island"
 import {
 	registerFramework,
 	getFramework,
@@ -6,8 +5,8 @@ import {
 	registerComponents,
 	getComponent
 } from "./phoria-island-registry"
-import type { PhoriaIslandFramework, PhoriaIslandComponent } from "./phoria-island-registry"
+import type { PhoriaIslandFramework, PhoriaIslandComponent, HttpResponse } from "./phoria-island-registry"
 
-export { PhoriaIsland, registerFramework, getFramework, registerComponent, registerComponents, getComponent }
+export { registerFramework, getFramework, registerComponent, registerComponents, getComponent }
 
-export type { PhoriaIslandFramework, PhoriaIslandComponent }
+export type { PhoriaIslandFramework, PhoriaIslandComponent, HttpResponse }

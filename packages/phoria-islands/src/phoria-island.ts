@@ -1,4 +1,4 @@
-import { getComponent } from "./phoria-island-registry"
+import { getComponent } from "./main"
 
 class PhoriaIsland extends HTMLElement {
 	async connectedCallback() {
@@ -17,7 +17,16 @@ class PhoriaIsland extends HTMLElement {
 				throw new Error(`Component "${componentName}" not found in registry.`)
 			}
 
-			await component.mountComponent(this)
+			const rawProps = this.getAttribute("props")
+			let props: Record<string, unknown> | null = null
+			if (rawProps !== null) {
+				props = JSON.parse(rawProps || "{}")
+			}
+
+			// TODO: Boolean may not be the best way to handle this
+			const hydrate = !this.hasAttribute("client:only")
+
+			await component.mount(this, props, hydrate)
 		} catch (error) {
 			// TODO: Error handling needs to be customisable from the caller
 			console.error(`Error loading "${componentName}" component:`, error)

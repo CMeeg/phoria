@@ -3,7 +3,9 @@
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"main": "./dist/main.cjs",
 	"module": "./dist/main.js",
 	"types": "./dist/main.d.ts",
@@ -18,20 +20,26 @@
 			"require": "./dist/react.cjs",
 			"types": "./dist/react/register.d.ts"
 		},
+		"./svelte": {
+			"import": "./dist/svelte.js",
+			"require": "./dist/svelte.cjs",
+			"types": "./dist/svelte/register.d.ts"
+		},
 		"./vue": {
 			"import": "./dist/vue.js",
 			"require": "./dist/vue.cjs",
 			"types": "./dist/vue/register.d.ts"
 		},
-		"./svelte": {
-			"import": "./dist/svelte.js",
-			"require": "./dist/svelte.cjs",
-			"types": "./dist/svelte/register.d.ts"
+		"./web": {
+			"import": "./dist/web.js",
+			"require": "./dist/web.cjs",
+			"types": "./dist/web.d.ts"
 		}
 	},
 	"scripts": {
-		"build": "tsc -b && vite build",
-		"lint": "biome check"
+		"build": "vite build",
+		"lint": "biome check",
+		"check": "tsc -b"
 	},
 	"dependencies": {
 		"react": "catalog:",
@@ -40,11 +48,13 @@
 		"vue": "catalog:"
 	},
 	"devDependencies": {
+		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dts": "^4.3.0",
+		"vite-plugin-externalize-deps": "^0.8.0",
 		"vite-tsconfig-paths": "catalog:"
 	}
 }

@@ -1,3 +1,6 @@
+import "@phoria/islands/react"
+import "@phoria/islands/svelte"
+import "@phoria/islands/vue"
 import { registerComponents } from "@phoria/islands"
 
 registerComponents({

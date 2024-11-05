@@ -11,6 +11,8 @@ using Phoria.Vite.Logging;
 
 namespace Phoria.Vite.DevServer;
 
+// TODO: Would it be better to have the server running in a sidecar? It might be more reliable as it could be more easily monitored and restarted if it fails
+
 /// <summary>
 /// Provides a way to launch the Vite Development Server.
 /// </summary>

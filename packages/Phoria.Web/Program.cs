@@ -1,3 +1,4 @@
+using Phoria.islands;
 using Phoria.Vite;
 using Phoria.Web;
 
@@ -25,6 +26,9 @@ if (builder.Environment.IsDevelopment())
 // TODO: Configure https on the dev server
 // TODO(docs): If using React, you must enable React Refresh for HMR to work (you will see this error in the console if you don't https://github.com/vitejs/vite-plugin-react/pull/79)
 builder.Services.AddViteServices();
+
+// TODO: Combine with AddViteServices e.g. just AddPhoria
+builder.Services.AddPhoriaIslands();
 
 WebApplication app = builder.Build();
 
