@@ -3,14 +3,15 @@ import react from "@vitejs/plugin-react"
 import vue from "@vitejs/plugin-vue"
 import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
-import appsettingsDev from "./appsettings.Development.json" with { type: "json" }
 import appsettings from "./appsettings.json" with { type: "json" }
+
+// TODO: See if there is a plugin like https://github.com/vitejs/vite-plugin-basic-ssl but for dotnet dev certs, or create one if not
 
 // https://vite.dev/config/
 export default defineConfig({
 	appType: "custom",
 	root: "ui",
-	base: `/${appsettings.Vite.Base}`,
+	base: appsettings.Phoria.Base,
 	publicDir: "public",
 	plugins: [
 		tsconfigPaths({
@@ -21,10 +22,11 @@ export default defineConfig({
 		vue()
 	],
 	server: {
-		port: appsettingsDev.Vite.Server.Port
+		host: appsettings.Phoria.Server.Host,
+		port: appsettings.Phoria.Server.Port
 	},
 	build: {
-		manifest: appsettings.Vite.Manifest,
+		manifest: appsettings.Phoria.Manifest,
 		rollupOptions: {
 			input: "ui/src/entry-client.tsx"
 		}

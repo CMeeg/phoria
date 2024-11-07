@@ -1,5 +1,5 @@
+using Phoria;
 using Phoria.islands;
-using Phoria.Vite;
 using Phoria.Web;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -25,7 +25,7 @@ if (builder.Environment.IsDevelopment())
 
 // TODO: Configure https on the dev server
 // TODO(docs): If using React, you must enable React Refresh for HMR to work (you will see this error in the console if you don't https://github.com/vitejs/vite-plugin-react/pull/79)
-builder.Services.AddViteServices();
+builder.Services.AddPhoria();
 
 // TODO: Combine with AddViteServices e.g. just AddPhoria
 builder.Services.AddPhoriaIslands();
@@ -47,16 +47,14 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 
-// The order of the Vite dev middleware matters so we will place it last
+// The order of the Phoria middleware matters so we will place it last
+// TODO: Does the order still matter?
 if (app.Environment.IsDevelopment())
 {
-    // Use the Vite Development Server when the environment is Development
-
-    // WebSockets support is required for HMR (hot module reload)
+    // WebSockets support is required for Vite HMR (hot module reload)
     app.UseWebSockets();
-
-    // Enable all required features to use the Vite Development Server
-    app.UseViteDevelopmentServer(true);
 }
+
+app.UsePhoria();
 
 app.Run();

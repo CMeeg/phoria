@@ -3,13 +3,13 @@ import fs from "node:fs/promises"
 import express from "express"
 import type { ViteDevServer } from "vite"
 import type { getComponent as GetComponent } from "@phoria/islands"
-// TODO: These paths need to be configurable - perhaps encapsulate most of the server in a function that takes options?
-import appsettingsDev from "../../../appsettings.Development.json" with { type: "json" }
+// TODO: This path needs to be configurable - perhaps encapsulate most of the server in a function that takes options?
 import appsettings from "../../../appsettings.json" with { type: "json" }
 
-const isProduction = process.env.NODE_ENV === "production"
-const port = process.env.PORT || appsettingsDev.Vite.Server.Port
-const base = process.env.BASE || `/${appsettings.Vite.Base}`
+const nodeEnv = process.env.NODE_ENV || "development"
+const isProduction = nodeEnv === "production"
+const port = process.env.PORT || appsettings.Phoria.Server.Port
+const base = process.env.BASE || appsettings.Phoria.Base
 const ABORT_DELAY = 10000
 
 // Get the SSR manifest if in production mode
@@ -31,7 +31,10 @@ if (isProduction) {
 } else {
 	const { createServer } = await import("vite")
 	vite = await createServer({
-		server: { middlewareMode: true },
+		server: {
+			middlewareMode: true,
+			strictPort: true
+		},
 		appType: "custom"
 	})
 	app.use(vite.middlewares)
@@ -39,6 +42,10 @@ if (isProduction) {
 
 // TODO: Is this necessary?
 app.use(express.json())
+
+app.get("/hc", (_, res) => {
+	res.json({ mode: nodeEnv })
+})
 
 // Serve HTML
 // TODO: This is a catch all route - prob want a specific route for islands

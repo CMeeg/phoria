@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.Web", "packages\Phor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.Islands", "packages\Phoria.Islands\Phoria.Islands.csproj", "{AD6AE76D-AEF7-4A4C-A595-743E49A936CB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria", "packages\Phoria\Phoria.csproj", "{A71FCF51-C664-4C8C-A56E-0C33A071EB78}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{AD6AE76D-AEF7-4A4C-A595-743E49A936CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD6AE76D-AEF7-4A4C-A595-743E49A936CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD6AE76D-AEF7-4A4C-A595-743E49A936CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A71FCF51-C664-4C8C-A56E-0C33A071EB78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A71FCF51-C664-4C8C-A56E-0C33A071EB78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A71FCF51-C664-4C8C-A56E-0C33A071EB78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A71FCF51-C664-4C8C-A56E-0C33A071EB78}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -65,5 +71,6 @@ Global
 		{61932D81-0CD5-48FA-848E-536B5AC98F99} = {F822651F-A85B-44B2-9BFC-68CED068F0E9}
 		{02C16EC4-7766-4CB2-BCD0-077F1297B2E4} = {F822651F-A85B-44B2-9BFC-68CED068F0E9}
 		{AD6AE76D-AEF7-4A4C-A595-743E49A936CB} = {F822651F-A85B-44B2-9BFC-68CED068F0E9}
+		{A71FCF51-C664-4C8C-A56E-0C33A071EB78} = {F822651F-A85B-44B2-9BFC-68CED068F0E9}
 	EndGlobalSection
 EndGlobal

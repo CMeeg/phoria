@@ -15,7 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Phoria.Vite\Phoria.Vite.csproj" />
+	  <ProjectReference Include="..\Phoria\Phoria.csproj" />
 	</ItemGroup>
 
 </Project>

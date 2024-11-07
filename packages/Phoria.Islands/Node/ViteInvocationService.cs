@@ -1,22 +1,23 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Phoria.Islands.Components;
-using Phoria.Vite.DevServer;
+using Phoria.Server;
 
 namespace Phoria.Islands.Node;
 
 public class ViteInvocationService : INodeInvocationService
 {
 	private readonly IHttpClientFactory clientFactory;
-	private readonly IViteDevServerStatus viteDevServerStatus;
+	private readonly IPhoriaServerMonitor serverMonitor;
+
 	internal const string HttpClientName = "Phoria.Islands.Node.ViteHttpClient";
 
 	public ViteInvocationService(
 		IHttpClientFactory clientFactory,
-		IViteDevServerStatus viteDevServerStatus
-	)
+		IPhoriaServerMonitor serverMonitor)
 	{
 		this.clientFactory = clientFactory;
-		this.viteDevServerStatus = viteDevServerStatus;
+		this.serverMonitor = serverMonitor;
 	}
 
 	public async Task<HttpResponseMessage> Invoke(string function, object[] args, CancellationToken cancellationToken = default)
@@ -45,7 +46,7 @@ public class ViteInvocationService : INodeInvocationService
 	private HttpClient CreateClient()
 	{
 		var client = clientFactory.CreateClient(HttpClientName);
-		client.BaseAddress = new Uri(viteDevServerStatus.ServerUrl);
+		client.BaseAddress = new Uri(serverMonitor.ServerStatus.Url);
 		return client;
 	}
 

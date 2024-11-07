@@ -8,7 +8,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Phoria.ServiceDefaults\Phoria.ServiceDefaults.csproj" />
-		<ProjectReference Include="..\Phoria.Vite\Phoria.Vite.csproj" />
+		<ProjectReference Include="..\Phoria\Phoria.csproj" />
 		<ProjectReference Include="..\Phoria.Islands\Phoria.Islands.csproj" />
 	</ItemGroup>
 
