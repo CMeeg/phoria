@@ -7,6 +7,12 @@ public enum PhoriaIslandRenderMode
 	Isomorphic
 }
 
+public enum ClientMode
+{
+	OnLoad,
+	Only
+}
+
 public class PhoriaIslandComponent
 {
 	/// <summary>
@@ -19,4 +25,5 @@ public class PhoriaIslandComponent
 	/// </summary>
 	public object? Props { get; set; }
 	public PhoriaIslandRenderMode RenderMode { get; set; } = PhoriaIslandRenderMode.Isomorphic;
+	public ClientMode? Client { get; set; }
 }

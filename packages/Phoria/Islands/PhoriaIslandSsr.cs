@@ -1,5 +1,7 @@
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Phoria.IO;
 using Phoria.Server;
 
 namespace Phoria.Islands;
@@ -31,9 +33,12 @@ public class PhoriaIslandSsr
 		PhoriaIslandComponent component,
 		CancellationToken cancellationToken = default)
 	{
-		SerializedProps? props = component.Props == null
-			? null
-			: options.Islands.PropsSerializer.Serialize(component.Props);
+		StreamPool? propsStreamPool = null;
+		if (component.Props != null)
+		{
+			propsStreamPool = new StreamPool();
+			options.Islands.PropsSerializer.Serialize(component.Props, propsStreamPool);
+		}
 
 		using HttpClient client = phoriaServerHttpClientFactory.CreateClient();
 
@@ -41,37 +46,27 @@ public class PhoriaIslandSsr
 			{ "component", component.ComponentName }
 		});
 
-		StreamContent? content = CreatePropsContent(props);
+		StreamContent? body = CreatePropsContent(propsStreamPool);
 
 		var response = await client.PostAsync(
 			$"{RenderUrl}{query}",
-			content,
+			body,
 			cancellationToken);
 
-		string? framework = null;
-		if (response.Headers.TryGetValues(
-			"x-phoria-component-framework",
-			out IEnumerable<string>? componentFrameworkHeader))
-		{
-			framework = componentFrameworkHeader.FirstOrDefault();
-		}
+		var contentStreamPool = new StreamPool();
+		await response.Content.CopyToAsync(contentStreamPool.Stream, cancellationToken);
 
 		return new PhoriaIslandSsrResult
 		{
-			Framework = framework,
-			CopyToStream = response.Content.CopyToAsync,
-			Props = props
+			Headers = response.Headers,
+			Content = contentStreamPool,
+			Props = propsStreamPool
 		};
 	}
 
-	private static StreamContent? CreatePropsContent(SerializedProps? props)
+	private static StreamContent? CreatePropsContent(StreamPool? props)
 	{
-		if (props == null)
-		{
-			return null;
-		}
-
-		if (props.Stream == null || props.Stream.Length == 0)
+		if (props == null || props.Stream == null || props.Stream.Length == 0)
 		{
 			return null;
 		}
@@ -87,7 +82,7 @@ public class PhoriaIslandSsr
 
 public record PhoriaIslandSsrResult
 {
-	public string? Framework { get; init; }
-	public required Func<Stream, Task> CopyToStream { get; init; }
-	public SerializedProps? Props { get; init; }
+	public required HttpResponseHeaders Headers { get; init; }
+	public required StreamPool Content { get; init; }
+	public StreamPool? Props { get; init; }
 }

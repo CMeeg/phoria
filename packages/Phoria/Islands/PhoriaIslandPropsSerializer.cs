@@ -1,6 +1,3 @@
-// Copyright (c) 2024 Daniil Sokolyuk.
-// Licensed under the MIT License, See LICENCE in the project root for license information.
-
 using System.Buffers;
 using System.Text.Json;
 using Phoria.IO;
@@ -9,7 +6,8 @@ namespace Phoria.Islands;
 
 public interface IPhoriaIslandPropsSerializer
 {
-	SerializedProps Serialize(object props);
+	string Serialize(object props);
+	void Serialize(object props, StreamPool streamPool);
 }
 
 public sealed class SystemTextJsonPropsSerializer
@@ -29,15 +27,18 @@ public sealed class SystemTextJsonPropsSerializer
 		this.jsonSerializerOptions = jsonSerializerOptions;
 	}
 
-	public SerializedProps Serialize(object props)
+	public string Serialize(object props)
 	{
-		var pooledStream = new PooledStream();
-
-		JsonSerializer.Serialize(
-			new Utf8JsonWriter((IBufferWriter<byte>)pooledStream.Stream),
+		return JsonSerializer.Serialize(
 			props,
 			jsonSerializerOptions);
+	}
 
-		return new SerializedProps(pooledStream);
+	public void Serialize(object props, StreamPool streamPool)
+	{
+		JsonSerializer.Serialize(
+			new Utf8JsonWriter((IBufferWriter<byte>)streamPool.Stream),
+			props,
+			jsonSerializerOptions);
 	}
 }

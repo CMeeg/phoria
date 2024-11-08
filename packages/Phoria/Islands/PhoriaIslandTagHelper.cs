@@ -1,18 +1,8 @@
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using Microsoft.IO;
-using Phoria.IO;
+using Microsoft.Extensions.Options;
 using Phoria.Server;
 
 namespace Phoria.Islands;
-
-public enum ClientMode
-{
-	OnLoad,
-	Only
-}
 
 public class PhoriaIslandTagHelper
 	: TagHelper
@@ -20,6 +10,7 @@ public class PhoriaIslandTagHelper
 	private readonly IPhoriaIslandRegistry registry;
 	private readonly IPhoriaServerMonitor serverMonitor;
 	private readonly IPhoriaIslandSsr phoriaIslandSsr;
+	private readonly PhoriaOptions options;
 
 	public required string Component { get; set; }
 	public object? Props { get; set; }
@@ -28,11 +19,13 @@ public class PhoriaIslandTagHelper
 	public PhoriaIslandTagHelper(
 		IPhoriaIslandRegistry registry,
 		IPhoriaServerMonitor serverMonitor,
-		IPhoriaIslandSsr phoriaIslandSsr)
+		IPhoriaIslandSsr phoriaIslandSsr,
+		IOptions<PhoriaOptions> options)
 	{
 		this.registry = registry;
 		this.serverMonitor = serverMonitor;
 		this.phoriaIslandSsr = phoriaIslandSsr;
+		this.options = options.Value;
 	}
 
 	public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
@@ -61,7 +54,8 @@ public class PhoriaIslandTagHelper
 		{
 			ComponentName = Component,
 			Props = Props,
-			RenderMode = renderMode
+			RenderMode = renderMode,
+			Client = Client
 		};
 
 		registry.RegisterComponent(component);
@@ -69,86 +63,15 @@ public class PhoriaIslandTagHelper
 		output.TagName = null;
 		output.TagMode = TagMode.StartTagAndEndTag;
 
-		if (renderMode != PhoriaIslandRenderMode.ServerOnly)
-		{
-			// Render the phoria-island web component
+		PhoriaIslandSsrResult? ssrResult = component.RenderMode != PhoriaIslandRenderMode.ClientOnly
+			? await phoriaIslandSsr.RenderComponent(component)
+			: null;
 
-			// TODO: Maybe allow setting the tag name via config?
-			output.TagName = "phoria-island";
+		var content = new PhoriaIslandHtmlContent(
+			component,
+			ssrResult,
+			options);
 
-			output.Attributes.Add("component", component.ComponentName);
-
-			// TODO: Support other directives - see Astro for inspiration
-
-			string? clientDirective = Client switch
-			{
-				ClientMode.Only => "client:only",
-				ClientMode.OnLoad => "client:load",
-				_ => null
-			};
-
-			if (clientDirective != null)
-			{
-				output.Attributes.Add(new TagHelperAttribute(
-					clientDirective,
-					null,
-					HtmlAttributeValueStyle.Minimized));
-			}
-		}
-
-		if (renderMode != PhoriaIslandRenderMode.ClientOnly)
-		{
-			try
-			{
-				PhoriaIslandSsrResult ssrResult = await phoriaIslandSsr.RenderComponent(component);
-
-				if (ssrResult.Props != null)
-				{
-					output.Attributes.Add("props", CreateUtf8TextWriter(ssrResult.Props.Stream).ToString());
-				}
-
-				var ssrOutput = new PooledStream();
-				await ssrResult.CopyToStream(ssrOutput.Stream);
-
-				output.Content.SetHtmlContent(CreateUtf8TextWriter(ssrOutput.Stream).ToString());
-			}
-			catch (Exception)
-			{
-				// TODO: Log this
-				// TODO: Throw an exception?
-
-				output.SuppressOutput();
-
-				return;
-			}
-		}
-	}
-
-	private static StringWriter CreateUtf8TextWriter(RecyclableMemoryStream stream)
-	{
-		var textWriter = new StringWriter();
-		WriteUtf8Stream(textWriter, stream);
-
-		return textWriter;
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void WriteUtf8Stream(TextWriter textWriter, RecyclableMemoryStream stream)
-	{
-		if (stream == null || stream.Length == 0)
-		{
-			return;
-		}
-
-		stream.Position = 0;
-
-		var textWriterBufferWriter = new TextWriterBufferWriter(textWriter);
-
-		Encoding.UTF8.GetDecoder().Convert(
-			stream.GetReadOnlySequence(),
-			textWriterBufferWriter,
-			true,
-			out _,
-			out _);
+		output.Content.SetHtmlContent(content);
 	}
 }

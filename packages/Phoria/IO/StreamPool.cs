@@ -5,15 +5,14 @@ using Microsoft.IO;
 
 namespace Phoria.IO;
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification = "The name reflects the purpose of the class.")]
-public sealed class PooledStream
+public sealed class StreamPool
 	: IDisposable
 {
 	private static readonly RecyclableMemoryStreamManager manager;
 
 	public RecyclableMemoryStream Stream { get; }
 
-	static PooledStream()
+	static StreamPool()
 	{
 		int blockSize = 1024 * 128;
 		int largeBufferMultiple = 1024 * 1024;
@@ -31,7 +30,7 @@ public sealed class PooledStream
 		});
 	}
 
-	public PooledStream()
+	public StreamPool()
 	{
 		Stream = manager.GetStream();
 	}
