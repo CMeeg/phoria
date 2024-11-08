@@ -134,6 +134,7 @@ public sealed class PhoriaServerMonitor
 		{
 			Health = PhoriaServerHealth.Healthy,
 			Mode = result.Mode,
+			Frameworks = result.Frameworks,
 			Url = options.GetServerUrl()
 		};
 	}
@@ -143,7 +144,6 @@ public sealed class PhoriaServerMonitor
 		return new PhoriaServerStatus
 		{
 			Health = PhoriaServerHealth.Unhealthy,
-			Mode = PhoriaServerMode.Unknown,
 			Url = options.GetServerUrl()
 		};
 	}
@@ -152,8 +152,6 @@ public sealed class PhoriaServerMonitor
 	{
 		return new PhoriaServerStatus
 		{
-			Health = PhoriaServerHealth.Unknown,
-			Mode = PhoriaServerMode.Unknown,
 			Url = options.GetServerUrl()
 		};
 	}
@@ -167,7 +165,8 @@ public sealed class PhoriaServerMonitor
 
 internal sealed record PhoriaHealthCheckResult
 {
-	public PhoriaServerMode Mode { get; init; }
+	public PhoriaServerMode Mode { get; init; } = PhoriaServerMode.Unknown;
+	public string[] Frameworks { get; init; } = [];
 }
 
 internal static partial class PhoriaServerMonitorLogMessages

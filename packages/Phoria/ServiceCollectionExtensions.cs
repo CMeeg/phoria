@@ -11,54 +11,23 @@ namespace Phoria;
 
 public static class ServiceCollectionExtensions
 {
-	public static IServiceCollection AddPhoria(this IServiceCollection services)
-	{
-		return services.SetOptions().ConfigureServices();
-	}
-
 	public static IServiceCollection AddPhoria(
 		this IServiceCollection services,
 		Action<PhoriaOptions>? configure = null)
 	{
-		if (configure is null)
-		{
-			services.SetOptions();
-		}
-		else
-		{
-			services.Configure(configure);
-		}
+		// Create options from appsettings first
 
-		return services.ConfigureServices();
-	}
+		IServiceProvider serviceProvider = services.BuildServiceProvider();
+		IConfiguration configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
-	public static IServiceCollection AddPhoria(
-		this IServiceCollection services,
-		PhoriaOptions options)
-	{
-		return services.SetOptions(options).ConfigureServices();
-	}
+		var options = new PhoriaOptions();
+		configuration.GetSection(PhoriaOptions.SectionName).Bind(options);
 
-	private static IServiceCollection SetOptions(
-		this IServiceCollection services,
-		PhoriaOptions? options = null)
-	{
-		if (options is null)
-		{
-			// Add the options from the configuration
+		// Then set options from the configure action
 
-			IServiceProvider serviceProvider = services.BuildServiceProvider();
-			IConfiguration configuration = serviceProvider.GetRequiredService<IConfiguration>();
-			services.Configure<PhoriaOptions>(configuration.GetSection(PhoriaOptions.SectionName));
-		}
-		else
-		{
-			// Add the options provided
+		configure?.Invoke(options);
 
-			services.AddSingleton(Options.Create(options));
-		}
-
-		return services;
+		return services.AddSingleton(Options.Create(options)).ConfigureServices();
 	}
 
 	private static IServiceCollection ConfigureServices(this IServiceCollection services)
@@ -97,6 +66,8 @@ public static class ServiceCollectionExtensions
 		// Add Islands services
 
 		services.TryAddScoped<PhoriaIslandsEntryTagHelperMonitor>();
+		services.TryAddSingleton<IPhoriaIslandSsr, PhoriaIslandSsr>();
+		services.TryAddScoped<IPhoriaIslandRegistry, PhoriaIslandRegistry>();
 
 		return services;
 	}

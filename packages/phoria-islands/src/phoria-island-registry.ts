@@ -15,6 +15,10 @@ function getFramework(name: string) {
 	return frameworkRegistry.get(name.toLowerCase())
 }
 
+function getFrameworks() {
+	return Array.from(frameworkRegistry.keys())
+}
+
 interface PhoriaIslandComponentOptions<T> {
 	loader: () => Promise<T>
 	framework: string
@@ -69,6 +73,6 @@ function getComponent(name: string) {
 	return componentRegistry.get(name.toLowerCase())
 }
 
-export { registerFramework, getFramework, registerComponent, registerComponents, getComponent }
+export { registerFramework, getFramework, getFrameworks, registerComponent, registerComponents, getComponent }
 
 export type { PhoriaIslandFramework, PhoriaIslandComponent, HttpResponse }

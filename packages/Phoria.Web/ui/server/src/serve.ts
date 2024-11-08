@@ -2,7 +2,7 @@
 import fs from "node:fs/promises"
 import express from "express"
 import type { ViteDevServer } from "vite"
-import type { getComponent as GetComponent } from "@phoria/islands"
+import type { getComponent as GetComponent, getFrameworks as GetFrameworks } from "@phoria/islands"
 // TODO: This path needs to be configurable - perhaps encapsulate most of the server in a function that takes options?
 import appsettings from "../../../appsettings.json" with { type: "json" }
 
@@ -43,28 +43,57 @@ if (isProduction) {
 // TODO: Is this necessary?
 app.use(express.json())
 
-app.get("/hc", (_, res) => {
-	res.json({ mode: nodeEnv })
+interface ServerEntry {
+	getComponent: GetComponent
+	getFrameworks: GetFrameworks
+}
+
+const loadServerEntry = async (): Promise<ServerEntry> => {
+	if (isProduction) {
+		// TODO: This is the build server path - need to make it configurable as it could change
+		const entryServerPath = "./ui/server/entry-server.js"
+		return (await import(entryServerPath)) as ServerEntry
+	}
+
+	if (!vite) {
+		throw new Error("Vite dev server is not defined.")
+	}
+
+	// TODO: This path needs to be configurable also
+	const entryServerPath = "./ui/src/entry-server.tsx"
+	// TODO: How can you restart the server if the entry-server.tsx changes? Or if this server.ts file changes?
+	return (await vite.ssrLoadModule(entryServerPath)) as ServerEntry
+}
+
+// Health check endpoint
+
+app.get("/hc", async (_, res) => {
+	const serverEntry = await loadServerEntry()
+
+	res.json({ mode: nodeEnv, frameworks: serverEntry.getFrameworks() })
 })
 
-// Serve HTML
-// TODO: This is a catch all route - prob want a specific route for islands
-// TODO: Also have a /health route for health checks on startup
-app.use("*", async (req, res) => {
-	try {
-		// TODO: Is this replace necessary?
-		const url = req.originalUrl.replace(base, "")
-		// TODO: Remove this log (it's for debug), but add some way to configure logging and a logger implementation
-		console.log("Rendering", url)
+// Ssr endpoint
 
-		const qs = new URLSearchParams(url)
+app.use("/render", async (req, res) => {
+	try {
+		// TODO: Remove this log (it's for debug), but add some way to configure logging and a logger implementation
+		console.log("Rendering", req.originalUrl)
 
 		// Try to get component name from querystring
 
-		const componentName = qs.get("component")
+		const componentName = req.query.component
 
 		if (!componentName) {
 			throw new Error(`No "component" name provided in querystring.`)
+		}
+
+		const serverEntry = await loadServerEntry()
+
+		const component = serverEntry.getComponent(componentName)
+
+		if (!component) {
+			throw new Error(`Component "${componentName}" not found in registry.`)
 		}
 
 		// Try get props from body
@@ -73,29 +102,7 @@ app.use("*", async (req, res) => {
 
 		const props = body !== null && typeof body === "object" && !Array.isArray(body) ? body : null
 
-		// TODO: Do we need to export this function or is it enough to just import the entry-server file?
-		let getComponent: GetComponent
-
-		if (isProduction) {
-			// TODO: This is the build server path - need to make it configurable as it could change
-			const entryServerPath = "./ui/server/entry-server.js"
-			getComponent = (await import(entryServerPath)).getComponent
-		} else {
-			if (!vite) {
-				throw new Error("Vite dev server is not defined.")
-			}
-
-			// TODO: This path needs to be configurable also
-			const entryServerPath = "./ui/src/entry-server.tsx"
-			// TODO: How can you restart the server if the entry-server.tsx changes? Or if this server.ts file changes?
-			getComponent = (await vite.ssrLoadModule(entryServerPath)).getComponent
-		}
-
-		const component = getComponent(componentName)
-
-		if (!component) {
-			throw new Error(`Component "${componentName}" not found in registry.`)
-		}
+		// Render the component to the response
 
 		// TODO: This demonstrates passing data to the caller though so maybe useful, but might remove if not needed
 		res.setHeader("x-phoria-component-framework", component.framework)

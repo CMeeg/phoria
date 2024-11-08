@@ -1,14 +1,17 @@
+// Copyright (c) 2024 Daniil Sokolyuk.
+// Licensed under the MIT License, See LICENCE in the project root for license information.
+
 using Microsoft.IO;
 
-namespace Phoria.Islands;
+namespace Phoria.IO;
 
-internal class PooledStream : IDisposable
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification = "The name reflects the purpose of the class.")]
+public sealed class PooledStream
+	: IDisposable
 {
 	private static readonly RecyclableMemoryStreamManager manager;
 
-	private readonly RecyclableMemoryStream stream;
-
-	public RecyclableMemoryStream Stream => stream;
+	public RecyclableMemoryStream Stream { get; }
 
 	static PooledStream()
 	{
@@ -30,11 +33,11 @@ internal class PooledStream : IDisposable
 
 	public PooledStream()
 	{
-		stream = manager.GetStream();
+		Stream = manager.GetStream();
 	}
 
 	public void Dispose()
 	{
-		stream?.Dispose();
+		Stream?.Dispose();
 	}
 }

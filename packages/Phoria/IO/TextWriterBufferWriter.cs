@@ -1,8 +1,12 @@
+// Copyright (c) 2024 Daniil Sokolyuk.
+// Licensed under the MIT License, See LICENCE in the project root for license information.
+
 using System.Buffers;
 
-namespace Phoria.Islands;
+namespace Phoria.IO;
 
-internal class TextWriterBufferWriter : IBufferWriter<char>
+internal sealed class TextWriterBufferWriter
+	: IBufferWriter<char>
 {
 	private static readonly MemoryPool<char> memoryPool = MemoryPool<char>.Shared;
 
@@ -19,7 +23,7 @@ internal class TextWriterBufferWriter : IBufferWriter<char>
 	{
 		if (memoryOwner == null)
 		{
-			throw new Exception("Cannot advance. No memory rented.");
+			throw new InvalidOperationException("Cannot advance. No memory rented.");
 		}
 
 		textWriter.Write(memoryOwner.Memory.Span.Slice(0, count));

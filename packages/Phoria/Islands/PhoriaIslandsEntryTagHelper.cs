@@ -2,7 +2,9 @@
 // Licensed under the MIT License, See LICENCE in the project root for license information.
 
 using System.ComponentModel;
+using System.Globalization;
 using System.Reflection.Metadata;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -165,24 +167,22 @@ public class PhoriaIslandsEntryTagHelper
 
 				// Add the script tag to the output
 
-				// TODO: Would be good to only inject this if needed e.g. if a react component is used - can the react "plugin" do this? Otherwise we can add it as an option
-				bool useReactRefresh = true;
-
-				if (useReactRefresh)
+				if (serverMonitor.ServerStatus.Frameworks.Contains(
+					"react",
+					StringComparer.InvariantCultureIgnoreCase))
 				{
 					string viteReactRefreshUrl = $"{serverUrl}/@react-refresh";
 
-					output.PreElement.AppendHtml(
-						"<script type=\"module\">\n"
-							+ "    import RefreshRuntime from \""
-							+ viteReactRefreshUrl
-							+ "\";\n"
-							+ "    RefreshRuntime.injectIntoGlobalHook(window);\n"
-							+ "    window.$RefreshReg$ = () => { };\n"
-							+ "    window.$RefreshSig$ = () => (type) => type;\n"
-							+ "    window.__vite_plugin_react_preamble_installed__ = true;\n"
-							+ "</script>\n"
-					);
+					var script = new StringBuilder();
+					script.AppendLine("<script type=\"module\">");
+					script.AppendLine(CultureInfo.InvariantCulture, $"import RefreshRuntime from \"{viteReactRefreshUrl}\";");
+					script.AppendLine("RefreshRuntime.injectIntoGlobalHook(window);");
+					script.AppendLine("window.$RefreshReg$ = () => { };");
+					script.AppendLine("window.$RefreshSig$ = () => (type) => type;");
+					script.AppendLine("window.__vite_plugin_react_preamble_installed__ = true;");
+					script.AppendLine("</script>");
+
+					output.PreElement.AppendHtml(script.ToString());
 				}
 
 				output.PreElement.AppendHtml(

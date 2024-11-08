@@ -1,4 +1,4 @@
-import { getComponent } from "@phoria/islands"
+import { getComponent, getFrameworks } from "@phoria/islands"
 import "./app/components/register"
 
-export { getComponent }
+export { getComponent, getFrameworks }
