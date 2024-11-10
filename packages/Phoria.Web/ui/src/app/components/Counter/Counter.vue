@@ -6,6 +6,10 @@ const props = defineProps<{ startAt?: number }>()
 const count = ref(props.startAt ?? 0)
 </script>
 
+<script module lang="ts">
+	export const componentPath = import.meta.url
+</script>
+
 <template>
 	<div class="vue-counter">
 		<a href="https://vuejs.org/" target="_blank" rel="noreferrer">

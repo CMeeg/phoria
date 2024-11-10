@@ -56,6 +56,20 @@ public class PhoriaIslandSsr
 		var contentStreamPool = new StreamPool();
 		await response.Content.CopyToAsync(contentStreamPool.Stream, cancellationToken);
 
+		if (response.Headers.TryGetValues(
+			"x-phoria-island-framework",
+			out IEnumerable<string>? componentFrameworkHeader))
+		{
+			component.Framework = componentFrameworkHeader.FirstOrDefault();
+		}
+
+		if (response.Headers.TryGetValues(
+			"x-phoria-island-path",
+			out IEnumerable<string>? componentPathHeader))
+		{
+			component.ComponentPath = componentPathHeader.FirstOrDefault();
+		}
+
 		return new PhoriaIslandSsrResult
 		{
 			Headers = response.Headers,

@@ -8,6 +8,10 @@ let { startAt = 0 } = $props()
 let count = $state(startAt)
 </script>
 
+<script module lang="ts">
+	export const componentPath = import.meta.url
+</script>
+
 <div class="svelte-counter">
 	<a href="https://svelte.dev" target="_blank" rel="noreferrer">
 		<img src="{base}/svelte.svg" class="logo svelte" alt="Svelte Logo" />

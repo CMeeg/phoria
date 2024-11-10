@@ -25,3 +25,5 @@ function Counter({ startAt }: CounterProps) {
 }
 
 export { Counter }
+
+export const componentPath = import.meta.url

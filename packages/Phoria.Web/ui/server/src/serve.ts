@@ -14,7 +14,7 @@ const ABORT_DELAY = 10000
 
 // Get the SSR manifest if in production mode
 // The SSR manifest is produced by the build process
-const ssrManifest = isProduction ? await fs.readFile("./ui/client/.vite/ssr-manifest.json", "utf-8") : undefined
+// const ssrManifest = isProduction ? await fs.readFile("./ui/client/.vite/ssr-manifest.json", "utf-8") : undefined
 
 // Create http server
 const app = express()
@@ -104,17 +104,7 @@ app.use("/render", async (req, res) => {
 
 		// Render the component to the response
 
-		// TODO: This demonstrates passing data to the caller though so maybe useful, but might remove if not needed
-		res.setHeader("x-phoria-component-framework", component.framework)
-
-		// TODO: Svelte also returns a `head` property - need to look into that, and if anything simlar can be done with React and Vue (maybe using the ssrManifest?)
-		if (typeof component.streamHttpResponse === "function") {
-			await component.streamHttpResponse(res, props, { timeout: ABORT_DELAY })
-		} else {
-			// TODO: Maybe make symmetrical with streamHttpResponse i.e. pass response in to function, or let framework handle the choice of whether to stream or not
-			const html = await component.renderToString(props)
-			res.status(200).setHeader("Content-Type", "text/html").send(html)
-		}
+		await component.renderToHttpResponse(res, props, { timeout: ABORT_DELAY })
 	} catch (e: unknown) {
 		const error = e instanceof Error ? e : new Error("Unknown error", { cause: e })
 		vite?.ssrFixStacktrace(error)

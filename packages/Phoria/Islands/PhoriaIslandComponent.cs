@@ -26,4 +26,6 @@ public class PhoriaIslandComponent
 	public object? Props { get; set; }
 	public PhoriaIslandRenderMode RenderMode { get; set; } = PhoriaIslandRenderMode.Isomorphic;
 	public ClientMode? Client { get; set; }
+	public string? Framework { get; set; }
+	public string? ComponentPath { get; set; }
 }

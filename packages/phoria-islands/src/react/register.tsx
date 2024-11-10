@@ -1,28 +1,29 @@
-import { registerFramework, type PhoriaIslandFramework } from "~/phoria-island-registry"
+import { registerFramework, getIslandImport, type PhoriaIslandFramework } from "~/phoria-island-registry"
 import type { FunctionComponent } from "react"
+import { sendHttpResponse, streamHttpResponse } from "./ssr"
 
 // TODO: Split into a separate package?
 // TODO: "Registration" is done automatically on import - should this be up to the caller?
 // TODO: Is it worth exploring a "plugin" system for this or using Vite's plugin system?
 
-// TODO: Maybe split into client and server functions - dynamic imports maybe sub-optimal on the server
+// TODO: Maybe split into client and server modules - dynamic imports maybe sub-optimal on the server
 
 const frameworkName = "react"
-
-const defaultStreamTimeoutMs = 10_000
 
 const framework: PhoriaIslandFramework<FunctionComponent> = {
 	createComponent: (component) => {
 		return {
 			framework: frameworkName,
 			mount: async (container, props, hydrate) => {
-				Promise.all([import("react"), import("react-dom/client"), component.loader()]).then(
-					([React, ReactDOM, Component]) => {
+				const islandImport = getIslandImport<FunctionComponent>(component)
+
+				Promise.all([import("react"), import("react-dom/client"), islandImport]).then(
+					([React, ReactDOM, Island]) => {
 						if (hydrate) {
 							ReactDOM.hydrateRoot(
 								container,
 								<React.StrictMode>
-									<Component {...props} />
+									<Island.component {...props} />
 								</React.StrictMode>
 							)
 
@@ -32,75 +33,31 @@ const framework: PhoriaIslandFramework<FunctionComponent> = {
 						const root = ReactDOM.createRoot(container)
 						root.render(
 							<React.StrictMode>
-								<Component {...props} />
+								<Island.component {...props} />
 							</React.StrictMode>
 						)
 					}
 				)
 			},
-			renderToString: async (props) => {
-				return Promise.all([import("react"), import("react-dom/server"), component.loader()]).then(
-					([React, ReactDOM, Component]) => {
-						return ReactDOM.renderToString(
-							<React.StrictMode>
-								<Component {...props} />
-							</React.StrictMode>
-						)
-					}
-				)
-			},
-			streamHttpResponse: async (res, props, options) => {
-				Promise.all([import("react"), import("react-dom/server"), import("node:stream"), component.loader()]).then(
-					([React, ReactDOM, Stream, Component]) => {
-						const opts = {
-							timeout: defaultStreamTimeoutMs,
-							...options
-						}
+			renderToHttpResponse: async (res, props, options) => {
+				const islandImport = getIslandImport<FunctionComponent>(component)
 
-						let didError = false
+				const island = await islandImport
 
-						const { pipe, abort } = ReactDOM.renderToPipeableStream(
-							<React.StrictMode>
-								<Component {...props} />
-							</React.StrictMode>,
-							{
-								onShellReady() {
-									res.status(didError ? 500 : 200)
-									res.setHeader("Content-Type", "text/html")
+				res.setHeader("x-phoria-island-framework", frameworkName)
 
-									const transformStream = new Stream.Transform({
-										transform(chunk, encoding, callback) {
-											res.write(chunk, encoding)
-											callback()
-										}
-									})
+				console.log({ ReactPath: island.componentPath })
 
-									transformStream.on("finish", () => {
-										res.end()
-									})
+				if (island.componentPath) {
+					// With Vue, we could also get the component path from `ctx.modules`, but then it'd be inconsistent with other frameworks that don't expose that
+					res.setHeader("x-phoria-island-path", island.componentPath)
+				}
 
-									pipe(transformStream)
-								},
-								onShellError() {
-									res.status(500)
-									res.setHeader("Content-Type", "text/html")
-									res.send("<h1>Something went wrong</h1>")
-								},
-								onError(error: unknown) {
-									didError = true
-									// TODO: Pass through logger from caller
-									console.error(error)
-								}
-							}
-						)
-
-						setTimeout(() => {
-							// TODO: Pass through logger from caller
-							console.log("Aborting render")
-							abort()
-						}, opts.timeout)
-					}
-				)
+				if (options?.renderToStream ?? true) {
+					await streamHttpResponse(res, island, props, options)
+				} else {
+					await sendHttpResponse(res, island, props)
+				}
 			}
 		}
 	}

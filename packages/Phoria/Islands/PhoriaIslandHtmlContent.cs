@@ -61,23 +61,16 @@ public class PhoriaIslandHtmlContent
 			writer.Write($" props=\"{encoder.Encode(options.Islands.PropsSerializer.Serialize(component.Props))}\"");
 		}
 
+		if (component.Framework != null)
+		{
+			writer.Write($" framework=\"{component.Framework}\"");
+		}
+
+		writer.Write(">");
+
 		if (ssrResult != null)
 		{
-			// TODO: Not sure this adds any benefit - ditch it?
-			if (ssrResult.Headers.TryGetValues(
-				"x-phoria-component-framework",
-				out IEnumerable<string>? componentFrameworkHeader))
-			{
-				writer.Write($" framework=\"{componentFrameworkHeader.FirstOrDefault()}\"");
-			}
-
-			writer.Write(">");
-
 			WriteUtf8Stream(writer, ssrResult.Content.Stream);
-		}
-		else
-		{
-			writer.Write(">");
 		}
 
 		writer.Write($"</{TagName}>");

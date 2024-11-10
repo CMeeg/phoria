@@ -200,6 +200,8 @@ public class PhoriaIslandsEntryTagHelper
 		}
 		else
 		{
+			// TODO: Check that this output includes all recommended output as described in step 4 of https://vite.dev/guide/backend-integration
+
 			// Get the entry chunk from the manifest file
 
 			IViteManifest manifest = manifestReader.ReadManifest();

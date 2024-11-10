@@ -5,15 +5,18 @@ import { registerComponents } from "@phoria/islands"
 
 registerComponents({
 	ReactCounter: {
-		loader: () => import("./Counter/Counter.tsx").then((module) => module.Counter),
+		loader: {
+			module: () => import("./Counter/Counter.tsx"),
+			component: (module) => module.Counter
+		},
 		framework: "react"
 	},
 	VueCounter: {
-		loader: () => import("./Counter/Counter.vue").then((module) => module.default),
+		loader: () => import("./Counter/Counter.vue"),
 		framework: "vue"
 	},
 	SvelteCounter: {
-		loader: () => import("./Counter/Counter.svelte").then((module) => module.default),
+		loader: () => import("./Counter/Counter.svelte"),
 		framework: "svelte"
 	}
 })
