@@ -22,12 +22,19 @@ public record PhoriaOptions
 	/// </summary>
 	public string? Base { get; set; } = "/phoria";
 
-	// TODO: Is this still a sensible default?
+	// TODO: Is this a sensible default?
 
 	/// <summary>
-	/// The Vite manifest file name. Default is ".vite/manifest.json".
+	/// The Vite manifest file name. Default is "client/.vite/manifest.json".
 	/// </summary>
-	public string Manifest { get; set; } = Path.Combine(".vite", "manifest.json");
+	public string Manifest { get; set; } = Path.Combine("client", ".vite", "manifest.json");
+
+	// TODO: Is this a sensible default?
+
+	/// <summary>
+	/// The Vite SSR manifest file name. Default is "client/.vite/ssr-manifest.json".
+	/// </summary>
+	public string SsrManifest { get; set; } = Path.Combine("client", ".vite", "ssr-manifest.json");
 
 	public PhoriaServerOptions Server { get; set; } = new();
 

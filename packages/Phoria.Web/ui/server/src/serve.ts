@@ -1,5 +1,5 @@
 // TODO: Use h3 instead of express?
-import fs from "node:fs/promises"
+// import fs from "node:fs/promises"
 import express from "express"
 import type { ViteDevServer } from "vite"
 import type { getComponent as GetComponent, getFrameworks as GetFrameworks } from "@phoria/islands"

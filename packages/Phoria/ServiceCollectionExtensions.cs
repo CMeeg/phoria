@@ -62,12 +62,13 @@ public static class ServiceCollectionExtensions
 		// Add Vite services
 
 		services.TryAddSingleton<IViteManifestReader, ViteManifestReader>();
+		services.TryAddSingleton<IViteSsrManifestReader, ViteSsrManifestReader>();
 
 		// Add Islands services
 
-		services.TryAddScoped<PhoriaIslandsEntryTagHelperMonitor>();
+		services.TryAddScoped<PhoriaIslandEntryTagHelperMonitor>();
 		services.TryAddSingleton<IPhoriaIslandSsr, PhoriaIslandSsr>();
-		services.TryAddScoped<IPhoriaIslandRegistry, PhoriaIslandRegistry>();
+		services.TryAddScoped<IPhoriaIslandScopedContext, PhoriaIslandScopedContext>();
 
 		return services;
 	}

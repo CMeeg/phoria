@@ -14,17 +14,18 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Phoria.Islands;
+using Phoria.Logging;
 using Phoria.Server;
 using Phoria.Vite;
 
-[assembly: MetadataUpdateHandler(typeof(PhoriaIslandsEntryTagHelperMonitor))]
+[assembly: MetadataUpdateHandler(typeof(PhoriaIslandEntryTagHelper))]
 
 namespace Phoria.Islands;
 
 [HtmlTargetElement(ScriptTag, Attributes = PhoriaSrcAttribute)]
 [HtmlTargetElement(LinkTag, Attributes = PhoriaHrefAttribute)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public class PhoriaIslandsEntryTagHelper
+public class PhoriaIslandEntryTagHelper
 	: TagHelper
 {
 	private static readonly Regex scriptRegex =
@@ -41,10 +42,10 @@ public class PhoriaIslandsEntryTagHelper
 	private const string LinkAsAttribute = "stylesheet";
 	private const string LinkAsStyle = "style";
 
-	private readonly ILogger<PhoriaIslandsEntryTagHelper> logger;
+	private readonly ILogger<PhoriaIslandEntryTagHelper> logger;
 	private readonly IViteManifestReader manifestReader;
 	private readonly IPhoriaServerMonitor serverMonitor;
-	private readonly PhoriaIslandsEntryTagHelperMonitor tagHelperMonitor;
+	private readonly PhoriaIslandEntryTagHelperMonitor tagHelperMonitor;
 	private readonly PhoriaOptions options;
 	private readonly IUrlHelperFactory urlHelperFactory;
 
@@ -89,11 +90,11 @@ public class PhoriaIslandsEntryTagHelper
 	/// <param name="tagHelperMonitor">The tag helper monitor.</param>
 	/// <param name="options">Phoria options.</param>
 	/// <param name="urlHelperFactory">Url helper factory to build the file path.</param>
-	public PhoriaIslandsEntryTagHelper(
-		ILogger<PhoriaIslandsEntryTagHelper> logger,
+	public PhoriaIslandEntryTagHelper(
+		ILogger<PhoriaIslandEntryTagHelper> logger,
 		IViteManifestReader manifestReader,
 		IPhoriaServerMonitor serverMonitor,
-		PhoriaIslandsEntryTagHelperMonitor tagHelperMonitor,
+		PhoriaIslandEntryTagHelperMonitor tagHelperMonitor,
 		IOptions<PhoriaOptions> options,
 		IUrlHelperFactory urlHelperFactory)
 	{
@@ -142,7 +143,6 @@ public class PhoriaIslandsEntryTagHelper
 			value = value[basePath.Length..].TrimStart('/');
 		}
 
-		IUrlHelper urlHelper = urlHelperFactory.GetUrlHelper(ViewContext);
 		string file;
 
 		// If the server is running in development mode, don't load the files from the manifest
@@ -219,6 +219,10 @@ public class PhoriaIslandsEntryTagHelper
 
 			// If the entry name looks like a script and the tagName is a 'link' of kind 'stylesheet', render the css file
 
+			var urlHelper = new PhoriaIslandUrlHelper(
+				urlHelperFactory.GetUrlHelper(ViewContext),
+				options);
+
 			if (tagName == LinkTag
 				&& (Rel == LinkRelStylesheet || As == LinkAsStyle)
 				&& scriptRegex.IsMatch(value))
@@ -240,13 +244,13 @@ public class PhoriaIslandsEntryTagHelper
 
 				// TODO: Handle multiple css files
 
-				file = GetAbsoluteFilePath(urlHelper, basePath, cssFiles!.First());
+				file = urlHelper.GetContentUrl(cssFiles!.First());
 			}
 			else
 			{
 				// Script file
 
-				file = GetAbsoluteFilePath(urlHelper, basePath, entry.File);
+				file = urlHelper.GetContentUrl(entry.File);
 			}
 		}
 
@@ -270,32 +274,12 @@ public class PhoriaIslandsEntryTagHelper
 			new TagHelperAttribute(attribute, file, HtmlAttributeValueStyle.DoubleQuotes)
 		);
 	}
-
-	private static string GetAbsoluteFilePath(
-		IUrlHelper urlHelper,
-		string? basePath,
-		string filePath)
-	{
-		// If the base path is not null, remove it from the value
-
-		if (!string.IsNullOrEmpty(basePath)
-			&& filePath.StartsWith(basePath, StringComparison.InvariantCulture))
-		{
-			filePath = filePath[basePath.Length..].TrimStart('/');
-		}
-
-		// Get the absoulte path to the manifest file
-
-		return urlHelper.Content(
-			$"~/{(string.IsNullOrEmpty(basePath) ? string.Empty : $"{basePath}/")}{filePath}"
-		);
-	}
 }
 
 /// <summary>
-/// Service used by the PhoriaIslandsEntryTagHelper to track the injection of the Vite client script when the server is in development mode.
+/// Service used by the PhoriaIslandEntryTagHelper to track the injection of the Vite client script when the server is in development mode.
 /// </summary>
-public class PhoriaIslandsEntryTagHelperMonitor
+public class PhoriaIslandEntryTagHelperMonitor
 {
 	/// <summary>
 	/// True if the Vite client script has been injected.
@@ -303,10 +287,10 @@ public class PhoriaIslandsEntryTagHelperMonitor
 	public bool IsViteClientScriptInjected { get; set; }
 }
 
-internal static partial class PhoriaIslandsEntryTagHelperLogMessages
+internal static partial class PhoriaIslandEntryTagHelperLogMessages
 {
 	[LoggerMessage(
-		EventId = 1101,
+		EventId = EventFeature.Islands + 1,
 		Message = "entry-{Attribute} value missing (check {View})",
 		Level = LogLevel.Warning)]
 	internal static partial void LogEntryAttributeMissing(
@@ -315,7 +299,7 @@ internal static partial class PhoriaIslandsEntryTagHelperLogMessages
 		string view);
 
 	[LoggerMessage(
-		EventId = 1102,
+		EventId = EventFeature.Islands + 2,
 		Message = "'{Key}' was not found in Vite manifest file (check {View})",
 		Level = LogLevel.Error)]
 	internal static partial void LogViteManifestKeyNotFound(
@@ -324,7 +308,7 @@ internal static partial class PhoriaIslandsEntryTagHelperLogMessages
 		string view);
 
 	[LoggerMessage(
-		EventId = 1103,
+		EventId = EventFeature.Islands + 3,
 		Message = "The entry '{Entry}' doesn't have CSS chunks",
 		Level = LogLevel.Warning)]
 	internal static partial void LogManifestEntryDoesntHaveCssChunks(this ILogger logger, string entry);

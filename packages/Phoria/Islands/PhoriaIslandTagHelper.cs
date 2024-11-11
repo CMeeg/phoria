@@ -7,7 +7,7 @@ namespace Phoria.Islands;
 public class PhoriaIslandTagHelper
 	: TagHelper
 {
-	private readonly IPhoriaIslandRegistry registry;
+	private readonly IPhoriaIslandScopedContext scopedContext;
 	private readonly IPhoriaServerMonitor serverMonitor;
 	private readonly IPhoriaIslandSsr phoriaIslandSsr;
 	private readonly PhoriaOptions options;
@@ -17,12 +17,12 @@ public class PhoriaIslandTagHelper
 	public ClientMode? Client { get; set; }
 
 	public PhoriaIslandTagHelper(
-		IPhoriaIslandRegistry registry,
+		IPhoriaIslandScopedContext scopedContext,
 		IPhoriaServerMonitor serverMonitor,
 		IPhoriaIslandSsr phoriaIslandSsr,
 		IOptions<PhoriaOptions> options)
 	{
-		this.registry = registry;
+		this.scopedContext = scopedContext;
 		this.serverMonitor = serverMonitor;
 		this.phoriaIslandSsr = phoriaIslandSsr;
 		this.options = options.Value;
@@ -58,7 +58,7 @@ public class PhoriaIslandTagHelper
 			Client = Client
 		};
 
-		registry.RegisterComponent(component);
+		scopedContext.AddComponent(component);
 
 		output.TagName = null;
 		output.TagMode = TagMode.StartTagAndEndTag;

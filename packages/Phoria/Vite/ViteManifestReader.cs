@@ -7,6 +7,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
+using Phoria.Logging;
 using Phoria.Server;
 
 namespace Phoria.Vite;
@@ -57,7 +58,7 @@ public sealed class ViteManifestReader
 		this.options = options.Value;
 		this.serverMonitor = serverMonitor;
 
-		// TODO: Can this be injected?
+		// TODO: Can this be injected? ViteSsrManifestReader and ViteManifestReader can use the same fileprovider
 		// TODO: This was wwwroot and working in the previous version, but have changed to ContentRootPath for now
 		fileProvider = new(Path.Combine(environment.ContentRootPath, this.options.GetBasePath().TrimStart('/')));
 	}
@@ -172,38 +173,20 @@ public sealed class ViteManifestReader
 internal static partial class ViteManifestReaderLogMessages
 {
 	[LoggerMessage(
-		EventId = 1001,
+		EventId = EventFeature.Vite + 1,
 		Message = "The manifest file won't be read because the vite development service is enabled. The service will always return null chunks",
 		Level = LogLevel.Information)]
 	internal static partial void LogManifestFileWontBeRead(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = 1002,
-		Message = "Attempted to get the record '{Record}' from the manifest file while the vite development server is enabled. Null was returned",
-		Level = LogLevel.Warning)]
-	internal static partial void LogManifestFileReadAttempt(this ILogger logger, string record);
-
-	[LoggerMessage(
-		EventId = 1003,
-		Message = "Requesting a chunk with the base path included is deprecated. Please remove the base path from the key '{Key}'",
-		Level = LogLevel.Warning)]
-	internal static partial void LogRequestingChunkWithBasePath(this ILogger logger, string key);
-
-	[LoggerMessage(
-		EventId = 1004,
-		Message = "The chunk '{Key}' was not found",
-		Level = LogLevel.Warning)]
-	internal static partial void LogChunkNotFound(this ILogger logger, string key);
-
-	[LoggerMessage(
-		EventId = 1005,
+		EventId = EventFeature.Vite + 2,
 		Message = "Detected change in Vite manifest - refreshing",
 		Level = LogLevel.Information)]
 	internal static partial void LogDetectedChangeInManifest(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = 1006,
-		Message = "The manifest file was not found. Did you forget to build the assets? ('npm run build')",
+		EventId = EventFeature.Vite + 3,
+		Message = "The manifest file was not found. Has the build process been executed?",
 		Level = LogLevel.Error)]
 	internal static partial void LogManifestFileNotFound(this ILogger logger);
 }
