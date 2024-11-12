@@ -76,35 +76,29 @@ function getIslandImport<T>(
 	}))
 }
 
-interface HttpResponse {
-	status: (code: number) => HttpResponse
-	setHeader: (name: string, value: number | string | readonly string[]) => HttpResponse
-	send: (body: unknown) => void
-	write(chunk: unknown, callback?: (error: Error | null | undefined) => void): boolean
-	write(chunk: unknown, encoding: BufferEncoding, callback?: (error: Error | null | undefined) => void): boolean
-	closed: boolean
-	end(cb?: () => void): HttpResponse
-	end(chunk: unknown, cb?: () => void): HttpResponse
-	end(chunk: unknown, encoding: BufferEncoding, cb?: () => void): HttpResponse
+interface PhoriaIslandRenderOptions {
+	preferStream?: boolean
 }
 
-interface PhoriaIslandRenderOptions {
-	timeout?: number
-	renderToStream?: boolean
+type PhoriaIslandProps = Record<string, unknown> | null
+
+interface PhoriaIslandRenderResult {
+	framework: string
+	componentPath?: string
+	html: string | ReadableStream
 }
 
 interface PhoriaIslandComponent {
 	framework: string
-	mount: <P extends Record<string, unknown> | null>(
+	mount: <P extends PhoriaIslandProps>(
 		container: HTMLElement,
 		props?: P,
 		hydrate?: boolean
 	) => Promise<void>
-	renderToHttpResponse: <P extends Record<string, unknown> | null>(
-		res: HttpResponse,
+	render: <P extends PhoriaIslandProps>(
 		props: P,
 		options?: PhoriaIslandRenderOptions
-	) => Promise<void>
+	) => Promise<PhoriaIslandRenderResult>
 }
 
 function registerComponent<M extends PhoriaIslandComponentModule, T>(
@@ -152,8 +146,9 @@ export {
 export type {
 	PhoriaIslandFramework,
 	PhoriaIslandComponent,
-	HttpResponse,
+	PhoriaIslandProps,
 	PhoriaIslandImport,
 	PhoriaIsland,
-	PhoriaIslandRenderOptions
+	PhoriaIslandRenderOptions,
+	PhoriaIslandRenderResult
 }

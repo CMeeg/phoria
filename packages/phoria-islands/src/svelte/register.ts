@@ -1,6 +1,6 @@
 import { registerFramework, getIslandImport, type PhoriaIslandFramework } from "~/phoria-island-registry"
 import type { Component } from "svelte"
-import { sendHttpResponse } from "./ssr"
+import { renderToString } from "./ssr"
 
 // TODO: Split into a separate package?
 // TODO: "Registration" is done automatically on import - should this be up to the caller?
@@ -29,20 +29,19 @@ const framework: PhoriaIslandFramework<Component> = {
 					Svelte.mount(Island.component, { target: container, props: svelteProps })
 				})
 			},
-			renderToHttpResponse: async (res, props) => {
+			render: async (props) => {
+				// TODO: Can "cache" the imported component? Maybe only in production?
 				const islandImport = getIslandImport<Component>(component)
-
 				const island = await islandImport
 
-				res.setHeader("x-phoria-island-framework", frameworkName)
-
-				if (island.componentPath) {
-					// With Vue, we could also get the component path from `ctx.modules`, but then it'd be inconsistent with other frameworks that don't expose that
-					res.setHeader("x-phoria-island-path", island.componentPath)
-				}
-
 				// TODO: Svelte doesn't support streaming - should I acknowledge that somehow?
-				await sendHttpResponse(res, island, props)
+				const html = await renderToString(island, props)
+
+				return {
+					framework: frameworkName,
+					componentPath: island.componentPath,
+					html
+				}
 			}
 		}
 	}

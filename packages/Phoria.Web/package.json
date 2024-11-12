@@ -17,6 +17,8 @@
 		"@phoria/islands": "workspace:*",
 		"compression": "^1.7.5",
 		"express": "^4.21.1",
+		"h3": "^1.13.0",
+		"listhen": "^1.9.0",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"sirv": "^3.0.0",

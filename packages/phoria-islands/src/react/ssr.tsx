@@ -1,14 +1,13 @@
 import type { FunctionComponent } from "react"
-import type { HttpResponse, PhoriaIsland, PhoriaIslandRenderOptions } from "~/phoria-island-registry"
+import type { PhoriaIsland, PhoriaIslandProps } from "~/phoria-island-registry"
 
-const defaultStreamTimeoutMs = 10_000
+// TODO: With some refactoring we shouldn't have to dynamically import the required modules for SSR
 
-async function sendHttpResponse<P extends Record<string, unknown> | null>(
-	res: HttpResponse,
+async function renderToString<P extends PhoriaIslandProps>(
 	island: PhoriaIsland<FunctionComponent>,
 	props?: P
 ) {
-	await Promise.all([import("react"), import("react-dom/server")])
+	return await Promise.all([import("react"), import("react-dom/server")])
 		.then(([React, ReactDOM]) => {
 			return ReactDOM.renderToString(
 				<React.StrictMode>
@@ -16,68 +15,26 @@ async function sendHttpResponse<P extends Record<string, unknown> | null>(
 				</React.StrictMode>
 			)
 		})
-		.then((html) => {
-			res.status(200).setHeader("Content-Type", "text/html").send(html)
+}
+
+async function renderToStream<P extends PhoriaIslandProps>(
+	island: PhoriaIsland<FunctionComponent>,
+	props?: P
+) {
+	// `react-dom/server.edge` is used because of https://github.com/facebook/react/issues/26906
+	// Implemented workaround as per https://github.com/redwoodjs/redwood/pull/10284
+	// Also having to use React 19 RC because `react-dom/server.edge` is not exported from 18.3.1
+	return await Promise.all([import("react"), import("react-dom/server.edge")])
+		.then(([React, ReactDOM]) => {
+			return ReactDOM.renderToReadableStream(
+				<React.StrictMode>
+					<island.component {...props} />
+				</React.StrictMode>
+			)
+		})
+		.then((stream) => {
+			return stream as ReadableStream
 		})
 }
 
-async function streamHttpResponse<P extends Record<string, unknown> | null>(
-	res: HttpResponse,
-	island: PhoriaIsland<FunctionComponent>,
-	props?: P,
-	options?: PhoriaIslandRenderOptions
-) {
-	await Promise.all([import("react"), import("react-dom/server"), import("node:stream")]).then(
-		([React, ReactDOM, Stream]) => {
-			const opts = {
-				timeout: defaultStreamTimeoutMs,
-				...options
-			}
-
-			let didError = false
-
-			const { pipe, abort } = ReactDOM.renderToPipeableStream(
-				<React.StrictMode>
-					<island.component {...props} />
-				</React.StrictMode>,
-				{
-					onShellReady() {
-						res.status(didError ? 500 : 200)
-						res.setHeader("Content-Type", "text/html")
-
-						const transformStream = new Stream.Transform({
-							transform(chunk, encoding, callback) {
-								res.write(chunk, encoding)
-								callback()
-							}
-						})
-
-						transformStream.on("finish", () => {
-							res.end()
-						})
-
-						pipe(transformStream)
-					},
-					onShellError() {
-						res.status(500)
-						res.setHeader("Content-Type", "text/html")
-						res.send("<h1>Something went wrong</h1>")
-					},
-					onError(error: unknown) {
-						didError = true
-						// TODO: Pass through logger from caller
-						console.error(error)
-					}
-				}
-			)
-
-			setTimeout(() => {
-				// TODO: Pass through logger from caller
-				console.log("Aborting render")
-				abort()
-			}, opts.timeout)
-		}
-	)
-}
-
-export { sendHttpResponse, streamHttpResponse }
+export { renderToString, renderToStream }

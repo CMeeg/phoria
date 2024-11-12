@@ -1,5 +1,4 @@
 using System.Net.Http.Headers;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Phoria.IO;
 using Phoria.Server;
@@ -42,14 +41,10 @@ public class PhoriaIslandSsr
 
 		using HttpClient client = phoriaServerHttpClientFactory.CreateClient();
 
-		var query = QueryString.Create(new Dictionary<string, string?>{
-			{ "component", component.ComponentName }
-		});
-
 		StreamContent? body = CreatePropsContent(propsStreamPool);
 
 		var response = await client.PostAsync(
-			$"{RenderUrl}{query}",
+			$"{RenderUrl}/{component.ComponentName}",
 			body,
 			cancellationToken);
 

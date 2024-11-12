@@ -1,4 +1,4 @@
-import { getComponent } from "./main"
+import { getComponent, type PhoriaIslandProps } from "./main"
 
 class PhoriaIsland extends HTMLElement {
 	async connectedCallback() {
@@ -18,7 +18,7 @@ class PhoriaIsland extends HTMLElement {
 			}
 
 			const rawProps = this.getAttribute("props")
-			let props: Record<string, unknown> | null = null
+			let props: PhoriaIslandProps = null
 			if (rawProps !== null) {
 				props = JSON.parse(rawProps || "{}")
 			}

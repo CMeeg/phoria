@@ -1,12 +1,13 @@
 import type { Component, ComponentProps } from "svelte"
-import type { HttpResponse, PhoriaIsland } from "~/phoria-island-registry"
+import type { PhoriaIsland, PhoriaIslandProps } from "~/phoria-island-registry"
 
-async function sendHttpResponse<P extends Record<string, unknown> | null>(
-	res: HttpResponse,
+// TODO: With some refactoring we shouldn't have to dynamically import the required modules for SSR
+
+async function renderToString<P extends PhoriaIslandProps>(
 	island: PhoriaIsland<Component>,
 	props?: P
 ) {
-	await Promise.all([import("svelte/server")])
+	return await Promise.all([import("svelte/server")])
 		.then(([SvelteServer]) => {
 			const ctx = new Map()
 			const html = SvelteServer.render(island.component, {
@@ -16,9 +17,6 @@ async function sendHttpResponse<P extends Record<string, unknown> | null>(
 
 			return html.body
 		})
-		.then((html) => {
-			res.status(200).setHeader("Content-Type", "text/html").send(html)
-		})
 }
 
-export { sendHttpResponse }
+export { renderToString }
