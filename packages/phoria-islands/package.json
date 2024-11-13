@@ -20,6 +20,11 @@
 			"require": "./dist/react.cjs",
 			"types": "./dist/react/register.d.ts"
 		},
+		"./server": {
+			"import": "./dist/server.js",
+			"require": "./dist/server.cjs",
+			"types": "./dist/server/main.d.ts"
+		},
 		"./svelte": {
 			"import": "./dist/svelte.js",
 			"require": "./dist/svelte.cjs",
@@ -42,6 +47,9 @@
 		"check": "tsc -b"
 	},
 	"dependencies": {
+		"defu": "^6.1.4",
+		"destr": "^2.0.3",
+		"empathic": "^1.0.0",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"svelte": "catalog:",

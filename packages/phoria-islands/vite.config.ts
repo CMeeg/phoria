@@ -11,6 +11,7 @@ export default defineConfig({
 			entry: {
 				main: "src/main.ts",
 				react: "src/react/register.tsx",
+				server: "src/server/main.ts",
 				svelte: "src/svelte/register.ts",
 				vue: "src/vue/register.ts",
 				web: "src/web.ts"

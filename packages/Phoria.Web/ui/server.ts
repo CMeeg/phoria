@@ -7,67 +7,61 @@ import {
 	getRouterParams,
 	readBody,
 	setResponseHeader,
+	useBase,
 	toNodeListener
 } from "h3"
 import { listen } from "listhen"
-import type { ViteDevServer } from "vite"
-import type { getComponent, getFrameworks } from "@phoria/islands"
-// TODO: This path needs to be configurable - perhaps encapsulate most of the server in a function that takes options?
-// Could maybe use the lib in the recent js perf update to "find closest"
-import appsettings from "../../../appsettings.json" with { type: "json" }
+import { getPhoriaAppSettings } from "@phoria/islands/server"
+
+// Get environment and appsettings
 
 const nodeEnv = process.env.NODE_ENV || "development"
+const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? nodeEnv
 const isProduction = nodeEnv === "production"
-const port = process.env.PORT || appsettings.Phoria.Server.Port
-// TODO: This was used by `sirv` (static file server) - still needed in h3?
-// const base = process.env.BASE || appsettings.Phoria.Base
-const ABORT_DELAY = 10000
+const appsettings = await getPhoriaAppSettings(process.cwd(), dotnetEnv)
+
+// Create Vite dev server if not in production environment
+
+const viteDevServer = isProduction
+	? undefined
+	: await import("vite").then((vite) =>
+			vite.createServer({
+				server: {
+					middlewareMode: true,
+					strictPort: true
+				},
+				appType: "custom"
+			})
+		)
 
 // Create http server
+
 const app = createApp()
 
-// Add middlewares
-let vite: ViteDevServer | undefined
-if (!isProduction) {
-	const { createServer } = await import("vite")
-
-	vite = await createServer({
-		server: {
-			middlewareMode: true,
-			strictPort: true
-		},
-		appType: "custom"
-	})
-
-	app.use(fromNodeMiddleware(vite.middlewares))
+if (viteDevServer) {
+	app.use(fromNodeMiddleware(viteDevServer.middlewares))
 }
 
-interface ServerEntry {
-	getComponent: typeof getComponent
-	getFrameworks: typeof getFrameworks
-}
+// Handle ssr requests
 
-// TODO: I think because of things like this, some of the server needs to remain in the consuming project - I may just need to move the internal/critical/boilerplatey things to a library - look at Remix for inspiration
-const loadServerEntry = async (): Promise<ServerEntry> => {
-	if (isProduction) {
-		// TODO: This is the build server path - need to make it configurable as it could change
-		const entryServerPath = "./ui/server/entry-server.js"
-		return (await import(entryServerPath)) as ServerEntry
-	}
+// TODO: Move this type to the lib
+// interface ServerEntry
+// {
+// 	getComponent: typeof getComponent
+// 	getFrameworks: typeof getFrameworks
+// }
 
-	if (!vite) {
-		throw new Error("Vite dev server is not defined.")
-	}
+const devServerEntryPath = "src/entry-server.tsx"
+const prodServerEntryPath = "dist/server/entry-server.js"
 
-	// TODO: This path needs to be configurable also
-	const entryServerPath = "./ui/src/entry-server.tsx"
-	// TODO: How can you restart the server if the entry-server.tsx changes? Or if this server.ts file changes?
-	return (await vite.ssrLoadModule(entryServerPath)) as ServerEntry
-}
-
-// Define routes
+const loadServerEntry = viteDevServer
+	? () => viteDevServer.ssrLoadModule(devServerEntryPath)
+	: await import(prodServerEntryPath)
 
 const router = createRouter()
+
+// TODO: Move this to the lib - create a nested "phoria" router
+const phoriaRouter = createRouter()
 
 // Health check endpoint
 router.get(
@@ -80,7 +74,7 @@ router.get(
 )
 
 // Ssr endpoint
-router.post(
+phoriaRouter.post(
 	"/render/:component",
 	defineEventHandler(async (event) => {
 		const params = getRouterParams(event)
@@ -124,8 +118,10 @@ router.post(
 
 			return result.html
 		} catch (e: unknown) {
+			// TODO: We don't want to move error handling to the lib though so this needs some thought
+			// TODO: Take a look into `app.options.onError`
 			const error = e instanceof Error ? e : new Error("Unknown error", { cause: e })
-			vite?.ssrFixStacktrace(error)
+			viteDevServer?.ssrFixStacktrace(error)
 
 			// TODO: Prob want to log these via some logging service, but need to leave this up to the consuming project
 			console.log(error.stack)
@@ -139,7 +135,16 @@ router.post(
 	})
 )
 
-app.use(router)
+// TODO: Maybe just return the handler from the lib?
+const ssrBase = appsettings.Ssr?.Base ?? "/ssr"
+router.use(`${ssrBase}/**`, useBase(`${ssrBase}`, phoriaRouter.handler))
+
+app.use(router.handler)
+
+// TODO: This was used by `sirv` (static file server) - still needed in h3?
+// const base = appsettings.Phoria.Base
+
+const port = appsettings.Server?.Port ?? 5173
 
 // TODO: How do we put this in watch mode when in dev?
 const listener = await listen(toNodeListener(app), {

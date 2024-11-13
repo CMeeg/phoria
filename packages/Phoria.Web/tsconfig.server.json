@@ -6,16 +6,16 @@
 		"lib": ["ES2022"],
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
-		"noImplicitAny": true,
-		"outDir": "../dist",
-		"paths": {
-			"~/*": ["src/*"]
-		},
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedSideEffectImports": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"outDir": "ui/dist",
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"strict": true,
 		"sourceMap": true,
 		"target": "ES2022"
 	},
-	"include": ["src/**/*.ts", "src/**/*.d.ts"]
+	"include": ["ui/server.ts"]
 }

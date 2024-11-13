@@ -104,7 +104,7 @@ public sealed class ViteSsrManifestReader
 	{
 		// Read the name of the SSR manifest file from the configuration
 
-		string ssrManifestName = options.SsrManifest;
+		string ssrManifestName = options.Ssr.Manifest;
 		IFileInfo ssrManifestFile = fileProvider.GetFileInfo(ssrManifestName);
 
 		// If the SSR manifest file exists, deserialize it into a dictionary

@@ -7,10 +7,10 @@
 		"build": "run-p build:* -c",
 		"build:entry-client": "vite build --manifest --ssrManifest --emptyOutDir --outDir ./dist/client",
 		"build:entry-server": "vite build --ssr src/entry-server.tsx --emptyOutDir --outDir ./dist/server",
-		"build:server": "tsc --project ./ui/server/tsconfig.json",
-		"dev": "tsx ./ui/server/src/serve.ts",
+		"build:server": "tsc --project ./tsconfig.server.json",
+		"dev": "tsx ./ui/server.ts",
 		"lint": "biome check",
-		"start": "cross-env NODE_ENV=production PORT=5001 node ./ui/serve.js",
+		"start": "cross-env NODE_ENV=production PORT=5001 node ./ui/dist/server.js",
 		"check": "tsc -b"
 	},
 	"dependencies": {

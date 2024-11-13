@@ -15,8 +15,6 @@ public interface IPhoriaIslandSsr
 public class PhoriaIslandSsr
 	: IPhoriaIslandSsr
 {
-	internal const string RenderUrl = "/render";
-
 	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory;
 	private readonly PhoriaOptions options;
 
@@ -44,7 +42,7 @@ public class PhoriaIslandSsr
 		StreamContent? body = CreatePropsContent(propsStreamPool);
 
 		var response = await client.PostAsync(
-			$"{RenderUrl}/{component.ComponentName}",
+			$"{options.Ssr.Base}/render/{component.ComponentName}",
 			body,
 			cancellationToken);
 
