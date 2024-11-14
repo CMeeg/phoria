@@ -5,6 +5,7 @@ catalog:
   "@types/node": ^22.8.7
   "@types/react": npm:types-react@rc
   "@types/react-dom": npm:types-react-dom@rc
+  h3: ^1.13.0
   react: npm:react@rc
   react-dom: npm:react-dom@rc
   svelte: ^5.1.3

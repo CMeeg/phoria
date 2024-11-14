@@ -15,20 +15,15 @@
 	},
 	"dependencies": {
 		"@phoria/islands": "workspace:*",
-		"compression": "^1.7.5",
-		"express": "^4.21.1",
-		"h3": "^1.13.0",
+		"h3": "catalog:",
 		"listhen": "^1.9.0",
 		"react": "catalog:",
 		"react-dom": "catalog:",
-		"sirv": "^3.0.0",
 		"svelte": "catalog:",
 		"vue": "catalog:"
 	},
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
-		"@types/compression": "^1.7.5",
-		"@types/express": "^5.0.0",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",

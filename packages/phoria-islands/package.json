@@ -3,9 +3,7 @@
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"main": "./dist/main.cjs",
 	"module": "./dist/main.js",
 	"types": "./dist/main.d.ts",
@@ -50,6 +48,7 @@
 		"defu": "^6.1.4",
 		"destr": "^2.0.3",
 		"empathic": "^1.0.0",
+		"h3": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"svelte": "catalog:",

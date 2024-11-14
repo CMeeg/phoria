@@ -42,6 +42,7 @@ async function parseAppSettings(path: string, cwd: string): Promise<Partial<Phor
 	}
 }
 
+// TODO: Could maybe make this more of a generic function that supports getting appsettings for any app, and add support for filtering by section e.g. in the case of Phoria we only want the Phoria section
 async function getPhoriaAppSettings(cwd: string, environment?: string): Promise<Partial<PhoriaAppSettings>> {
 	const appsettings = await parseAppSettings("appsettings.json", cwd)
 
