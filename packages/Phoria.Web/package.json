@@ -14,7 +14,10 @@
 		"check": "tsc -b"
 	},
 	"dependencies": {
-		"@phoria/islands": "workspace:*",
+		"@meeg/phoria": "workspace:*",
+		"@meeg/phoria-react": "workspace:*",
+		"@meeg/phoria-svelte": "workspace:*",
+		"@meeg/phoria-vue": "workspace:*",
 		"h3": "catalog:",
 		"listhen": "^1.9.0",
 		"react": "catalog:",

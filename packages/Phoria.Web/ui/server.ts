@@ -1,6 +1,6 @@
 import { createApp, fromNodeMiddleware, toNodeListener } from "h3"
 import { listen } from "listhen"
-import { getPhoriaAppSettings, createPhoriaRequestHandler } from "@phoria/islands/server"
+import { getPhoriaAppSettings, createPhoriaRequestHandler } from "@meeg/phoria/server"
 
 // Get environment and appsettings
 

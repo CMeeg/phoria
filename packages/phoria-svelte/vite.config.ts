@@ -10,10 +10,10 @@ export default defineConfig({
 		lib: {
 			entry: {
 				main: "src/main.ts",
-				server: "src/server/main.ts",
-				web: "src/web/main.ts"
+				client: "src/client/main.ts",
+				server: "src/server/main.ts"
 			},
-			name: "phoria"
+			name: "phoria-svelte"
 		}
 	}
 })

@@ -1,4 +1,4 @@
-import { getComponent, type PhoriaIslandProps } from "./main"
+import { getComponent, getCsrService, csrMountMode, type PhoriaIslandProps } from "~/register"
 
 class PhoriaIsland extends HTMLElement {
 	async connectedCallback() {
@@ -13,29 +13,35 @@ class PhoriaIsland extends HTMLElement {
 		try {
 			const component = getComponent(componentName)
 
-			if (!component) {
-				throw new Error(`Component "${componentName}" not found in registry.`)
+			if (typeof component === "undefined") {
+				throw new Error(`No component found with name "${componentName}".`)
+			}
+
+			const csr = getCsrService(component.framework)
+
+			if (typeof csr === "undefined") {
+				throw new Error(`No CSR service could be found for framework "${component.framework}".`)
 			}
 
 			const rawProps = this.getAttribute("props")
 			let props: PhoriaIslandProps = null
-			if (rawProps !== null) {
-				props = JSON.parse(rawProps || "{}")
+
+			if (typeof rawProps === "string") {
+				props = JSON.parse(rawProps)
 			}
 
-			// TODO: Boolean may not be the best way to handle this
-			const hydrate = !this.hasAttribute("client:only")
+			const mode = this.hasAttribute("client:only") ? csrMountMode.render : csrMountMode.hydrate
 
-			await component.mount(this, props, hydrate)
+			await csr.mount(this, component, props, { mode })
 		} catch (error) {
 			// TODO: Error handling needs to be customisable from the caller
 			console.error(`Error loading "${componentName}" component:`, error)
 		}
 	}
 
-	static register(tagName?: string) {
+	static register() {
 		if ("customElements" in window) {
-			customElements.define(tagName || "phoria-island", PhoriaIsland)
+			customElements.define("phoria-island", PhoriaIsland)
 		}
 	}
 }

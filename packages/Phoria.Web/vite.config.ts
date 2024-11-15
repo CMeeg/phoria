@@ -3,7 +3,7 @@ import tsconfigPaths from "vite-tsconfig-paths"
 import { svelte } from "@sveltejs/vite-plugin-svelte"
 import react from "@vitejs/plugin-react"
 import vue from "@vitejs/plugin-vue"
-import { getPhoriaAppSettings } from "@phoria/islands/server"
+import { getPhoriaAppSettings } from "@meeg/phoria/server"
 
 // TODO: See if there is a plugin like https://github.com/vitejs/vite-plugin-basic-ssl but for dotnet dev certs, or create one if not
 

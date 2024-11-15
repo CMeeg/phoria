@@ -4,7 +4,8 @@
 		"baseUrl": ".",
 		"esModuleInterop": true,
 		"isolatedModules": true,
-		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+		"lib": ["ES2020", "DOM", "DOM.Iterable"],
 		"module": "ESNext",
 		"moduleDetection": "force",
 		"moduleResolution": "Bundler",
@@ -19,7 +20,7 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"target": "ES2022",
+		"target": "ES2020",
 		"useDefineForClassFields": true,
 		"verbatimModuleSyntax": true
 	},

@@ -7,7 +7,7 @@ import {
 	setResponseHeader,
 	useBase
 } from "h3"
-import type { getComponent, getFrameworks, PhoriaIslandProps } from "~/main"
+import { getSsrService, type getComponent, type getFrameworks, type PhoriaIslandProps } from "~/register"
 
 interface PhoriaServerEntry {
 	getComponent: typeof getComponent
@@ -81,6 +81,14 @@ function createPhoriaRequestHandler(serverEntry: PhoriaServerEntryLoader, ssrBas
 				})
 			}
 
+			// Try to get the SSR service to use to render the component
+
+			const ssr = getSsrService(component.framework)
+
+			if (typeof ssr === "undefined") {
+				throw new Error(`No SSR service could be found for framework "${component.framework}".`)
+			}
+
 			// Try get props from body
 
 			let props: PhoriaIslandProps = null
@@ -102,7 +110,7 @@ function createPhoriaRequestHandler(serverEntry: PhoriaServerEntryLoader, ssrBas
 			// Render the component to the response
 
 			// TODO: Expose a way to set `preferStream` from the request?
-			const result = await component.render(props, { preferStream: true })
+			const result = await ssr.render(component, props, { preferStream: true })
 
 			setResponseHeader(event, "x-phoria-island-framework", result.framework)
 

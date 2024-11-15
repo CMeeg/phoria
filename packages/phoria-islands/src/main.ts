@@ -1,25 +1,54 @@
 import {
-	registerFramework,
-	getFramework,
 	getFrameworks,
 	registerComponent,
 	registerComponents,
-	getComponent
-} from "./phoria-island-registry"
+	getComponent,
+	createIslandImport,
+	registerCsrService,
+	getCsrService,
+	csrMountMode,
+	registerSsrService,
+	getSsrService
+} from "./register"
 import type {
-	PhoriaIslandFramework,
 	PhoriaIslandComponent,
+	PhoriaIslandComponentModule,
+	PhoriaIslandComponentOptions,
 	PhoriaIslandProps,
-	PhoriaIslandRenderOptions,
-	PhoriaIslandRenderResult
-} from "./phoria-island-registry"
+	PhoriaIsland,
+	PhoriaIslandImport,
+	PhoriaIslandComponentCsrService,
+	PhoriaIslandCsrOptions,
+	PhoriaIslandCsrMountMode,
+	PhoriaIslandComponentSsrService,
+	PhoriaIslandSsrOptions,
+	PhoriaIslandSsrResult
+} from "./register"
 
-export { registerFramework, getFramework, getFrameworks, registerComponent, registerComponents, getComponent }
+export {
+	getFrameworks,
+	registerComponent,
+	registerComponents,
+	getComponent,
+	createIslandImport,
+	registerCsrService,
+	getCsrService,
+	csrMountMode,
+	registerSsrService,
+	getSsrService
+}
 
 export type {
-	PhoriaIslandFramework,
 	PhoriaIslandComponent,
+	PhoriaIslandComponentModule,
+	PhoriaIslandComponentOptions,
 	PhoriaIslandProps,
-	PhoriaIslandRenderOptions,
-	PhoriaIslandRenderResult
+	PhoriaIsland,
+	PhoriaIslandImport,
+	PhoriaIslandComponentCsrService,
+	PhoriaIslandCsrOptions,
+	PhoriaIslandCsrMountMode,
+	PhoriaIslandComponentSsrService,
+	PhoriaIslandSsrOptions,
+	PhoriaIslandSsrResult
 }
