@@ -145,6 +145,9 @@ public class PhoriaIslandEntryTagHelper
 
 		string file;
 
+		// TODO: When the server was unhealthy in prod this was spitting out the original atttribute value, but we prob want to suppress output in that case
+		// TODO: Actually, it was spitting out the vite/client script tag also so not sure what was going on! It was caused by the path to the server js being an invalid path, and the server was returning "connection refused"
+
 		// If the server is running in development mode, don't load the files from the manifest
 
 		if (serverMonitor.ServerStatus.Mode == PhoriaServerMode.Development)

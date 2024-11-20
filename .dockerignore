@@ -1,9 +1,7 @@
 # directories
-.azd/
 .azure/
-.cache/
+.nx/
 .git/
-.github/
 .vscode/
 infra/
 **/bin/

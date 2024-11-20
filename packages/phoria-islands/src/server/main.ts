@@ -1,6 +1,11 @@
-import { getPhoriaAppSettings, type PhoriaAppSettings } from "./appsettings"
-import { createPhoriaRequestHandler, type PhoriaServerEntry, type PhoriaServerEntryLoader } from "./routing"
+import { getPhoriaAppSettings, parsePhoriaAppSettings, type PhoriaAppSettings } from "./appsettings"
+import {
+	createPhoriaSsrRequestHandler,
+	createPhoriaCsrRequestHandler,
+	type PhoriaServerEntry,
+	type PhoriaServerEntryLoader
+} from "./routing"
 
-export { getPhoriaAppSettings, createPhoriaRequestHandler }
+export { getPhoriaAppSettings, parsePhoriaAppSettings, createPhoriaSsrRequestHandler, createPhoriaCsrRequestHandler }
 
 export type { PhoriaAppSettings, PhoriaServerEntry, PhoriaServerEntryLoader }

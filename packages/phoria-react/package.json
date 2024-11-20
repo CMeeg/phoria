@@ -25,7 +25,7 @@
 		}
 	},
 	"scripts": {
-		"build": "vite build",
+		"build": "cross-env NODE_ENV=production vite build",
 		"lint": "biome check",
 		"check": "tsc -b"
 	},
@@ -37,6 +37,7 @@
 	"devDependencies": {
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
+		"cross-env": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",

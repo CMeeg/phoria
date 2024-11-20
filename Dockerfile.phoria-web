@@ -1,48 +1,63 @@
-# Build stage
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG TARGETARCH
+# ui build stage
+FROM node:22-slim AS uibuild
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 WORKDIR /src
 
-# Install node and npm
+# Copy source code
+COPY . .
 
-ENV NODE_VERSION=22.11.0
-ENV NODE_DOWNLOAD_URL=https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz
+# Install deps
+RUN corepack enable
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
-RUN wget "$NODE_DOWNLOAD_URL" -O nodejs.tar.gz \
-	&& tar -xzf "nodejs.tar.gz" -C /usr/local --strip-components=1 \
-	&& rm nodejs.tar.gz \
-	&& apt update \
-	&& apt-get install -y nodejs
+# Build the app
+ENV NODE_ENV=production
+ENV DOTNET_ENVIRONMENT=production
+RUN pnpm lerna run build \
+	&& pnpm deploy --filter="phoria.web" --prod /app
+
+# dotnet build stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS appbuild
+WORKDIR /src
 
 # Copy source code
-COPY --link . .
-
-# Install UI deps
-ENV NODE_ENV=development
-RUN npm install -g corepack
-RUN corepack install
-RUN corepack enable
-RUN pnpm install --frozen-lockfile
-
-# Build UI assets
-ENV NODE_ENV=production
-RUN pnpm lerna run build
-RUN pnpm prune --prod
+COPY . .
 
 # Install Aspire workload
 RUN dotnet workload restore packages/Phoria.AppHost/Phoria.AppHost.csproj
 
 # Restore all projects
-RUN dotnet restore -a $TARGETARCH
+RUN dotnet restore
 
 # Publish web app
-RUN dotnet publish packages/Phoria.Web/Phoria.Web.csproj -c Release -a $TARGETARCH --no-restore -o /app
+RUN dotnet publish packages/Phoria.Web/Phoria.Web.csproj -c Release --no-restore -o /app
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
-EXPOSE 8080
+ENV NODE_ENV=production
+ENV DOTNET_ENVIRONMENT=production
 WORKDIR /app
-COPY --link --from=build /app .
-COPY --link --from=build /src/packages/Phoria.Web/ui/dist ./wwwroot/ui
+
+# Copy built assets
+
+COPY --from=appbuild /app .
+COPY --from=uibuild /app/ui/dist ./ui
+COPY --from=uibuild /app/node_modules ./node_modules
+
+# Install node
+
+ENV NODE_VERSION=22.11.0
+RUN apt-get -y update \
+	&& apt-get install -y curl \
+	&& curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} -o nodesource_setup.sh | bash \
+	&& apt-get install -y --no-install-recommends nodejs \
+	&& apt-get clean
+
+# Run the app
+
 USER $APP_UID
+
+EXPOSE 8080
+
 ENTRYPOINT ["./Phoria.Web"]

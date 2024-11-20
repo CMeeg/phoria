@@ -5,8 +5,12 @@ import {
 	createError,
 	readBody,
 	setResponseHeader,
-	useBase
+	useBase,
+	serveStatic
 } from "h3"
+import { stat, readFile } from "node:fs/promises"
+import { join } from "node:path"
+import mime from "mime/lite"
 import { getSsrService, type getComponent, type getFrameworks, type PhoriaIslandProps } from "~/register"
 
 interface PhoriaServerEntry {
@@ -14,9 +18,9 @@ interface PhoriaServerEntry {
 	getFrameworks: typeof getFrameworks
 }
 
-type PhoriaServerEntryLoader = () => Promise<PhoriaServerEntry> | Promise<PhoriaServerEntry>
+type PhoriaServerEntryLoader = () => Promise<Record<string, unknown>> | PhoriaServerEntry
 
-function createPhoriaRequestHandler(serverEntry: PhoriaServerEntryLoader, ssrBase?: string) {
+function createPhoriaSsrRequestHandler(serverEntry: PhoriaServerEntryLoader, base: string) {
 	const loadServerEntry = typeof serverEntry === "function" ? serverEntry : () => serverEntry
 
 	const router = createRouter()
@@ -27,6 +31,13 @@ function createPhoriaRequestHandler(serverEntry: PhoriaServerEntryLoader, ssrBas
 		"/hc",
 		defineEventHandler(async () => {
 			const serverEntry = await loadServerEntry()
+
+			if (typeof serverEntry.getFrameworks !== "function") {
+				throw createError({
+					status: 500,
+					message: "Server entry does not export a getFrameworks function."
+				})
+			}
 
 			const nodeEnv = process.env.NODE_ENV || "development"
 
@@ -57,18 +68,12 @@ function createPhoriaRequestHandler(serverEntry: PhoriaServerEntryLoader, ssrBas
 				})
 			}
 
-			const serverEntry = await loadServerEntry().catch((e) => {
-				throw createError({
-					status: 500,
-					message: "Failed to load server entry.",
-					cause: e
-				})
-			})
+			const serverEntry = await loadServerEntry()
 
 			if (typeof serverEntry.getComponent !== "function") {
 				throw createError({
 					status: 500,
-					message: "Server entry does not have a getComponent function."
+					message: "Server entry does not export a getComponent function."
 				})
 			}
 
@@ -122,12 +127,45 @@ function createPhoriaRequestHandler(serverEntry: PhoriaServerEntryLoader, ssrBas
 		})
 	)
 
-	const ssrRouterBase = ssrBase ?? "/ssr"
-	router.use(`${ssrRouterBase}/**`, useBase(`${ssrRouterBase}`, ssrRouter.handler))
+	router.use(`${base}/**`, useBase(base, ssrRouter.handler))
 
 	return router.handler
 }
 
-export { createPhoriaRequestHandler }
+function createPhoriaCsrRequestHandler(base: string, cwd: string) {
+	const basePath = base.startsWith("/") ? base.substring(1) : base
+	const publicDir = "phoria/client"
+
+	const staticFilehandler = defineEventHandler((event) => {
+		return serveStatic(event, {
+			getContents: (id) => {
+				const filePath = join(cwd, basePath, publicDir, id)
+
+				return readFile(filePath)
+			},
+			getMeta: async (id) => {
+				const filePath = join(cwd, basePath, publicDir, id)
+
+				const stats = await stat(filePath).catch(() => {})
+
+				if (!stats || !stats.isFile()) {
+					return
+				}
+
+				return {
+					size: stats.size,
+					mtime: stats.mtimeMs,
+					type: mime.getType(filePath) ?? "application/octet-stream"
+					// TODO: Encoding?
+					// encoding: "TODO"
+				}
+			}
+		})
+	})
+
+	return createRouter().use(`${base}/**`, useBase(base, staticFilehandler)).handler
+}
+
+export { createPhoriaSsrRequestHandler, createPhoriaCsrRequestHandler }
 
 export type { PhoriaServerEntry, PhoriaServerEntryLoader }

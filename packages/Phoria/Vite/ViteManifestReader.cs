@@ -28,13 +28,16 @@ public interface IViteManifestReader
 public sealed class ViteManifestReader
 	: IViteManifestReader, IDisposable
 {
+	private const string ManifestName = "manifest.json";
+
 	private static bool warnAboutManifestOnce = true;
 
 	private readonly ILogger<ViteManifestReader> logger;
 	private readonly IPhoriaServerMonitor serverMonitor;
+	private readonly IWebHostEnvironment environment;
 	private readonly PhoriaOptions options;
-	private readonly PhysicalFileProvider fileProvider;
 
+	private PhysicalFileProvider? fileProvider;
 	private IChangeToken? changeToken;
 	private IDisposable? changeTokenDispose;
 	private IViteManifest? viteManifest;
@@ -57,10 +60,7 @@ public sealed class ViteManifestReader
 		this.logger = logger;
 		this.options = options.Value;
 		this.serverMonitor = serverMonitor;
-
-		// TODO: Can this be injected? ViteSsrManifestReader and ViteManifestReader can use the same fileprovider
-		// TODO: This was wwwroot and working in the previous version, but have changed to ContentRootPath for now
-		fileProvider = new(Path.Combine(environment.ContentRootPath, this.options.GetBasePath().TrimStart('/')));
+		this.environment = environment;
 	}
 
 	public IViteManifest ReadManifest()
@@ -107,8 +107,12 @@ public sealed class ViteManifestReader
 	{
 		// Read the name of the manifest file from the configuration
 
-		string manifestName = options.Manifest;
-		IFileInfo manifestFile = fileProvider.GetFileInfo(manifestName);
+		string basePath = options.GetBasePath().TrimStart('/');
+
+		// TODO: Can this be injected? ViteManifestReader and ViteSsrManifestReader can use the same fileprovider
+		fileProvider ??= new(Path.Combine(environment.ContentRootPath, basePath, "phoria", "client", ".vite"));
+
+		IFileInfo manifestFile = fileProvider.GetFileInfo(ManifestName);
 
 		// If the manifest file exists, deserialize it into a dictionary
 
@@ -128,7 +132,7 @@ public sealed class ViteManifestReader
 
 			// Watch the manifest file for changes
 
-			changeToken = fileProvider.Watch(manifestName);
+			changeToken = fileProvider.Watch(ManifestName);
 
 			if (changeToken.ActiveChangeCallbacks)
 			{
@@ -165,7 +169,7 @@ public sealed class ViteManifestReader
 
 	public void Dispose()
 	{
-		fileProvider.Dispose();
+		fileProvider?.Dispose();
 		changeTokenDispose?.Dispose();
 	}
 }

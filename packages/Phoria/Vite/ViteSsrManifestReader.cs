@@ -25,13 +25,16 @@ public interface IViteSsrManifestReader
 public sealed class ViteSsrManifestReader
 	: IViteSsrManifestReader, IDisposable
 {
+	private const string ManifestName = "ssr-manifest.json";
+
 	private static bool warnAboutManifestOnce = true;
 
 	private readonly ILogger<ViteSsrManifestReader> logger;
 	private readonly IPhoriaServerMonitor serverMonitor;
+	private readonly IWebHostEnvironment environment;
 	private readonly PhoriaOptions options;
-	private readonly PhysicalFileProvider fileProvider;
 
+	private PhysicalFileProvider? fileProvider;
 	private IChangeToken? changeToken;
 	private IDisposable? changeTokenDispose;
 	private IViteSsrManifest? viteSsrManifest;
@@ -54,10 +57,7 @@ public sealed class ViteSsrManifestReader
 		this.logger = logger;
 		this.options = options.Value;
 		this.serverMonitor = serverMonitor;
-
-		// TODO: Can this be injected? ViteSsrManifestReader and ViteManifestReader can use the same fileprovider
-		// TODO: This was wwwroot and working in the previous version, but have changed to ContentRootPath for now
-		fileProvider = new(Path.Combine(environment.ContentRootPath, this.options.GetBasePath().TrimStart('/')));
+		this.environment = environment;
 	}
 
 	public IViteSsrManifest ReadSsrManifest()
@@ -104,8 +104,12 @@ public sealed class ViteSsrManifestReader
 	{
 		// Read the name of the SSR manifest file from the configuration
 
-		string ssrManifestName = options.Ssr.Manifest;
-		IFileInfo ssrManifestFile = fileProvider.GetFileInfo(ssrManifestName);
+		string basePath = options.GetBasePath().TrimStart('/');
+
+		// TODO: Can this be injected? ViteManifestReader and ViteSsrManifestReader can use the same fileprovider
+		fileProvider ??= new(Path.Combine(environment.ContentRootPath, basePath, "phoria", "client", ".vite"));
+
+		IFileInfo ssrManifestFile = fileProvider.GetFileInfo(ManifestName);
 
 		// If the SSR manifest file exists, deserialize it into a dictionary
 
@@ -125,7 +129,7 @@ public sealed class ViteSsrManifestReader
 
 			// Watch the SSR manifest file for changes
 
-			changeToken = fileProvider.Watch(ssrManifestName);
+			changeToken = fileProvider.Watch(ManifestName);
 
 			if (changeToken.ActiveChangeCallbacks)
 			{
@@ -162,7 +166,7 @@ public sealed class ViteSsrManifestReader
 
 	public void Dispose()
 	{
-		fileProvider.Dispose();
+		fileProvider?.Dispose();
 		changeTokenDispose?.Dispose();
 	}
 }

@@ -54,10 +54,12 @@ public static class ServiceCollectionExtensions
 
 		// Add Server services
 
-		services.TryAddSingleton<IPhoriaServerHttpClientFactory, PhoriaServerHttpClientFactory>();
-		services.TryAddSingleton<IPhoriaServerMonitor, PhoriaServerMonitor>();
-		services.AddHostedService<PhoriaServerMonitorService>();
 		services.TryAddScoped<IViteDevServerHmrProxy, ViteDevServerHmrProxy>();
+		services.TryAddSingleton<IPhoriaServerHttpClientFactory, PhoriaServerHttpClientFactory>();
+		services.TryAddSingleton<IPhoriaServerProcess, PhoriaServerProcess>();
+		services.TryAddSingleton<IPhoriaServerMonitor, PhoriaServerMonitor>();
+		services.AddHostedService<PhoriaServerProcessService>();
+		services.AddHostedService<PhoriaServerMonitorService>();
 
 		// Add Vite services
 

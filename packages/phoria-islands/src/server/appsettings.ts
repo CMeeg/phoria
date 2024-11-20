@@ -7,21 +7,23 @@ interface AppSettings {
 	Phoria?: Partial<PhoriaAppSettings>
 }
 
-interface PhoriaSsrAppSettings {
+interface PhoriaAppSettings {
+	Root: string
 	Base: string
-	Manifest: string
+	Entry: string
+	SsrBase: string
+	SsrEntry: string
+	Server: PhoriaServerAppSettings
+	Build: PhoriaBuildAppSettings
 }
 
 interface PhoriaServerAppSettings {
 	Host: string
-	Port: number
+	Port?: number
 }
 
-interface PhoriaAppSettings {
-	Base: string
-	Manifest: string
-	Ssr: Partial<PhoriaSsrAppSettings>
-	Server: Partial<PhoriaServerAppSettings>
+interface PhoriaBuildAppSettings {
+	OutDir: string
 }
 
 async function parseAppSettings(path: string, cwd: string): Promise<Partial<PhoriaAppSettings>> {
@@ -44,6 +46,8 @@ async function parseAppSettings(path: string, cwd: string): Promise<Partial<Phor
 
 // TODO: Could maybe make this more of a generic function that supports getting appsettings for any app, and add support for filtering by section e.g. in the case of Phoria we only want the Phoria section
 async function getPhoriaAppSettings(cwd: string, environment?: string): Promise<Partial<PhoriaAppSettings>> {
+	// TODO: Need to support or at least cater for different casing of the file name, e.g. appsettings.json, appSettings.json; and also the environment file e.g. appsettings.development.json, appsettings.Development.json
+	// TODO: Could use https://unjs.io/packages/scule for case transforms; or could just make it clear that your environment variable and file names must use the same casing
 	const appsettings = await parseAppSettings("appsettings.json", cwd)
 
 	const envappsettings =
@@ -52,6 +56,37 @@ async function getPhoriaAppSettings(cwd: string, environment?: string): Promise<
 	return defu(envappsettings, appsettings)
 }
 
-export { getPhoriaAppSettings }
+async function parsePhoriaAppSettings(cwd: string, environment?: string): Promise<PhoriaAppSettings> {
+	const appsettings = await getPhoriaAppSettings(cwd, environment)
+
+	// Defaults here must be in sync with the defaults set in `Phoria/PhoriaOptions.cs`
+
+	const defaultAppsettings: Partial<PhoriaAppSettings> = {
+		Root: "ui",
+		Base: "/ui",
+		SsrBase: "/ssr",
+		Server: {
+			Host: "localhost",
+			Port: 5173
+		},
+		Build: {
+			OutDir: "dist"
+		}
+	}
+
+	const parsedAppSettings = defu(appsettings, defaultAppsettings) as PhoriaAppSettings
+
+	if (!parsedAppSettings.Entry) {
+		throw new Error("`Entry` is required in `Phoria` app settings.")
+	}
+
+	if (!parsedAppSettings.SsrEntry) {
+		throw new Error("`SsrEntry` is required in `Phoria` app settings.")
+	}
+
+	return parsedAppSettings
+}
+
+export { getPhoriaAppSettings, parsePhoriaAppSettings }
 
 export type { PhoriaAppSettings }

@@ -33,7 +33,8 @@
 		"defu": "^6.1.4",
 		"destr": "^2.0.3",
 		"empathic": "^1.0.0",
-		"h3": "catalog:"
+		"h3": "catalog:",
+		"mime": "^4.0.4"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",

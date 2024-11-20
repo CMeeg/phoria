@@ -63,7 +63,7 @@ internal sealed class PhoriaServerMiddleware
 
 		try
 		{
-			// Get the requested path from the Vite Dev Server
+			// Get the requested path from the Phoria Server
 
 			HttpResponseMessage response = await httpClient.GetAsync(requestUrl);
 

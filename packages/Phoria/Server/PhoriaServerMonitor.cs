@@ -63,22 +63,13 @@ public sealed class PhoriaServerMonitor
 		await CheckHealth();
 
 		// Start a periodic health check
+
 		periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.HealthCheckInterval));
 
 		while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
 		{
 			await CheckHealth();
 		}
-	}
-
-	public Task StopMonitoring()
-	{
-		Dispose();
-
-		semaphore = null;
-		periodicTimer = null;
-
-		return Task.CompletedTask;
 	}
 
 	private async Task CheckHealth()
@@ -155,6 +146,16 @@ public sealed class PhoriaServerMonitor
 		{
 			Url = options.GetServerUrl()
 		};
+	}
+
+	public Task StopMonitoring()
+	{
+		Dispose();
+
+		semaphore = null;
+		periodicTimer = null;
+
+		return Task.CompletedTask;
 	}
 
 	public void Dispose()

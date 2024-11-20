@@ -42,7 +42,7 @@ public class PhoriaIslandSsr
 		StreamContent? body = CreatePropsContent(propsStreamPool);
 
 		var response = await client.PostAsync(
-			$"{options.Ssr.Base}/render/{component.ComponentName}",
+			$"{options.SsrBase}/render/{component.ComponentName}",
 			body,
 			cancellationToken);
 

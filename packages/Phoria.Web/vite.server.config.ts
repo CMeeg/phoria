@@ -1,11 +1,5 @@
 import { defineConfig, type UserConfig } from "vite"
-import tsconfigPaths from "vite-tsconfig-paths"
-import { svelte } from "@sveltejs/vite-plugin-svelte"
-import react from "@vitejs/plugin-react"
-import vue from "@vitejs/plugin-vue"
 import { parsePhoriaAppSettings } from "@meeg/phoria/server"
-
-// TODO: See if there is a plugin like https://github.com/vitejs/vite-plugin-basic-ssl but for dotnet dev certs, or create one if not
 
 export default defineConfig(async () => {
 	const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "development"
@@ -15,19 +9,9 @@ export default defineConfig(async () => {
 	return {
 		root: appsettings.Root,
 		base: appsettings.Base,
-		publicDir: "public",
-		plugins: [
-			tsconfigPaths({
-				root: "../" // The tsconfig is in the root of the project, not the "Vite root"
-			}),
-			react(),
-			svelte(),
-			vue()
-		],
 		build: {
-			rollupOptions: {
-				input: appsettings.Entry
-			}
+			target: "es2022",
+			copyPublicDir: false
 		},
 		ssr: {
 			// It should only be required to add the `@meeg/phoria*` packages in this workspace - when the packages are published they should be external by default

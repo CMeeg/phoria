@@ -23,9 +23,9 @@ internal static class PhoriaOptionsExtensions
 
 	internal static string GetBasePath(this PhoriaOptions options)
 	{
-		string? basePath = options.Base?.Trim('/');
-		return string.IsNullOrEmpty(basePath)
+		string path = options.Base.Trim('/');
+		return string.IsNullOrEmpty(path)
 			? string.Empty
-			: $"/{basePath}";
+			: $"/{path}";
 	}
 }
