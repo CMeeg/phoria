@@ -62,12 +62,10 @@ function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): PluginO
 	}
 }
 
-function phoriaReact(options?: Partial<PhoriaReactPluginOptions>) {
-	const plugins = [phoriaReactPlugin(options)]
+function phoriaReact(options?: Partial<PhoriaReactPluginOptions>): PluginOption {
+	const plugins: PluginOption = options?.react !== false ? [...react(options?.react)] : []
 
-	if (options?.react !== false) {
-		plugins.push(...react(options?.react))
-	}
+	plugins.push(phoriaReactPlugin(options))
 
 	return plugins
 }

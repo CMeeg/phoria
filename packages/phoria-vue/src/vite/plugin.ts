@@ -61,11 +61,9 @@ function phoriaVuePlugin(options?: Partial<PhoriaVuePluginOptions>): PluginOptio
 }
 
 function phoriaVue(options?: Partial<PhoriaVuePluginOptions>): PluginOption {
-	const plugins = [phoriaVuePlugin(options)]
+	const plugins: PluginOption = options?.vue !== false ? [vue(options?.vue)] : []
 
-	if (options?.vue !== false) {
-		plugins.push(vue(options?.vue))
-	}
+	plugins.push(phoriaVuePlugin(options))
 
 	return plugins
 }

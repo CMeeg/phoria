@@ -61,11 +61,9 @@ function phoriaSveltePlugin(options?: Partial<PhoriaSveltePluginOptions>): Plugi
 }
 
 function phoriaSvelte(options?: Partial<PhoriaSveltePluginOptions>): PluginOption {
-	const plugins = [phoriaSveltePlugin(options)]
+	const plugins: PluginOption = options?.svelte !== false ? [...svelte(options?.svelte)] : []
 
-	if (options?.svelte !== false) {
-		plugins.push(...svelte(options?.svelte))
-	}
+	plugins.push(phoriaSveltePlugin(options))
 
 	return plugins
 }
