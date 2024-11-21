@@ -22,6 +22,11 @@
 			"import": "./dist/server.js",
 			"require": "./dist/server.cjs",
 			"types": "./dist/server/main.d.ts"
+		},
+		"./vite": {
+			"import": "./dist/vite.js",
+			"require": "./dist/vite.cjs",
+			"types": "./dist/vite/plugin.d.ts"
 		}
 	},
 	"scripts": {
@@ -31,6 +36,8 @@
 	},
 	"dependencies": {
 		"@meeg/phoria": "workspace:*",
+		"@rollup/pluginutils": "catalog:",
+		"magic-string": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:"
 	},

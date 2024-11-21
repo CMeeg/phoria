@@ -6,10 +6,6 @@ const props = defineProps<{ startAt?: number }>()
 const count = ref(props.startAt ?? 0)
 </script>
 
-<script module lang="ts">
-	export const componentPath = import.meta.url
-</script>
-
 <template>
 	<div class="vue-counter">
 		<a href="https://vuejs.org/" target="_blank" rel="noreferrer">
@@ -18,7 +14,7 @@ const count = ref(props.startAt ?? 0)
 		<button type="button" @click="count++">count is {{ count }}</button>
 		<p>
 			Edit
-			<code>ui/app/components/Counter/Counter.vue</code> to test HMR
+			<code>ui/src/app/components/Counter/Counter.vue</code> to test HMR
 		</p>
 	</div>
 </template>

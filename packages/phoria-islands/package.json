@@ -18,10 +18,10 @@
 			"require": "./dist/server.cjs",
 			"types": "./dist/server/main.d.ts"
 		},
-		"./web": {
-			"import": "./dist/web.js",
-			"require": "./dist/web.cjs",
-			"types": "./dist/web/main.d.ts"
+		"./client": {
+			"import": "./dist/client.js",
+			"require": "./dist/client.cjs",
+			"types": "./dist/client/main.d.ts"
 		}
 	},
 	"scripts": {

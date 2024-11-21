@@ -9,9 +9,9 @@ export default defineConfig({
 	build: {
 		lib: {
 			entry: {
+				client: "src/client/main.ts",
 				main: "src/main.ts",
-				server: "src/server/main.ts",
-				web: "src/web/main.ts"
+				server: "src/server/main.ts"
 			},
 			name: "phoria"
 		}

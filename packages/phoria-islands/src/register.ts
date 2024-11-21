@@ -1,7 +1,8 @@
 type PhoriaIslandProps = Record<string, unknown> | null
 
 type PhoriaIslandComponentModule = {
-	componentPath?: string
+	[key: string]: unknown
+	__phoriaComponentPath?: string
 }
 
 type PhoriaIslandComponentDefaultModule<T> = PhoriaIslandComponentModule & {
@@ -150,7 +151,7 @@ function createIslandImport<T>(
 
 			return {
 				component: module.default as T,
-				componentPath: module.componentPath
+				componentPath: module.__phoriaComponentPath
 			}
 		})
 	}
@@ -159,7 +160,7 @@ function createIslandImport<T>(
 
 	return loader.module().then((module) => ({
 		component: loader.component(module) as T,
-		componentPath: module.componentPath
+		componentPath: module.__phoriaComponentPath
 	}))
 }
 

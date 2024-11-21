@@ -11,7 +11,8 @@ export default defineConfig({
 			entry: {
 				main: "src/main.ts",
 				client: "src/client/main.ts",
-				server: "src/server/main.ts"
+				server: "src/server/main.ts",
+				vite: "src/vite/plugin.ts"
 			},
 			name: "phoria-react"
 		}

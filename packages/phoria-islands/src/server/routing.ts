@@ -11,17 +11,37 @@ import {
 import { stat, readFile } from "node:fs/promises"
 import { join } from "node:path"
 import mime from "mime/lite"
-import { getSsrService, type getComponent, type getFrameworks, type PhoriaIslandProps } from "~/register"
+import type { PhoriaServerEntry } from "./server-entry"
+import { getSsrService, type PhoriaIslandProps } from "~/register"
 
-interface PhoriaServerEntry {
-	getComponent: typeof getComponent
-	getFrameworks: typeof getFrameworks
+type PhoriaServerEntryModule = {
+	serverEntry: PhoriaServerEntry
 }
 
-type PhoriaServerEntryLoader = () => Promise<Record<string, unknown>> | PhoriaServerEntry
+type PhoriaServerEntryLoader = () => Promise<Record<string, unknown>> | PhoriaServerEntryModule
 
-function createPhoriaSsrRequestHandler(serverEntry: PhoriaServerEntryLoader, base: string) {
-	const loadServerEntry = typeof serverEntry === "function" ? serverEntry : () => serverEntry
+function isServerEntry(serverEntry: unknown): serverEntry is PhoriaServerEntry {
+	if (typeof serverEntry === "undefined" || serverEntry === null) {
+		return false
+	}
+
+	if (typeof serverEntry !== "object") {
+		return false
+	}
+
+	if (!("getComponent" in serverEntry)) {
+		return false
+	}
+
+	if (!("getFrameworks" in serverEntry)) {
+		return false
+	}
+
+	return true
+}
+
+function createPhoriaSsrRequestHandler(serverEntryLoader: PhoriaServerEntryLoader, base: string) {
+	const loadServerEntry = typeof serverEntryLoader === "function" ? serverEntryLoader : () => serverEntryLoader
 
 	const router = createRouter()
 
@@ -30,12 +50,13 @@ function createPhoriaSsrRequestHandler(serverEntry: PhoriaServerEntryLoader, bas
 	router.get(
 		"/hc",
 		defineEventHandler(async () => {
-			const serverEntry = await loadServerEntry()
+			const { serverEntry } = await loadServerEntry()
 
-			if (typeof serverEntry.getFrameworks !== "function") {
+			if (!isServerEntry(serverEntry)) {
 				throw createError({
 					status: 500,
-					message: "Server entry does not export a getFrameworks function."
+					message:
+						"Server entry does not have a named export `serverEntry` or export is not of type `PhoriaServerEntry`."
 				})
 			}
 
@@ -67,13 +88,13 @@ function createPhoriaSsrRequestHandler(serverEntry: PhoriaServerEntryLoader, bas
 					message: `No "component" was provided in the request path. Please make the request to ${renderRoutePath}.`
 				})
 			}
+			const { serverEntry } = await loadServerEntry()
 
-			const serverEntry = await loadServerEntry()
-
-			if (typeof serverEntry.getComponent !== "function") {
+			if (!isServerEntry(serverEntry)) {
 				throw createError({
 					status: 500,
-					message: "Server entry does not export a getComponent function."
+					message:
+						"Server entry does not have a named export `serverEntry` or export is not of type `PhoriaServerEntry`."
 				})
 			}
 
@@ -132,6 +153,7 @@ function createPhoriaSsrRequestHandler(serverEntry: PhoriaServerEntryLoader, bas
 	return router.handler
 }
 
+// TODO: Make `cwd` optional and default to `process.cwd()`
 function createPhoriaCsrRequestHandler(base: string, cwd: string) {
 	const basePath = base.startsWith("/") ? base.substring(1) : base
 	const publicDir = "phoria/client"

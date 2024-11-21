@@ -8,10 +8,6 @@ let { startAt = 0 } = $props()
 let count = $state(startAt)
 </script>
 
-<script module lang="ts">
-	export const componentPath = import.meta.url
-</script>
-
 <div class="svelte-counter">
 	<a href="https://svelte.dev" target="_blank" rel="noreferrer">
 		<img src="{base}/svelte.svg" class="logo svelte" alt="Svelte Logo" />
@@ -19,7 +15,7 @@ let count = $state(startAt)
 	<button type="button" onclick={() => count++}>count is {count}</button>
 	<p>
 		Edit
-		<code>ui/app/components/Counter/Counter.svelte</code> to test HMR
+		<code>ui/src/app/components/Counter/Counter.svelte</code> to test HMR
 	</p>
 </div>
 

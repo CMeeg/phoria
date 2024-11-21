@@ -3,7 +3,11 @@ import tsconfigPaths from "vite-tsconfig-paths"
 import { svelte } from "@sveltejs/vite-plugin-svelte"
 import react from "@vitejs/plugin-react"
 import vue from "@vitejs/plugin-vue"
+import Inspect from "vite-plugin-inspect"
 import { parsePhoriaAppSettings } from "@meeg/phoria/server"
+import { phoriaReact } from "@meeg/phoria-react/vite"
+import { phoriaSvelte } from "@meeg/phoria-svelte/vite"
+import { phoriaVue } from "@meeg/phoria-vue/vite"
 
 // TODO: See if there is a plugin like https://github.com/vitejs/vite-plugin-basic-ssl but for dotnet dev certs, or create one if not
 
@@ -22,7 +26,14 @@ export default defineConfig(async () => {
 			}),
 			react(),
 			svelte(),
-			vue()
+			vue(),
+			phoriaReact(),
+			phoriaSvelte(),
+			phoriaVue(),
+			Inspect({
+				build: true,
+				outputDir: ".vite-inspect"
+			})
 		],
 		build: {
 			rollupOptions: {

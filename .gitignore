@@ -1,6 +1,7 @@
 .azure/
 .nx/cache
 .nx/workspace-data
+.vite-inspect/
 bin/
 dist/
 node_modules/

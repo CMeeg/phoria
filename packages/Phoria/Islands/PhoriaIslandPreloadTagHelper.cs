@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Phoria.Logging;
 using Phoria.Server;
 using Phoria.Vite;
 
@@ -14,11 +13,9 @@ namespace Phoria.Islands;
 public class PhoriaIslandPreloadTagHelper
 	: TagHelper
 {
-	private readonly ILogger<PhoriaIslandPreloadTagHelper> logger;
 	private readonly IPhoriaServerMonitor serverMonitor;
 	private readonly IPhoriaIslandScopedContext scopedContext;
 	private readonly IViteSsrManifestReader ssrManifestReader;
-	private readonly IWebHostEnvironment environment;
 	private readonly IUrlHelperFactory urlHelperFactory;
 	private readonly PhoriaOptions options;
 
@@ -28,19 +25,15 @@ public class PhoriaIslandPreloadTagHelper
 	public ViewContext ViewContext { get; set; } = default!;
 
 	public PhoriaIslandPreloadTagHelper(
-		ILogger<PhoriaIslandPreloadTagHelper> logger,
 		IPhoriaServerMonitor serverMonitor,
 		IPhoriaIslandScopedContext scopedContext,
 		IViteSsrManifestReader ssrManifestReader,
 		IOptions<PhoriaOptions> options,
-		IWebHostEnvironment environment,
 		IUrlHelperFactory urlHelperFactory)
 	{
-		this.logger = logger;
 		this.serverMonitor = serverMonitor;
 		this.scopedContext = scopedContext;
 		this.ssrManifestReader = ssrManifestReader;
-		this.environment = environment;
 		this.urlHelperFactory = urlHelperFactory;
 		this.options = options.Value;
 	}
@@ -66,7 +59,7 @@ public class PhoriaIslandPreloadTagHelper
 
 		IViteSsrManifest ssrManifest = ssrManifestReader.ReadSsrManifest();
 
-		string basePath = Path.Combine(environment.ContentRootPath, options.GetBasePath().TrimStart('/'));
+		string basePath = options.GetBasePath().TrimStart('/');
 
 		HashSet<string> seenFiles = new();
 
@@ -77,30 +70,19 @@ public class PhoriaIslandPreloadTagHelper
 				continue;
 			}
 
-			// The component path will be a file URL so we need to convert it to a local path
-
-			string localComponentPath;
-
-			try
-			{
-				localComponentPath = new Uri(component.ComponentPath).LocalPath;
-			}
-			catch (Exception ex)
-			{
-				logger.LogInvalidComponentPathFileUrl(component.ComponentName, component.ComponentPath, ex);
-
-				continue;
-			}
+			string componentPath = component.ComponentPath.TrimStart('/');
 
 			// We then need to remove the base path to get the island's module ID
 
-			string moduleId = localComponentPath.Replace(basePath, string.Empty)
-				.Replace('\\', '/')
-				.TrimStart('/');
+			if (!string.IsNullOrEmpty(basePath)
+				&& componentPath.StartsWith(basePath, StringComparison.InvariantCulture))
+			{
+				componentPath = componentPath[basePath.Length..].TrimStart('/');
+			}
 
 			// Now we can see if the module exists in the SSR manifest
 
-			string[]? files = ssrManifest[moduleId];
+			string[]? files = ssrManifest[componentPath];
 
 			if (files == null)
 			{
@@ -147,20 +129,3 @@ public class PhoriaIslandPreloadTagHelper
 		}
 	}
 }
-
-internal static partial class PhoriaIslandPreloadTagHelperLogMessages
-{
-	private static readonly Action<ILogger, string, string, Exception?> logInvalidComponentPathFileUrl = LoggerMessage.Define<string, string>(
-		LogLevel.Error,
-		EventFeature.Islands + 4,
-		"Component path \"{ComponentPath}\" to component \"{ComponentName}\" could not be parsed as a file URI.");
-	internal static void LogInvalidComponentPathFileUrl(
-		this ILogger logger,
-		string componentName,
-		string componentPath,
-		Exception? exception = null)
-	{
-		logInvalidComponentPathFileUrl(logger, componentName, componentPath, exception);
-	}
-}
-

@@ -18,12 +18,10 @@ function Counter({ startAt }: CounterProps) {
 				count is {count}
 			</button>
 			<p>
-				Edit <code>ui/app/components/Counter/Counter.tsx</code> to test HMR
+				Edit <code>ui/src/app/components/Counter/Counter.tsx</code> to test HMR
 			</p>
 		</div>
 	)
 }
 
 export { Counter }
-
-export const componentPath = import.meta.url
