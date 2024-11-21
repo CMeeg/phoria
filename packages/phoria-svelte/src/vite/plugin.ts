@@ -1,4 +1,5 @@
-import type { Plugin } from "vite"
+import type { PluginOption } from "vite"
+import { svelte, type Options as SvelteOptions } from "@sveltejs/vite-plugin-svelte"
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import MagicString from "magic-string"
 
@@ -8,6 +9,7 @@ interface PhoriaSveltePluginOptions {
 	include: CreateFilterParams[0]
 	exclude: CreateFilterParams[1],
 	cwd: string
+	svelte?: SvelteOptions | false
 }
 
 const defaultOptions: PhoriaSveltePluginOptions = {
@@ -16,15 +18,15 @@ const defaultOptions: PhoriaSveltePluginOptions = {
 	cwd: process.cwd()
 }
 
-// TODO: Maybe also include the svelte plugin so you don't have to install it separately?
-
-function phoriaSveltePlugin(options?: Partial<PhoriaSveltePluginOptions>): Plugin {
+function phoriaSveltePlugin(options?: Partial<PhoriaSveltePluginOptions>): PluginOption {
 	const opts = { ...defaultOptions, ...options }
 
 	const filter = createFilter(opts.include, opts.exclude)
 
 	const cwd = normalizePath(opts.cwd)
 	const cwdRegex = new RegExp(`^${cwd}`, "i");
+
+	// TODO: Maybe also add the client and server imports to client and server entries?
 
 	return {
 		name: "phoria-svelte",
@@ -58,6 +60,16 @@ function phoriaSveltePlugin(options?: Partial<PhoriaSveltePluginOptions>): Plugi
 	}
 }
 
-export { phoriaSveltePlugin as phoriaSvelte }
+function phoriaSvelte(options?: Partial<PhoriaSveltePluginOptions>): PluginOption {
+	const plugins = [phoriaSveltePlugin(options)]
+
+	if (options?.svelte !== false) {
+		plugins.push(...svelte(options?.svelte))
+	}
+
+	return plugins
+}
+
+export { phoriaSvelte }
 
 export type { PhoriaSveltePluginOptions }

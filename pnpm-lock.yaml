@@ -99,9 +99,6 @@ importers:
         specifier: 'catalog:'
         version: 3.5.12(typescript@5.6.3)
     devDependencies:
-      '@sveltejs/vite-plugin-svelte':
-        specifier: ^4.0.0
-        version: 4.0.0(svelte@5.1.6)(vite@5.4.10(@types/node@22.8.7))
       '@types/node':
         specifier: 'catalog:'
         version: 22.8.7
@@ -111,12 +108,6 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: types-react-dom@19.0.0-rc.1
-      '@vitejs/plugin-react':
-        specifier: ^4.3.3
-        version: 4.3.3(vite@5.4.10(@types/node@22.8.7))
-      '@vitejs/plugin-vue':
-        specifier: ^5.0.3
-        version: 5.1.4(vite@5.4.10(@types/node@22.8.7))(vue@3.5.12(typescript@5.6.3))
       cross-env:
         specifier: 'catalog:'
         version: 7.0.3
@@ -187,15 +178,12 @@ importers:
       '@rollup/pluginutils':
         specifier: 'catalog:'
         version: 5.1.3(rollup@4.24.2)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.3
+        version: 4.3.3(vite@5.4.10(@types/node@22.8.7))
       magic-string:
         specifier: 'catalog:'
         version: 0.30.13
-      react:
-        specifier: 'catalog:'
-        version: 19.0.0-rc-2ec26bc4-20241111
-      react-dom:
-        specifier: 'catalog:'
-        version: 19.0.0-rc-2ec26bc4-20241111(react@19.0.0-rc-2ec26bc4-20241111)
     devDependencies:
       '@types/react':
         specifier: 'catalog:'
@@ -206,6 +194,12 @@ importers:
       cross-env:
         specifier: 'catalog:'
         version: 7.0.3
+      react:
+        specifier: 'catalog:'
+        version: 19.0.0-rc-2ec26bc4-20241111
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.0.0-rc-2ec26bc4-20241111(react@19.0.0-rc-2ec26bc4-20241111)
       typescript:
         specifier: 'catalog:'
         version: 5.6.3
@@ -230,13 +224,16 @@ importers:
       '@rollup/pluginutils':
         specifier: 'catalog:'
         version: 5.1.3(rollup@4.24.2)
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^4.0.0
+        version: 4.0.0(svelte@5.1.6)(vite@5.4.10(@types/node@22.8.7))
       magic-string:
         specifier: 'catalog:'
         version: 0.30.13
+    devDependencies:
       svelte:
         specifier: 'catalog:'
         version: 5.1.6
-    devDependencies:
       typescript:
         specifier: 'catalog:'
         version: 5.6.3
@@ -261,12 +258,12 @@ importers:
       '@rollup/pluginutils':
         specifier: 'catalog:'
         version: 5.1.3(rollup@4.24.2)
+      '@vitejs/plugin-vue':
+        specifier: ^5.0.3
+        version: 5.1.4(vite@5.4.10(@types/node@22.8.7))(vue@3.5.12(typescript@5.6.3))
       magic-string:
         specifier: 'catalog:'
         version: 0.30.13
-      vue:
-        specifier: 'catalog:'
-        version: 3.5.12(typescript@5.6.3)
     devDependencies:
       typescript:
         specifier: 'catalog:'
@@ -283,6 +280,9 @@ importers:
       vite-tsconfig-paths:
         specifier: 'catalog:'
         version: 5.0.1(typescript@5.6.3)(vite@5.4.10(@types/node@22.8.7))
+      vue:
+        specifier: 'catalog:'
+        version: 3.5.12(typescript@5.6.3)
 
 packages:
 

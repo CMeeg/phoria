@@ -1,13 +1,17 @@
-import type { Plugin } from "vite"
+import type { PluginOption } from "vite"
+import react, { type Options as ViteReactPluginOptions } from "@vitejs/plugin-react"
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import MagicString from "magic-string"
+
+export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude" | "babel">
 
 type CreateFilterParams = Parameters<typeof createFilter>
 
 interface PhoriaReactPluginOptions {
 	include: CreateFilterParams[0]
-	exclude: CreateFilterParams[1],
+	exclude: CreateFilterParams[1]
 	cwd: string
+	react?: ReactOptions | false
 }
 
 const defaultOptions: PhoriaReactPluginOptions = {
@@ -16,15 +20,15 @@ const defaultOptions: PhoriaReactPluginOptions = {
 	cwd: process.cwd()
 }
 
-// TODO: Maybe also include the react plugin so you don't have to install it separately?
-
-function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): Plugin {
+function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): PluginOption {
 	const opts = { ...defaultOptions, ...options }
 
 	const filter = createFilter(opts.include, opts.exclude)
 
 	const cwd = normalizePath(opts.cwd)
-	const cwdRegex = new RegExp(`^${cwd}`, "i");
+	const cwdRegex = new RegExp(`^${cwd}`, "i")
+
+	// TODO: Maybe also add the client and server imports to client and server entries?
 
 	return {
 		name: "phoria-react",
@@ -58,6 +62,16 @@ function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): Plugin 
 	}
 }
 
-export { phoriaReactPlugin as phoriaReact }
+function phoriaReact(options?: Partial<PhoriaReactPluginOptions>) {
+	const plugins = [phoriaReactPlugin(options)]
+
+	if (options?.react !== false) {
+		plugins.push(...react(options?.react))
+	}
+
+	return plugins
+}
+
+export { phoriaReact }
 
 export type { PhoriaReactPluginOptions }

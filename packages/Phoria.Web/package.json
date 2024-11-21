@@ -12,7 +12,7 @@
 		"dev": "tsx ./ui/src/server.ts",
 		"lint": "biome check",
 		"start": "cross-env NODE_ENV=production DOTNET_ENVIRONMENT=production node ./ui/dist/server/server.js",
-		"check": "tsc -b"
+		"check": "tsc"
 	},
 	"dependencies": {
 		"@meeg/phoria": "workspace:*",
@@ -27,12 +27,9 @@
 		"vue": "catalog:"
 	},
 	"devDependencies": {
-		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
-		"@vitejs/plugin-react": "^4.3.3",
-		"@vitejs/plugin-vue": "^5.0.3",
 		"cross-env": "catalog:",
 		"npm-run-all": "^4.1.5",
 		"postcss-preset-env": "^10.0.8",

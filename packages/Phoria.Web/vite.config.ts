@@ -1,8 +1,5 @@
 import { defineConfig, type UserConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
-import { svelte } from "@sveltejs/vite-plugin-svelte"
-import react from "@vitejs/plugin-react"
-import vue from "@vitejs/plugin-vue"
 import Inspect from "vite-plugin-inspect"
 import { parsePhoriaAppSettings } from "@meeg/phoria/server"
 import { phoriaReact } from "@meeg/phoria-react/vite"
@@ -24,9 +21,6 @@ export default defineConfig(async () => {
 			tsconfigPaths({
 				root: "../" // The tsconfig is in the root of the project, not the "Vite root"
 			}),
-			react(),
-			svelte(),
-			vue(),
 			phoriaReact(),
 			phoriaSvelte(),
 			phoriaVue(),

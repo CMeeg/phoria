@@ -32,19 +32,26 @@
 	"scripts": {
 		"build": "vite build",
 		"lint": "biome check",
-		"check": "tsc -b"
+		"check": "tsc"
 	},
 	"dependencies": {
 		"@meeg/phoria": "workspace:*",
 		"@rollup/pluginutils": "catalog:",
-		"magic-string": "catalog:",
-		"vue": "catalog:"
+		"@vitejs/plugin-vue": "^5.0.3",
+		"magic-string": "catalog:"
 	},
 	"devDependencies": {
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",
 		"vite-plugin-externalize-deps": "catalog:",
-		"vite-tsconfig-paths": "catalog:"
+		"vite-tsconfig-paths": "catalog:",
+		"vue": "catalog:"
+	},
+	"peerDependencies": {
+		"vue": "^3.0.0"
+	},
+	"engines": {
+		"node": "^18.17.1 || ^20.3.0 || >=21.0.0"
 	}
 }

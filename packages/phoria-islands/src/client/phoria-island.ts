@@ -34,7 +34,6 @@ class PhoriaIsland extends HTMLElement {
 
 			await csr.mount(this, component, props, { mode })
 		} catch (error) {
-			// TODO: Error handling needs to be customisable from the caller
 			console.error(`Error loading "${componentName}" component:`, error)
 		}
 	}

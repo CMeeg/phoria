@@ -1,4 +1,5 @@
-import type { Plugin } from "vite"
+import type { PluginOption } from "vite"
+import vue, { type Options as VueOptions } from "@vitejs/plugin-vue"
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import MagicString from "magic-string"
 
@@ -8,6 +9,7 @@ interface PhoriaVuePluginOptions {
 	include: CreateFilterParams[0]
 	exclude: CreateFilterParams[1],
 	cwd: string
+	vue?: VueOptions | false
 }
 
 const defaultOptions: PhoriaVuePluginOptions = {
@@ -16,15 +18,15 @@ const defaultOptions: PhoriaVuePluginOptions = {
 	cwd: process.cwd()
 }
 
-// TODO: Maybe also include the vue plugin so you don't have to install it separately?
-
-function phoriaVuePlugin(options?: Partial<PhoriaVuePluginOptions>): Plugin {
+function phoriaVuePlugin(options?: Partial<PhoriaVuePluginOptions>): PluginOption {
 	const opts = { ...defaultOptions, ...options }
 
 	const filter = createFilter(opts.include, opts.exclude)
 
 	const cwd = normalizePath(opts.cwd)
 	const cwdRegex = new RegExp(`^${cwd}`, "i");
+
+	// TODO: Maybe also add the client and server imports to client and server entries?
 
 	return {
 		name: "phoria-vue",
@@ -58,6 +60,16 @@ function phoriaVuePlugin(options?: Partial<PhoriaVuePluginOptions>): Plugin {
 	}
 }
 
-export { phoriaVuePlugin as phoriaVue }
+function phoriaVue(options?: Partial<PhoriaVuePluginOptions>): PluginOption {
+	const plugins = [phoriaVuePlugin(options)]
+
+	if (options?.vue !== false) {
+		plugins.push(vue(options?.vue))
+	}
+
+	return plugins
+}
+
+export { phoriaVue }
 
 export type { PhoriaVuePluginOptions }
