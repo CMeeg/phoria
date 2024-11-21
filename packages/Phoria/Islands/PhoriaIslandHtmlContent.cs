@@ -10,7 +10,6 @@ namespace Phoria.Islands;
 public class PhoriaIslandHtmlContent
 	: IHtmlContent
 {
-	// TODO: Maybe allow setting the tag name via config?
 	private const string TagName = "phoria-island";
 
 	private readonly PhoriaIslandComponent component;

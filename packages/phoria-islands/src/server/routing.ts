@@ -79,7 +79,6 @@ function createPhoriaSsrRequestHandler(serverEntryLoader: PhoriaServerEntryLoade
 
 			// Try to get the component to render
 
-			// TODO: Could validate params with https://h3.unjs.io/examples/validate-data#validate-params, but it's only one param so maybe not worth it?
 			const componentName = params.component
 
 			if (!componentName) {
@@ -122,7 +121,6 @@ function createPhoriaSsrRequestHandler(serverEntryLoader: PhoriaServerEntryLoade
 			const body = await readBody(event)
 
 			if (typeof body !== "undefined" && body !== null) {
-				// TODO: Validate props with https://h3.unjs.io/examples/validate-data#validate-body - props could be anything though so not sure how useful this would be
 				if (typeof body !== "object" || Array.isArray(body)) {
 					throw createError({
 						status: 400,

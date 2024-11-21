@@ -42,8 +42,7 @@ public class PhoriaIslandTagHelper
 		{
 			// We have to render the component on the server, but the server is not healthy
 
-			// TODO: Log this
-			// TODO: Throw an exception?
+			// TODO: Log this or throw an exception?
 
 			output.SuppressOutput();
 

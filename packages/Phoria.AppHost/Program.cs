@@ -2,7 +2,7 @@ IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(ar
 
 IResourceBuilder<ProjectResource> apiService = builder.AddProject<Projects.Phoria_ApiService>("apiservice");
 
-// TODO: I just want the web project to use my docker file :(
+// TODO: I just want the web project to use my docker file :( Raise issue upstream
 if (builder.ExecutionContext.IsRunMode)
 {
 	builder.AddProject<Projects.Phoria_Web>("webfrontend")

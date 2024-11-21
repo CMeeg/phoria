@@ -7,8 +7,6 @@ using Phoria.Logging;
 
 namespace Phoria.Server;
 
-// TODO: Do I want to implement something like ViteDevServerLauncher to start the server on startup?
-
 public interface IPhoriaServerMonitor
 {
 	PhoriaServerStatus ServerStatus { get; }
@@ -88,8 +86,6 @@ public sealed class PhoriaServerMonitor
 
 				if (response.IsSuccessStatusCode)
 				{
-					// TODO: We may want to get more info from the server response e.g. what frameworks are registered
-
 					PhoriaHealthCheckResult? result = await response.Content.ReadFromJsonAsync<PhoriaHealthCheckResult>(jsonDeserializeOptions);
 
 					if (result != null)
@@ -100,7 +96,6 @@ public sealed class PhoriaServerMonitor
 
 						return;
 					}
-
 				}
 
 				logger.LogServerIsUnhealthy(serverStatus.Url);

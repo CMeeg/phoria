@@ -2,8 +2,6 @@ using Microsoft.Extensions.Options;
 
 namespace Phoria.Server;
 
-// TODO: Is this the best way to do this?
-
 public interface IPhoriaServerHttpClientFactory
 {
 	HttpClient CreateClient();

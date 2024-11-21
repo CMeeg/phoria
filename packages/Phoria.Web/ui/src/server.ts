@@ -30,7 +30,7 @@ const viteDevServer = isProduction
 					middlewareMode: true,
 					host,
 					port,
-					// TODO: strictPort is not working - Vite is trying to find the next port if the port is already in use
+					// TODO: strictPort is not working - Vite is trying to find the next port if the port is already in use - raise issue upstream
 					strictPort: true
 				}
 			})

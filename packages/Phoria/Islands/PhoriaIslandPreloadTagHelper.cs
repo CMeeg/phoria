@@ -40,9 +40,6 @@ public class PhoriaIslandPreloadTagHelper
 
 	public override void Process(TagHelperContext context, TagHelperOutput output)
 	{
-		// TODO: This is not rendering anything in production
-		// TODO: The components still export import.meta.url as their component path so this won't match up with the SSR manifest
-
 		output.TagName = null;
 		output.TagMode = TagMode.StartTagAndEndTag;
 
