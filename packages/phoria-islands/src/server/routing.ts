@@ -151,20 +151,32 @@ function createPhoriaSsrRequestHandler(serverEntryLoader: PhoriaServerEntryLoade
 	return router.handler
 }
 
-// TODO: Make `cwd` optional and default to `process.cwd()`
-function createPhoriaCsrRequestHandler(base: string, cwd: string) {
+interface PhoriaCsrRequestHandlerOptions {
+	cwd: string
+}
+
+const defaultCsrRequestHandlerOptions: PhoriaCsrRequestHandlerOptions = {
+	cwd: process.cwd()
+}
+
+function createPhoriaCsrRequestHandler(base: string, options?: Partial<PhoriaCsrRequestHandlerOptions>) {
+	const opts = { ...defaultCsrRequestHandlerOptions, ...options }
+
 	const basePath = base.startsWith("/") ? base.substring(1) : base
 	const publicDir = "phoria/client"
+
+	// TODO: Compression
+	// TODO: Cache control
 
 	const staticFilehandler = defineEventHandler((event) => {
 		return serveStatic(event, {
 			getContents: (id) => {
-				const filePath = join(cwd, basePath, publicDir, id)
+				const filePath = join(opts.cwd, basePath, publicDir, id)
 
 				return readFile(filePath)
 			},
 			getMeta: async (id) => {
-				const filePath = join(cwd, basePath, publicDir, id)
+				const filePath = join(opts.cwd, basePath, publicDir, id)
 
 				const stats = await stat(filePath).catch(() => {})
 

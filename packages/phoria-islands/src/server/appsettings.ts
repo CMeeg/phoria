@@ -44,36 +44,45 @@ async function parseAppSettings(path: string, cwd: string): Promise<Partial<Phor
 	}
 }
 
+interface PhoriaAppSettingsOptions {
+	cwd: string
+	environment?: string
+}
+
+const defaultAppsettingsOptions: PhoriaAppSettingsOptions = {
+	cwd: process.cwd()
+}
+
 // TODO: Could maybe make this more of a generic function that supports getting appsettings for any app, and add support for filtering by section e.g. in the case of Phoria we only want the Phoria section
-// TODO: Make `cwd` optional and default to `process.cwd()`
-async function getPhoriaAppSettings(cwd: string, environment?: string): Promise<Partial<PhoriaAppSettings>> {
+async function getPhoriaAppSettings(options?: Partial<PhoriaAppSettingsOptions>): Promise<Partial<PhoriaAppSettings>> {
+	const opts = defu(options, defaultAppsettingsOptions)
+
 	// TODO: Need to support or at least cater for different casing of the file name, e.g. appsettings.json, appSettings.json; and also the environment file e.g. appsettings.development.json, appsettings.Development.json
 	// TODO: Could use https://unjs.io/packages/scule for case transforms; or could just make it clear that your environment variable and file names must use the same casing
-	const appsettings = await parseAppSettings("appsettings.json", cwd)
+	const appsettings = await parseAppSettings("appsettings.json", opts.cwd)
 
 	const envappsettings =
-		typeof environment === "string" ? await parseAppSettings(`appsettings.${environment}.json`, cwd) : {}
+		typeof opts.environment === "string" ? await parseAppSettings(`appsettings.${opts.environment}.json`, opts.cwd) : {}
 
 	return defu(envappsettings, appsettings)
 }
 
-async function parsePhoriaAppSettings(cwd: string, environment?: string): Promise<PhoriaAppSettings> {
-	const appsettings = await getPhoriaAppSettings(cwd, environment)
-
-	// Defaults here must be in sync with the defaults set in `Phoria/PhoriaOptions.cs`
-
-	const defaultAppsettings: Partial<PhoriaAppSettings> = {
-		Root: "ui",
-		Base: "/ui",
-		SsrBase: "/ssr",
-		Server: {
-			Host: "localhost",
-			Port: 5173
-		},
-		Build: {
-			OutDir: "dist"
-		}
+// Defaults here must be in sync with the defaults set in `Phoria/PhoriaOptions.cs`
+const defaultAppsettings: Partial<PhoriaAppSettings> = {
+	Root: "ui",
+	Base: "/ui",
+	SsrBase: "/ssr",
+	Server: {
+		Host: "localhost",
+		Port: 5173
+	},
+	Build: {
+		OutDir: "dist"
 	}
+}
+
+async function parsePhoriaAppSettings(options?: Partial<PhoriaAppSettingsOptions>): Promise<PhoriaAppSettings> {
+	const appsettings = await getPhoriaAppSettings(options)
 
 	const parsedAppSettings = defu(appsettings, defaultAppsettings) as PhoriaAppSettings
 

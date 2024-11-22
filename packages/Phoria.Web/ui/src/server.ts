@@ -14,7 +14,7 @@ const nodeEnv = process.env.NODE_ENV ?? "development"
 const isProduction = nodeEnv === "production"
 
 const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "development"
-const appsettings = await parsePhoriaAppSettings(cwd, dotnetEnv)
+const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv })
 
 // Create Vite dev server if not in production environment
 
@@ -49,7 +49,7 @@ if (viteDevServer) {
 } else {
 	// Configure the server to handle CSR and SSR requests
 
-	app.use(createPhoriaCsrRequestHandler(appsettings.Base, cwd))
+	app.use(createPhoriaCsrRequestHandler(appsettings.Base))
 
 	// Without `pathToFileURL` you will receive a `ERR_UNSUPPORTED_ESM_URL_SCHEME` error on Windows
 	const ssrEntry = pathToFileURL(`${cwd}/${appsettings.SsrEntry}`).href

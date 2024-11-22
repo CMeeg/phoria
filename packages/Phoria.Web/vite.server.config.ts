@@ -3,7 +3,7 @@ import { parsePhoriaAppSettings } from "@meeg/phoria/server"
 
 export default defineConfig(async () => {
 	const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "development"
-	const appsettings = await parsePhoriaAppSettings(process.cwd(), dotnetEnv)
+	const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv })
 
 	// https://vite.dev/config/
 	return {
