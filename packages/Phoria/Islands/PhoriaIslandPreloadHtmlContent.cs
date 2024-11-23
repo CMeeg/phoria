@@ -38,6 +38,6 @@ public class PhoriaIslandPreloadHtmlContent
 			return;
 		}
 
-		writer.Write(html);
+		writer.WriteLine(html);
 	}
 }

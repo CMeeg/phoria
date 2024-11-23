@@ -14,7 +14,7 @@ public class PhoriaIslandTagHelper
 
 	public required string Component { get; set; }
 	public object? Props { get; set; }
-	public ClientMode? Client { get; set; }
+	public PhoriaIslandClientDirective? Client { get; set; }
 
 	public PhoriaIslandTagHelper(
 		IPhoriaIslandScopedContext scopedContext,
@@ -30,12 +30,16 @@ public class PhoriaIslandTagHelper
 
 	public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
 	{
-		PhoriaIslandRenderMode renderMode = Client switch
+		PhoriaIslandRenderMode renderMode = PhoriaIslandRenderMode.Isomorphic;
+
+		if (Client == null)
 		{
-			ClientMode.OnLoad => PhoriaIslandRenderMode.Isomorphic,
-			ClientMode.Only => PhoriaIslandRenderMode.ClientOnly,
-			_ => PhoriaIslandRenderMode.ServerOnly
-		};
+			renderMode = PhoriaIslandRenderMode.ServerOnly;
+		}
+		else if (Client is PhoriaIslandClientOnlyDirective)
+		{
+			renderMode = PhoriaIslandRenderMode.ClientOnly;
+		}
 
 		if (renderMode != PhoriaIslandRenderMode.ServerOnly
 			&& serverMonitor.ServerStatus.Health != PhoriaServerHealth.Healthy)

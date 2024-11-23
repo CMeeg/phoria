@@ -7,10 +7,13 @@ public enum PhoriaIslandRenderMode
 	Isomorphic
 }
 
-public enum ClientMode
+public static class Client
 {
-	OnLoad,
-	Only
+	public static PhoriaIslandClientDirective Only => new PhoriaIslandClientOnlyDirective();
+	public static PhoriaIslandClientDirective Load => new PhoriaIslandClientLoadDirective();
+	public static PhoriaIslandClientDirective Idle(int? timeout = null) => new PhoriaIslandClientIdleDirective(timeout);
+	public static PhoriaIslandClientDirective Visible(string? rootMargin = null) => new PhoriaIslandClientVisibleDirective(rootMargin);
+	public static PhoriaIslandClientDirective Media(string mediaQuery) => new PhoriaIslandClientMediaDirective(mediaQuery);
 }
 
 public class PhoriaIslandComponent
@@ -25,7 +28,7 @@ public class PhoriaIslandComponent
 	/// </summary>
 	public object? Props { get; set; }
 	public PhoriaIslandRenderMode RenderMode { get; set; } = PhoriaIslandRenderMode.Isomorphic;
-	public ClientMode? Client { get; set; }
+	public PhoriaIslandClientDirective? Client { get; set; }
 	public string? Framework { get; set; }
 	public string? ComponentPath { get; set; }
 }

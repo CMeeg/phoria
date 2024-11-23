@@ -28,27 +28,35 @@ public class PhoriaIslandHtmlContent
 
 	public void WriteTo(TextWriter writer, HtmlEncoder encoder)
 	{
-		if (component.RenderMode != PhoriaIslandRenderMode.ServerOnly)
+		if (component.RenderMode == PhoriaIslandRenderMode.ServerOnly)
 		{
-			// Render the phoria-island web component
-
-			writer.Write($"<{TagName} component=\"{component.ComponentName}\"");
-
-			// TODO: Support other directives - see Astro for inspiration
-
-			string? clientDirective = component.Client switch
+			if (ssrResult != null)
 			{
-				ClientMode.Only => "client:only",
-				ClientMode.OnLoad => "client:load",
-				_ => null
-			};
+				// Render the SSR result
 
-			if (clientDirective != null)
+				WriteUtf8Stream(writer, ssrResult.Content.Stream);
+			}
+
+			return;
+		}
+
+		// Render the phoria-island web component
+
+		writer.Write($"<{TagName} component=\"{component.ComponentName}\"");
+
+		if (component.Client != null)
+		{
+			if (component.Client.Value == null)
 			{
-				writer.Write($" {clientDirective}");
+				writer.Write($" {component.Client.Name}");
+			}
+			else
+			{
+				writer.Write($" {component.Client.Name}=\"{encoder.Encode(component.Client.Value)}\"");
 			}
 		}
 
+		// TODO: Maybe it would be more performant to write props to a script tag so they are already parsed as javascript by the browser
 		if (ssrResult?.Props != null)
 		{
 			writer.Write(" props=\"");

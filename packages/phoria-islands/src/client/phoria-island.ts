@@ -1,9 +1,14 @@
 import { getComponent, getCsrService, csrMountMode, type PhoriaIslandProps } from "~/register"
+import { idle, visible, media, type PhoriaIslandDirective } from "./directives"
+
+const directives = new Map<string, PhoriaIslandDirective>()
+directives.set("client:load", async (mount) => await mount())
+directives.set("client:idle", idle)
+directives.set("client:visible", visible)
+directives.set("client:media", media)
 
 class PhoriaIsland extends HTMLElement {
 	async connectedCallback() {
-		// TODO: Add support for "directives" like Astro - see https://github.com/bholmesdev/vite-conf-islands-arch/blob/main/src/client.ts
-
 		const componentName = this.getAttribute("component")
 
 		if (!componentName) {
@@ -30,9 +35,35 @@ class PhoriaIsland extends HTMLElement {
 				props = JSON.parse(rawProps)
 			}
 
-			const mode = this.hasAttribute("client:only") ? csrMountMode.render : csrMountMode.hydrate
+			// This is a special case because it does not hydrate on mount and has highest priority
 
-			await csr.mount(this, component, props, { mode })
+			if (this.hasAttribute("client:only")) {
+				await csr.mount(this, component, props, { mode: csrMountMode.render })
+
+				return
+			}
+
+			// Otherwise we check for a client directive to determine the hydration strategy
+
+			for (const [name, directive] of directives) {
+				if (!this.hasAttribute(name)) {
+					continue
+				}
+
+				const value = this.getAttribute(name)
+
+				await directive(() => csr.mount(this, component, props, { mode: csrMountMode.hydrate }), {
+					element: this,
+					component: componentName,
+					value
+				})
+
+				return
+			}
+
+			// No directives found
+
+			throw new Error("No known client directive was found.")
 		} catch (error) {
 			console.error(`Error loading "${componentName}" component:`, error)
 		}
