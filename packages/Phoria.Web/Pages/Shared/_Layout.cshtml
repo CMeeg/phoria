@@ -8,8 +8,7 @@
 
 	@await RenderSectionAsync("Styles", required: false)
 
-	@* TODO: Now that PhoriaOptions.ClientEntry exists maybe create a `phoria-island-styles` tag helper *@
-	<link rel="stylesheet" phoria-href="ui/src/entry-client.ts" asp-append-version="true" />
+	<phoria-island-styles />
 
 	<phoria-island-preload />
 </head>
@@ -18,8 +17,7 @@
 		@RenderBody()
 	</main>
 
-	@* TODO: Now that PhoriaOptions.ClientEntry exists maybe create a `phoria-island-scripts` tag helper *@
-	<script type="module" phoria-src="ui/src/entry-client.ts"></script>
+	<phoria-island-scripts />
 
 	@await RenderSectionAsync("Scripts", required: false)
 </body>

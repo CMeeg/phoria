@@ -95,8 +95,6 @@ public class PhoriaIslandEntryTagHelper
 	/// <inheritdoc />
 	public override void Process(TagHelperContext context, TagHelperOutput output)
 	{
-		// TODO: Add new tag helpers `phoria-styles` and `phoria-scripts` that essentially do the same as this tag helper but just for the client entry, which can be sourced from the options
-
 		string tagName = output.TagName.ToLowerInvariant();
 
 		(string attribute, string? value) = tagName switch
