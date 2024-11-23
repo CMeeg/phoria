@@ -13,12 +13,9 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Phoria.Islands;
 using Phoria.Logging;
 using Phoria.Server;
 using Phoria.Vite;
-
-[assembly: MetadataUpdateHandler(typeof(PhoriaIslandEntryTagHelper))]
 
 namespace Phoria.Islands;
 
@@ -33,13 +30,14 @@ public class PhoriaIslandEntryTagHelper
 
 	private const string ScriptTag = "script";
 	private const string LinkTag = "link";
+	private const string IdAttribute = "href";
 	private const string SrcAttribute = "src";
 	private const string HrefAttribute = "href";
 	private const string PhoriaSrcAttribute = "phoria-src";
 	private const string PhoriaHrefAttribute = "phoria-href";
 	private const string LinkRelAttribute = "rel";
 	private const string LinkRelStylesheet = "stylesheet";
-	private const string LinkAsAttribute = "stylesheet";
+	private const string LinkAsAttribute = "as";
 	private const string LinkAsStyle = "style";
 
 	private readonly ILogger<PhoriaIslandEntryTagHelper> logger;
@@ -60,18 +58,6 @@ public class PhoriaIslandEntryTagHelper
 	/// </summary>
 	[HtmlAttributeName(PhoriaHrefAttribute)]
 	public string? PhoriaHref { get; set; }
-
-	/// <summary>
-	/// The rel attribute for the link tag.
-	/// </summary>
-	[HtmlAttributeName(LinkRelAttribute)]
-	public string? Rel { get; set; }
-
-	/// <summary>
-	/// The as attribute for the link tag.
-	/// </summary>
-	[HtmlAttributeName(LinkAsAttribute)]
-	public string? As { get; set; }
 
 	/// <inheritdoc />
 	[ViewContext]
@@ -109,6 +95,8 @@ public class PhoriaIslandEntryTagHelper
 	/// <inheritdoc />
 	public override void Process(TagHelperContext context, TagHelperOutput output)
 	{
+		// TODO: Add new tag helpers `phoria-styles` and `phoria-scripts` that essentially do the same as this tag helper but just for the client entry, which can be sourced from the options
+
 		string tagName = output.TagName.ToLowerInvariant();
 
 		(string attribute, string? value) = tagName switch
@@ -164,6 +152,8 @@ public class PhoriaIslandEntryTagHelper
 
 			// If the Vite client script was not inserted, it will be prepended to the current element tag
 
+			// TODO: Don't render the client script if no components in scoped context
+
 			if (!tagHelperMonitor.IsViteClientScriptInjected)
 			{
 				string viteClientUrl = $"{serverUrl}/@vite/client";
@@ -209,11 +199,9 @@ public class PhoriaIslandEntryTagHelper
 
 			IViteManifest manifest = manifestReader.ReadManifest();
 
-			IViteChunk? entry = manifest[value];
-
 			// If the entry is not found, log an error and return
 
-			if (entry == null)
+			if (!manifest.ContainsKey(value))
 			{
 				logger.LogViteManifestKeyNotFound(value, ViewContext.View.Path);
 				output.SuppressOutput();
@@ -226,17 +214,20 @@ public class PhoriaIslandEntryTagHelper
 				urlHelperFactory.GetUrlHelper(ViewContext),
 				options);
 
+			string? relAttr = output.Attributes[LinkRelAttribute]?.Value.ToString();
+			string? asAttr = output.Attributes[LinkAsAttribute]?.Value.ToString();
+
 			if (tagName == LinkTag
-				&& (Rel == LinkRelStylesheet || As == LinkAsStyle)
+				&& (relAttr == LinkRelStylesheet || asAttr == LinkAsStyle)
 				&& scriptRegex.IsMatch(value))
 			{
-				// Get the styles from the entry
+				// Get css files from the entry chunk
 
-				IEnumerable<string>? cssFiles = entry.Css;
+				IEnumerable<string>? cssFiles = manifest.GetRecursiveCssFiles(value).Reverse();
 
 				int count = cssFiles?.Count() ?? 0;
 
-				// If the entrypoint doesn't have css files, destroy it
+				// If the chunk doesn't have css files, destroy it
 
 				if (count == 0)
 				{
@@ -245,30 +236,54 @@ public class PhoriaIslandEntryTagHelper
 					return;
 				}
 
-				// TODO: Handle multiple css files
+				// Get the file path from the manifest
 
 				file = urlHelper.GetContentUrl(cssFiles!.First());
+
+				// If there are more than one css files, create clones of the element keeping all attributes
+
+				if (count > 1)
+				{
+					cssFiles = cssFiles!.Skip(1).Reverse();
+
+					var sharedAttributes = new TagHelperAttributeList(output.Attributes);
+
+					// If the attribute 'id' exists, remove it, otherwise it will be duplicated
+					TagHelperAttribute idAttr = sharedAttributes[IdAttribute];
+					if (idAttr != null)
+					{
+						sharedAttributes.Remove(idAttr);
+					}
+
+					foreach (string? cssFile in cssFiles)
+					{
+						// Get the file path from the manifest
+
+						string filePath = urlHelper.GetContentUrl(cssFile);
+
+						var linkOutput = new TagHelperOutput(
+							LinkTag,
+							[.. sharedAttributes],
+							(useCachedResult, encoder) =>
+								Task.Factory.StartNew<TagHelperContent>(
+									() => new DefaultTagHelperContent()
+								)
+						);
+
+						linkOutput.Attributes.SetAttribute(HrefAttribute, filePath);
+
+						output.PreElement.AppendHtml(linkOutput);
+					}
+				}
 			}
 			else
 			{
 				// Script file
 
+				IViteChunk entry = manifest[value]!;
+
 				file = urlHelper.GetContentUrl(entry.File);
 			}
-		}
-
-		// Forwards the rel attribute to the output
-
-		if (!string.IsNullOrEmpty(Rel))
-		{
-			output.Attributes.SetAttribute(new TagHelperAttribute(LinkRelAttribute, Rel));
-		}
-
-		// Forwards the as attribute to the output
-
-		if (!string.IsNullOrEmpty(As))
-		{
-			output.Attributes.SetAttribute(new TagHelperAttribute(LinkAsAttribute, As));
 		}
 
 		// Set the entry attribute

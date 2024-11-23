@@ -107,7 +107,7 @@ public sealed class ViteSsrManifestReader
 		string basePath = options.GetBasePath().TrimStart('/');
 
 		// TODO: Can this be injected? ViteManifestReader and ViteSsrManifestReader can use the same fileprovider
-		fileProvider ??= new(Path.Combine(environment.ContentRootPath, basePath, "phoria", "client", ".vite"));
+		fileProvider ??= new PhysicalFileProvider(Path.Combine(environment.ContentRootPath, basePath, "phoria", "client", ".vite"));
 
 		IFileInfo ssrManifestFile = fileProvider.GetFileInfo(ManifestName);
 
