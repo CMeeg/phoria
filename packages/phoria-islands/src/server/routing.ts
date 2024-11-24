@@ -165,9 +165,6 @@ function createPhoriaCsrRequestHandler(base: string, options?: Partial<PhoriaCsr
 	const basePath = base.startsWith("/") ? base.substring(1) : base
 	const publicDir = "phoria/client"
 
-	// TODO: Compression
-	// TODO: Cache control
-
 	const staticFilehandler = defineEventHandler((event) => {
 		return serveStatic(event, {
 			getContents: (id) => {

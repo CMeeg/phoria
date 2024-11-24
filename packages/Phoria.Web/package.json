@@ -9,10 +9,11 @@
 		"build:phoria:client": "vite build --manifest --ssrManifest --emptyOutDir --outDir dist/phoria/client",
 		"build:phoria:server": "vite build --ssr src/entry-server.ts --emptyOutDir --outDir dist/phoria/server",
 		"build:server": "vite build --config vite.server.config.ts --ssr src/server.ts --emptyOutDir --outDir dist/server",
+		"check": "tsc",
 		"dev": "tsx ./ui/src/server.ts",
 		"lint": "biome check",
 		"start": "cross-env NODE_ENV=production DOTNET_ENVIRONMENT=production node ./ui/dist/server/server.js",
-		"check": "tsc"
+		"vite:inspect": "npx serve ui/.vite-inspect"
 	},
 	"dependencies": {
 		"@meeg/phoria": "workspace:*",
@@ -27,6 +28,9 @@
 		"vue": "catalog:"
 	},
 	"devDependencies": {
+		"@sveltejs/vite-plugin-svelte": "^4.0.0",
+		"@vitejs/plugin-react": "^4.3.3",
+		"@vitejs/plugin-vue": "^5.0.3",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",

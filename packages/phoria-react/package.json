@@ -35,14 +35,14 @@
 		"check": "tsc"
 	},
 	"dependencies": {
-		"@meeg/phoria": "workspace:*",
 		"@rollup/pluginutils": "catalog:",
-		"@vitejs/plugin-react": "^4.3.3",
 		"magic-string": "catalog:"
 	},
 	"devDependencies": {
+		"@meeg/phoria": "workspace:*",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
+		"@vitejs/plugin-react": "^4.3.3",
 		"cross-env": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
@@ -53,10 +53,13 @@
 		"vite-tsconfig-paths": "catalog:"
 	},
 	"peerDependencies": {
+		"@meeg/phoria": "^0.1.0",
 		"@types/react": "npm:types-react@^19.0.0-rc",
 		"@types/react-dom": "npm:types-react-dom@^19.0.0-rc",
+		"@vitejs/plugin-react": "^4.0.0",
 		"react": "^19.0.0-rc",
-		"react-dom": "^19.0.0-rc"
+		"react-dom": "^19.0.0-rc",
+		"vite": "^5.0.0"
 	},
 	"engines": {
 		"node": "^18.17.1 || ^20.3.0 || >=21.0.0"

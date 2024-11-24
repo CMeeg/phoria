@@ -10,5 +10,6 @@ obj/
 
 *.tmp
 *.tsbuildinfo
+lerna-debug.log
 TODO.md
 vite.config.ts.*

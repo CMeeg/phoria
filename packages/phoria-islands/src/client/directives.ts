@@ -28,6 +28,7 @@ const visible: PhoriaIslandDirective = async (mount, { element, value }) => {
 				if (entry.isIntersecting) {
 					observer.disconnect()
 					await mount()
+					break
 				}
 			}
 		},

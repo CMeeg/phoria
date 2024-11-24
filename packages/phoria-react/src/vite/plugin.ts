@@ -1,4 +1,4 @@
-import type { PluginOption } from "vite"
+import type { PluginOption, UserConfig } from "vite"
 import react, { type Options as ViteReactPluginOptions } from "@vitejs/plugin-react"
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import MagicString from "magic-string"
@@ -20,6 +20,28 @@ const defaultOptions: PhoriaReactPluginOptions = {
 	cwd: process.cwd()
 }
 
+function setSsr(config: UserConfig) {
+	const external = ["@meeg/phoria-react/server"]
+
+	if (typeof config.ssr === "undefined") {
+		config.ssr = {
+			external
+		}
+
+		return
+	}
+
+	if (typeof config.ssr.external === "undefined") {
+		config.ssr.external = external
+
+		return
+	}
+
+	if (Array.isArray(config.ssr.external)) {
+		config.ssr.external.push(...external)
+	}
+}
+
 function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): PluginOption {
 	const opts = { ...defaultOptions, ...options }
 
@@ -32,6 +54,9 @@ function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): PluginO
 
 	return {
 		name: "phoria-react",
+		config: async (config) => {
+			setSsr(config)
+		},
 		transform(code, id) {
 			if (!filter(id)) {
 				return

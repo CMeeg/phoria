@@ -1,4 +1,4 @@
-import type { PluginOption } from "vite"
+import type { PluginOption, UserConfig } from "vite"
 import vue, { type Options as VueOptions } from "@vitejs/plugin-vue"
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import MagicString from "magic-string"
@@ -7,7 +7,7 @@ type CreateFilterParams = Parameters<typeof createFilter>
 
 interface PhoriaVuePluginOptions {
 	include: CreateFilterParams[0]
-	exclude: CreateFilterParams[1],
+	exclude: CreateFilterParams[1]
 	cwd: string
 	vue?: VueOptions | false
 }
@@ -18,18 +18,43 @@ const defaultOptions: PhoriaVuePluginOptions = {
 	cwd: process.cwd()
 }
 
+function setSsr(config: UserConfig) {
+	const external = ["@meeg/phoria-vue/server"]
+
+	if (typeof config.ssr === "undefined") {
+		config.ssr = {
+			external
+		}
+
+		return
+	}
+
+	if (typeof config.ssr.external === "undefined") {
+		config.ssr.external = external
+
+		return
+	}
+
+	if (Array.isArray(config.ssr.external)) {
+		config.ssr.external.push(...external)
+	}
+}
+
 function phoriaVuePlugin(options?: Partial<PhoriaVuePluginOptions>): PluginOption {
 	const opts = { ...defaultOptions, ...options }
 
 	const filter = createFilter(opts.include, opts.exclude)
 
 	const cwd = normalizePath(opts.cwd)
-	const cwdRegex = new RegExp(`^${cwd}`, "i");
+	const cwdRegex = new RegExp(`^${cwd}`, "i")
 
 	// TODO: Maybe also add the client and server imports to client and server entries?
 
 	return {
 		name: "phoria-vue",
+		config: async (config) => {
+			setSsr(config)
+		},
 		transform(code, id) {
 			if (!filter(id)) {
 				return

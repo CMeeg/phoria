@@ -13,15 +13,20 @@
 			"require": "./dist/main.cjs",
 			"types": "./dist/main.d.ts"
 		},
+		"./client": {
+			"import": "./dist/client.js",
+			"require": "./dist/client.cjs",
+			"types": "./dist/client/main.d.ts"
+		},
 		"./server": {
 			"import": "./dist/server.js",
 			"require": "./dist/server.cjs",
 			"types": "./dist/server/main.d.ts"
 		},
-		"./client": {
-			"import": "./dist/client.js",
-			"require": "./dist/client.cjs",
-			"types": "./dist/client/main.d.ts"
+		"./vite": {
+			"import": "./dist/vite.js",
+			"require": "./dist/vite.cjs",
+			"types": "./dist/vite/plugin.d.ts"
 		}
 	},
 	"scripts": {
@@ -43,5 +48,11 @@
 		"vite-plugin-dts": "^4.3.0",
 		"vite-plugin-externalize-deps": "^0.8.0",
 		"vite-tsconfig-paths": "catalog:"
+	},
+	"peerDependencies": {
+		"vite": "^5.0.0"
+	},
+	"engines": {
+		"node": "^18.17.1 || ^20.3.0 || >=21.0.0"
 	}
 }
