@@ -26,7 +26,11 @@ interface PhoriaBuildAppSettings {
 	OutDir: string
 }
 
-async function parseAppSettings(path: string, cwd: string): Promise<Partial<PhoriaAppSettings>> {
+async function parseAppSettings(
+	path: string,
+	cwd: string,
+	encoding: BufferEncoding
+): Promise<Partial<PhoriaAppSettings>> {
 	const appsettingsPath = up(path, { cwd })
 
 	if (typeof appsettingsPath !== "string") {
@@ -34,7 +38,7 @@ async function parseAppSettings(path: string, cwd: string): Promise<Partial<Phor
 	}
 
 	try {
-		const appsettingsContent = await readFile(appsettingsPath, { encoding: "utf8" })
+		const appsettingsContent = await readFile(appsettingsPath, { encoding })
 
 		const appsettings = safeDestr<AppSettings>(appsettingsContent)
 
@@ -45,26 +49,38 @@ async function parseAppSettings(path: string, cwd: string): Promise<Partial<Phor
 }
 
 interface PhoriaAppSettingsOptions {
+	fileName: string
+	encoding: BufferEncoding
 	cwd: string
 	environment?: string
 }
 
 const defaultAppsettingsOptions: PhoriaAppSettingsOptions = {
+	fileName: "appsettings.json",
+	encoding: "utf8",
 	cwd: process.cwd()
+}
+
+function getEnvAppsettingsFileName(fileName: string, environment: string) {
+	const lastPeriod = fileName.lastIndexOf(".")
+	const extension = fileName.slice(lastPeriod)
+	const baseName = fileName.slice(0, lastPeriod)
+
+	return `${baseName}.${environment}${extension}`
 }
 
 // TODO: Could maybe make this more of a generic function that supports getting appsettings for any app, and add support for filtering by section e.g. in the case of Phoria we only want the Phoria section
 async function getPhoriaAppSettings(options?: Partial<PhoriaAppSettingsOptions>): Promise<Partial<PhoriaAppSettings>> {
 	const opts = defu(options, defaultAppsettingsOptions)
 
-	// TODO: Need to support or at least cater for different casing of the file name, e.g. appsettings.json, appSettings.json; and also the environment file e.g. appsettings.development.json, appsettings.Development.json
-	// TODO: Could use https://unjs.io/packages/scule for case transforms; or could just make it clear that your environment variable and file names must use the same casing
-	const appsettings = await parseAppSettings("appsettings.json", opts.cwd)
+	const appsettings = await parseAppSettings(opts.fileName, opts.cwd, opts.encoding)
 
-	const envappsettings =
-		typeof opts.environment === "string" ? await parseAppSettings(`appsettings.${opts.environment}.json`, opts.cwd) : {}
+	const envAppsettings =
+		typeof opts.environment === "string"
+			? await parseAppSettings(getEnvAppsettingsFileName(opts.fileName, opts.environment), opts.cwd, opts.encoding)
+			: {}
 
-	return defu(envappsettings, appsettings)
+	return defu(envAppsettings, appsettings)
 }
 
 // Defaults here must be in sync with the defaults set in `Phoria/PhoriaOptions.cs`
