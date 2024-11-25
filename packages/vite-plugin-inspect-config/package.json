@@ -1,0 +1,36 @@
+{
+	"name": "@meeg/vite-plugin-inspect-config",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"files": ["dist"],
+	"main": "./dist/plugin.cjs",
+	"module": "./dist/plugin.js",
+	"types": "./dist/plugin.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/plugin.js",
+			"require": "./dist/plugin.cjs",
+			"types": "./dist/plugin.d.ts"
+		}
+	},
+	"scripts": {
+		"build": "vite build",
+		"lint": "biome check",
+		"check": "tsc"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vite-plugin-dts": "catalog:",
+		"vite-plugin-externalize-deps": "catalog:",
+		"vite-tsconfig-paths": "catalog:"
+	},
+	"peerDependencies": {
+		"vite": "^5.0.0"
+	},
+	"engines": {
+		"node": "^18.17.1 || ^20.3.0 || >=21.0.0"
+	}
+}

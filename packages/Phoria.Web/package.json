@@ -28,6 +28,8 @@
 		"vue": "catalog:"
 	},
 	"devDependencies": {
+		"@meeg/vite-plugin-dotnet-dev-certs": "workspace:*",
+		"@meeg/vite-plugin-inspect-config": "workspace:*",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@vitejs/plugin-react": "^4.3.3",
 		"@vitejs/plugin-vue": "^5.0.3",

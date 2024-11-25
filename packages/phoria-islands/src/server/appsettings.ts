@@ -20,6 +20,7 @@ interface PhoriaAppSettings {
 interface PhoriaServerAppSettings {
 	Host: string
 	Port?: number
+	Https: boolean
 }
 
 interface PhoriaBuildAppSettings {
@@ -90,7 +91,8 @@ const defaultAppsettings: Partial<PhoriaAppSettings> = {
 	SsrBase: "/ssr",
 	Server: {
 		Host: "localhost",
-		Port: 5173
+		Port: 5173,
+		Https: false
 	},
 	Build: {
 		OutDir: "dist"

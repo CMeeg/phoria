@@ -36,8 +36,8 @@
 	},
 	"dependencies": {
 		"defu": "^6.1.4",
-		"destr": "^2.0.3",
-		"empathic": "^1.0.0",
+		"destr": "catalog:",
+		"empathic": "catalog:",
 		"h3": "catalog:",
 		"mime": "^4.0.4"
 	},
@@ -45,8 +45,8 @@
 		"@types/node": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
-		"vite-plugin-dts": "^4.3.0",
-		"vite-plugin-externalize-deps": "^0.8.0",
+		"vite-plugin-dts": "catalog:",
+		"vite-plugin-externalize-deps": "catalog:",
 		"vite-tsconfig-paths": "catalog:"
 	},
 	"peerDependencies": {

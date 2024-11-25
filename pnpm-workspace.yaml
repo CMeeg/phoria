@@ -7,6 +7,8 @@ catalog:
   "@types/react": npm:types-react@rc
   "@types/react-dom": npm:types-react-dom@rc
   cross-env: ^7.0.3
+  destr: ^2.0.3
+  empathic: ^1.0.0
   h3: ^1.13.0
   magic-string: ^0.30.13
   react: npm:react@rc

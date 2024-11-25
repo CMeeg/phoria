@@ -2,6 +2,8 @@
 .azure/
 .nx/
 .git/
+.vite-config/
+.vite-inspect/
 .vscode/
 infra/
 **/bin/
@@ -14,3 +16,6 @@ Dockerfile*
 **/*.DS_Store
 **/*.env
 **/*.md
+**/*.tmp
+**/*.tsbuildinfo
+**/lerna-debug.log

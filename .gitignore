@@ -1,12 +1,12 @@
 .azure/
 .nx/cache
 .nx/workspace-data
+.vite-config/
 .vite-inspect/
 bin/
 dist/
 node_modules/
 obj/
-**/wwwroot/ui/
 
 *.tmp
 *.tsbuildinfo

@@ -74,10 +74,21 @@ app.options.onError = (error) => {
 
 // Start server
 
+// If using https in dev, we will source the https options from the vite dev server
+// If using https in production, we need to source and pass the https options to the listener
+const https =
+	appsettings.Server.Https && viteDevServer
+		? {
+				cert: viteDevServer.config.server?.https?.cert?.toString(),
+				key: viteDevServer.config.server?.https?.key?.toString()
+			}
+		: false
+
 // TODO: How do we put this in watch mode when in dev?
 const listener = await listen(toNodeListener(app), {
 	hostname: host,
 	port,
+	https,
 	isProd: isProduction,
 	qr: false,
 	tunnel: false
