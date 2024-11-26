@@ -1,9 +1,21 @@
 {
 	"name": "@meeg/vite-plugin-inspect-config",
-	"private": true,
-	"version": "0.1.0",
+	"version": "0.0.0",
+	"description": "Inspect the resolved Vite config to aid in developing plugins.",
+	"keywords": ["vite", "vite-plugin", "debug", "config"],
+	"author": "Chris Meagher",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/CMeeg/phoria.git",
+		"directory": "packages/vite-plugin-inspect-config"
+	},
+	"bugs": {
+		"url": "https://github.com/CMeeg/phoria/issues"
+	},
+	"homepage": "https://github.com/CMeeg/phoria#readme",
 	"type": "module",
-	"files": ["dist"],
+	"files": ["dist", "LICENSE", "README.md"],
 	"main": "./dist/plugin.cjs",
 	"module": "./dist/plugin.js",
 	"types": "./dist/plugin.d.ts",
