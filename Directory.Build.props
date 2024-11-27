@@ -1,0 +1,24 @@
+<Project>
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<AnalysisLevel>8.0-recommended</AnalysisLevel>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Authors>Chris Meagher</Authors>
+		<Copyright>Copyright © Chris Meagher 2024</Copyright>
+		<PackageProjectUrl>https://github.com/CMeeg/phoria</PackageProjectUrl>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/CMeeg/phoria.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageReleaseNotes>https://github.com/CMeeg/phoria/releases</PackageReleaseNotes>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	</PropertyGroup>
+
+</Project>
