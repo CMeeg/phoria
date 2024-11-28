@@ -17,7 +17,9 @@
 	"type": "module",
 	"scripts": {
 		"lerna": "lerna",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"publish": "changeset publish && lerna run publish",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"version": "changeset version && pnpm install --no-frozen-lockfile"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
