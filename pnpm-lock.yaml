@@ -75,6 +75,8 @@ importers:
         specifier: ^8.1.8
         version: 8.1.8(encoding@0.1.13)
 
+  packages/Phoria: {}
+
   packages/Phoria.Web:
     dependencies:
       '@meeg/phoria':
@@ -112,8 +114,8 @@ importers:
         specifier: workspace:*
         version: link:../vite-plugin-dotnet-dev-certs
       '@meeg/vite-plugin-inspect-config':
-        specifier: workspace:*
-        version: link:../vite-plugin-inspect-config
+        specifier: ^0.1.0
+        version: 0.1.0(vite@5.4.10(@types/node@22.8.7))
       '@sveltejs/vite-plugin-svelte':
         specifier: ^4.0.0
         version: 4.0.0(svelte@5.1.6)(vite@5.4.10(@types/node@22.8.7))
@@ -319,27 +321,6 @@ importers:
       tinyexec:
         specifier: ^0.3.1
         version: 0.3.1
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 22.8.7
-      typescript:
-        specifier: 'catalog:'
-        version: 5.6.3
-      vite:
-        specifier: 'catalog:'
-        version: 5.4.10(@types/node@22.8.7)
-      vite-plugin-dts:
-        specifier: 'catalog:'
-        version: 4.3.0(@types/node@22.8.7)(rollup@4.24.2)(typescript@5.6.3)(vite@5.4.10(@types/node@22.8.7))
-      vite-plugin-externalize-deps:
-        specifier: 'catalog:'
-        version: 0.8.0(vite@5.4.10(@types/node@22.8.7))
-      vite-tsconfig-paths:
-        specifier: 'catalog:'
-        version: 5.0.1(typescript@5.6.3)(vite@5.4.10(@types/node@22.8.7))
-
-  packages/vite-plugin-inspect-config:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1133,6 +1114,12 @@ packages:
 
   '@manypkg/get-packages@1.1.3':
     resolution: {integrity: sha512-fo+QhuU3qE/2TQMQmbVMqaQ6EWbMhi4ABWP+O4AM1NqPBuy0OrApV5LO6BrrgnhtAHS2NH6RrVk9OL181tTi8A==}
+
+  '@meeg/vite-plugin-inspect-config@0.1.0':
+    resolution: {integrity: sha512-NDP3Oe2mkb3kLbr9b6xK9fbb7gis7Mk0rp22mpnmhXc+ZI0yCAvrg9auiz5SWyomVYYbAz3uXmx2KM+VerqPaQ==}
+    engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0}
+    peerDependencies:
+      vite: ^5.0.0
 
   '@microsoft/api-extractor-model@7.29.8':
     resolution: {integrity: sha512-t3Z/xcO6TRbMcnKGVMs4uMzv/gd5j0NhMiJIGjD4cJMeFJ1Hf8wnLSx37vxlRlL0GWlGJhnFgxvnaL6JlS+73g==}
@@ -5486,6 +5473,10 @@ snapshots:
       fs-extra: 8.1.0
       globby: 11.1.0
       read-yaml-file: 1.1.0
+
+  '@meeg/vite-plugin-inspect-config@0.1.0(vite@5.4.10(@types/node@22.8.7))':
+    dependencies:
+      vite: 5.4.10(@types/node@22.8.7)
 
   '@microsoft/api-extractor-model@7.29.8(@types/node@22.8.7)':
     dependencies:
