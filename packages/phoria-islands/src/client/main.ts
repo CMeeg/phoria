@@ -1,5 +1,5 @@
-import { PhoriaIsland } from "./phoria-island"
 import type { PhoriaIslandDirective } from "./directives"
+import { PhoriaIsland } from "./phoria-island"
 
 export { PhoriaIsland }
 

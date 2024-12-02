@@ -1,7 +1,7 @@
-import "@meeg/phoria-react/server"
-import "@meeg/phoria-svelte/server"
-import "@meeg/phoria-vue/server"
+import "@phoria/phoria-react/server"
+import "@phoria/phoria-svelte/server"
+import "@phoria/phoria-vue/server"
 import "./app/components/register"
-import { serverEntry } from "@meeg/phoria/server"
+import { serverEntry } from "@phoria/phoria/server"
 
 export { serverEntry }

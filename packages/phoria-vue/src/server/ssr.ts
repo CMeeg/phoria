@@ -1,11 +1,11 @@
 import {
-	createIslandImport,
+	type PhoriaIsland,
 	type PhoriaIslandComponentSsrService,
 	type PhoriaIslandProps,
-	type PhoriaIsland
-} from "@meeg/phoria"
-import { createSSRApp, type Component } from "vue"
-import { renderToString as vueRenderToString, renderToWebStream } from "vue/server-renderer"
+	createIslandImport
+} from "@phoria/phoria"
+import { type Component, createSSRApp } from "vue"
+import { renderToWebStream, renderToString as vueRenderToString } from "vue/server-renderer"
 import { framework } from "~/main"
 
 async function renderToString<P extends PhoriaIslandProps>(island: PhoriaIsland<Component>, props?: P) {

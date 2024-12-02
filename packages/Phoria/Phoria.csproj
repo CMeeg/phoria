@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<PackageId>Meeg.Phoria</PackageId>
+		<PackageId>Phoria</PackageId>
 		<Title>Phoria</Title>
 		<Description>Islands architecture for dotnet.</Description>
 		<PackageTags>phoria;dotnet;aspnet;islands;vite;react;vue;svelte</PackageTags>

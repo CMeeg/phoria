@@ -1,18 +1,18 @@
+import { readFile, stat } from "node:fs/promises"
+import { join } from "node:path"
 import {
+	createError,
 	createRouter,
 	defineEventHandler,
 	getRouterParams,
-	createError,
 	readBody,
+	serveStatic,
 	setResponseHeader,
-	useBase,
-	serveStatic
+	useBase
 } from "h3"
-import { stat, readFile } from "node:fs/promises"
-import { join } from "node:path"
 import mime from "mime/lite"
+import { type PhoriaIslandProps, getSsrService } from "~/register"
 import type { PhoriaServerEntry } from "./server-entry"
-import { getSsrService, type PhoriaIslandProps } from "~/register"
 
 type PhoriaServerEntryModule = {
 	serverEntry: PhoriaServerEntry

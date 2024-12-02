@@ -1,7 +1,7 @@
-import type { PluginOption, UserConfig } from "vite"
-import react, { type Options as ViteReactPluginOptions } from "@vitejs/plugin-react"
 import { createFilter, normalizePath } from "@rollup/pluginutils"
+import react, { type Options as ViteReactPluginOptions } from "@vitejs/plugin-react"
 import MagicString from "magic-string"
+import type { PluginOption, UserConfig } from "vite"
 
 export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude" | "babel">
 
@@ -21,7 +21,7 @@ const defaultOptions: PhoriaReactPluginOptions = {
 }
 
 function setSsr(config: UserConfig) {
-	const external = ["@meeg/phoria-react/server"]
+	const external = ["@phoria/phoria-react/server"]
 
 	if (typeof config.ssr === "undefined") {
 		config.ssr = {

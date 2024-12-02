@@ -1,4 +1,4 @@
-import { createIslandImport, type PhoriaIslandComponentCsrService } from "@meeg/phoria"
+import { type PhoriaIslandComponentCsrService, createIslandImport } from "@phoria/phoria"
 import type { Component } from "vue"
 
 const service: PhoriaIslandComponentCsrService = {

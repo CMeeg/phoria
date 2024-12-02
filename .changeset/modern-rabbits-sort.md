@@ -1,8 +1,8 @@
 ---
-"@meeg/phoria": minor
-"@meeg/phoria-svelte": minor
-"@meeg/phoria-react": minor
-"@meeg/phoria-vue": minor
+"@phoria/phoria": minor
+"@phoria/phoria-svelte": minor
+"@phoria/phoria-react": minor
+"@phoria/phoria-vue": minor
 "phoria-dotnet": minor
 ---
 

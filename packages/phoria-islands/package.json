@@ -1,5 +1,5 @@
 {
-	"name": "@meeg/phoria",
+	"name": "@phoria/phoria",
 	"version": "0.0.0",
 	"description": "Islands architecture for dotnet.",
 	"keywords": ["phoria", "dotnet", "aspnet", "islands", "vite", "vite-plugin", "react", "svelte", "vue"],

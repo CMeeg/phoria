@@ -1,5 +1,5 @@
-import { defineConfig, type UserConfig } from "vite"
-import { parsePhoriaAppSettings } from "@meeg/phoria/server"
+import { parsePhoriaAppSettings } from "@phoria/phoria/server"
+import { type UserConfig, defineConfig } from "vite"
 
 export default defineConfig(async () => {
 	const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "development"
@@ -14,8 +14,13 @@ export default defineConfig(async () => {
 			copyPublicDir: false
 		},
 		ssr: {
-			// It should only be required to add the `@meeg/phoria*` packages in this workspace - when the packages are published they should be external by default
-			external: ["@meeg/phoria-react/server", "@meeg/phoria-svelte/server", "@meeg/phoria-vue/server", "@meeg/phoria"]
+			// It should only be required to add the `@phoria/phoria*` packages in this workspace - when the packages are published they should be external by default
+			external: [
+				"@phoria/phoria-react/server",
+				"@phoria/phoria-svelte/server",
+				"@phoria/phoria-vue/server",
+				"@phoria/phoria"
+			]
 		}
 	} satisfies UserConfig
 })

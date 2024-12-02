@@ -1,4 +1,4 @@
-import { registerSsrService } from "@meeg/phoria"
+import { registerSsrService } from "@phoria/phoria"
 import { framework } from "~/main"
 import { service } from "./ssr"
 

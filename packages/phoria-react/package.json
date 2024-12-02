@@ -1,5 +1,5 @@
 {
-	"name": "@meeg/phoria-react",
+	"name": "@phoria/phoria-react",
 	"version": "0.0.0",
 	"description": "Use React with Phoria Islands for dotnet.",
 	"keywords": ["phoria", "phoria-plugin", "dotnet", "aspnet", "islands", "vite", "vite-plugin", "react"],
@@ -51,7 +51,7 @@
 		"magic-string": "catalog:"
 	},
 	"devDependencies": {
-		"@meeg/phoria": "workspace:*",
+		"@phoria/phoria": "workspace:*",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react": "^4.3.3",
@@ -65,7 +65,7 @@
 		"vite-tsconfig-paths": "catalog:"
 	},
 	"peerDependencies": {
-		"@meeg/phoria": "^0.1.0",
+		"@phoria/phoria": "^0.1.0",
 		"@types/react": "npm:types-react@^19.0.0-rc",
 		"@types/react-dom": "npm:types-react-dom@^19.0.0-rc",
 		"@vitejs/plugin-react": "^4.0.0",

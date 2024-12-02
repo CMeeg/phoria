@@ -1,7 +1,7 @@
 import { defineConfig } from "vite"
-import tsconfigPaths from "vite-tsconfig-paths"
 import dts from "vite-plugin-dts"
 import { externalizeDeps } from "vite-plugin-externalize-deps"
+import tsconfigPaths from "vite-tsconfig-paths"
 
 // https://vite.dev/config/
 export default defineConfig({

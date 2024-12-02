@@ -1,5 +1,5 @@
-import { getComponent, getCsrService, csrMountMode, type PhoriaIslandProps } from "~/register"
-import { idle, visible, media, type PhoriaIslandDirective } from "./directives"
+import { type PhoriaIslandProps, csrMountMode, getComponent, getCsrService } from "~/register"
+import { type PhoriaIslandDirective, idle, media, visible } from "./directives"
 
 const directives = new Map<string, PhoriaIslandDirective>()
 directives.set("client:load", async (mount) => await mount())

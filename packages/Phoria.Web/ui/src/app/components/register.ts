@@ -1,4 +1,4 @@
-import { registerComponents } from "@meeg/phoria"
+import { registerComponents } from "@phoria/phoria"
 
 registerComponents({
 	ReactCounter: {

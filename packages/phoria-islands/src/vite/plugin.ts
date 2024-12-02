@@ -1,5 +1,5 @@
 import type { PluginOption, UserConfig } from "vite"
-import { parsePhoriaAppSettings, type PhoriaAppSettings } from "~/server/appsettings"
+import { type PhoriaAppSettings, parsePhoriaAppSettings } from "~/server/appsettings"
 
 interface PhoriaPluginOptions {
 	appsettings: PhoriaAppSettings
@@ -63,7 +63,7 @@ function setBuild(config: UserConfig, appsettings: PhoriaAppSettings) {
 }
 
 function setSsr(config: UserConfig) {
-	const external = ["@meeg/phoria"]
+	const external = ["@phoria/phoria"]
 
 	if (typeof config.ssr === "undefined") {
 		config.ssr = {

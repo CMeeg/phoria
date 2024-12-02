@@ -1,5 +1,5 @@
 {
-	"name": "@meeg/vite-plugin-dotnet-dev-certs",
+	"name": "@phoria/vite-plugin-dotnet-dev-certs",
 	"version": "0.0.0",
 	"description": "Use dotnet dev-certs with your Vite development server.",
 	"keywords": ["dotnet", "aspnet", "vite", "vite-plugin", "https", "ssl", "dev-certs"],
