@@ -1,7 +1,7 @@
 {
 	"name": "phoria.web",
 	"private": true,
-	"version": "0.1.0",
+	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
 		"build": "run-p build:phoria build:server -c",
@@ -16,10 +16,10 @@
 		"vite:inspect": "npx serve ui/.vite-inspect"
 	},
 	"dependencies": {
-		"@meeg/phoria": "workspace:*",
-		"@meeg/phoria-react": "workspace:*",
-		"@meeg/phoria-svelte": "workspace:*",
-		"@meeg/phoria-vue": "workspace:*",
+		"@phoria/phoria": "workspace:*",
+		"@phoria/phoria-react": "workspace:*",
+		"@phoria/phoria-svelte": "workspace:*",
+		"@phoria/phoria-vue": "workspace:*",
 		"h3": "catalog:",
 		"listhen": "^1.9.0",
 		"react": "catalog:",
@@ -28,8 +28,8 @@
 		"vue": "catalog:"
 	},
 	"devDependencies": {
-		"@meeg/vite-plugin-dotnet-dev-certs": "workspace:*",
-		"@meeg/vite-plugin-inspect-config": "workspace:*",
+		"@phoria/vite-plugin-dotnet-dev-certs": "workspace:*",
+		"@meeg/vite-plugin-inspect-config": "^0.1.0",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@vitejs/plugin-react": "^4.3.3",
 		"@vitejs/plugin-vue": "^5.0.3",

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises"
-import { up } from "empathic/find"
-import { safeDestr } from "destr"
 import { defu } from "defu"
+import { safeDestr } from "destr"
+import { up } from "empathic/find"
 
 interface AppSettings {
 	Phoria?: Partial<PhoriaAppSettings>

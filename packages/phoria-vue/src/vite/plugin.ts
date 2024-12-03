@@ -1,7 +1,7 @@
-import type { PluginOption, UserConfig } from "vite"
-import vue, { type Options as VueOptions } from "@vitejs/plugin-vue"
 import { createFilter, normalizePath } from "@rollup/pluginutils"
+import vue, { type Options as VueOptions } from "@vitejs/plugin-vue"
 import MagicString from "magic-string"
+import type { PluginOption, UserConfig } from "vite"
 
 type CreateFilterParams = Parameters<typeof createFilter>
 
@@ -19,7 +19,7 @@ const defaultOptions: PhoriaVuePluginOptions = {
 }
 
 function setSsr(config: UserConfig) {
-	const external = ["@meeg/phoria-vue/server"]
+	const external = ["@phoria/phoria-vue/server"]
 
 	if (typeof config.ssr === "undefined") {
 		config.ssr = {

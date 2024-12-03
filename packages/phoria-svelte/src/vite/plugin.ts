@@ -1,7 +1,7 @@
-import type { PluginOption, UserConfig } from "vite"
-import { svelte, type Options as SvelteOptions } from "@sveltejs/vite-plugin-svelte"
 import { createFilter, normalizePath } from "@rollup/pluginutils"
+import { type Options as SvelteOptions, svelte } from "@sveltejs/vite-plugin-svelte"
 import MagicString from "magic-string"
+import type { PluginOption, UserConfig } from "vite"
 
 type CreateFilterParams = Parameters<typeof createFilter>
 
@@ -19,7 +19,7 @@ const defaultOptions: PhoriaSveltePluginOptions = {
 }
 
 function setSsr(config: UserConfig) {
-	const external = ["@meeg/phoria-svelte/server"]
+	const external = ["@phoria/phoria-svelte/server"]
 
 	if (typeof config.ssr === "undefined") {
 		config.ssr = {

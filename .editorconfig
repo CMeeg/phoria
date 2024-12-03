@@ -18,7 +18,7 @@ indent_style = space
 [*.{cmd,bat}]
 end_of_line = crlf
 
-[*.{sln,csproj}]
+[*.{sln,csproj,props,config}]
 indent_size = 4
 
 [*.{cs,cshtml,razor}]

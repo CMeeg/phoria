@@ -1,9 +1,21 @@
 {
-	"name": "@meeg/vite-plugin-dotnet-dev-certs",
-	"private": true,
-	"version": "0.1.0",
+	"name": "@phoria/vite-plugin-dotnet-dev-certs",
+	"version": "0.0.0",
+	"description": "Use dotnet dev-certs with your Vite development server.",
+	"keywords": ["dotnet", "aspnet", "vite", "vite-plugin", "https", "ssl", "dev-certs"],
+	"author": "Chris Meagher",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/CMeeg/phoria.git",
+		"directory": "packages/vite-plugin-dotnet-dev-certs"
+	},
+	"bugs": {
+		"url": "https://github.com/CMeeg/phoria/issues"
+	},
+	"homepage": "https://github.com/CMeeg/phoria#readme",
 	"type": "module",
-	"files": ["dist"],
+	"files": ["dist", "LICENSE", "README.md"],
 	"main": "./dist/plugin.cjs",
 	"module": "./dist/plugin.js",
 	"types": "./dist/plugin.d.ts",

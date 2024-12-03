@@ -1,9 +1,9 @@
 import {
-	createIslandImport,
+	type PhoriaIsland,
 	type PhoriaIslandComponentSsrService,
 	type PhoriaIslandProps,
-	type PhoriaIsland
-} from "@meeg/phoria"
+	createIslandImport
+} from "@phoria/phoria"
 import type { Component, ComponentProps } from "svelte"
 import { render } from "svelte/server"
 import { framework } from "~/main"

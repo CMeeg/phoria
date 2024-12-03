@@ -1,10 +1,10 @@
-import type { PluginOption, UserConfig } from "vite"
-import { join } from "node:path"
 import { existsSync } from "node:fs"
 import { readFile } from "node:fs/promises"
-import { up } from "empathic/find"
+import { join } from "node:path"
 import { safeDestr } from "destr"
+import { up } from "empathic/find"
 import { x } from "tinyexec"
+import type { PluginOption, UserConfig } from "vite"
 
 interface DotnetDevCertsPluginOptions {
 	basePath?: string

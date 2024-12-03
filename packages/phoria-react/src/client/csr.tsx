@@ -1,4 +1,4 @@
-import { createIslandImport, csrMountMode, type PhoriaIslandComponentCsrService } from "@meeg/phoria"
+import { type PhoriaIslandComponentCsrService, createIslandImport, csrMountMode } from "@phoria/phoria"
 import type { FunctionComponent } from "react"
 
 const service: PhoriaIslandComponentCsrService = {
