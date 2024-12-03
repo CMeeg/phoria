@@ -107,4 +107,4 @@ await run(`dotnet pack "${cwd}" --include-symbols --nologo -p:Version=${version}
 
 const packageSource = await getNugetPackageSource(resolve("../../nuget.config"), packageSourceName)
 
-await run(`dotnet nuget push \"${join(distPath, "*.nupkg")}\" --source \"${packageSource}\" --api-key ${apiKey}`)
+await run(`dotnet nuget push \"${join(distPath, "*.nupkg")}\" --source \"${packageSource}\" --api-key ${apiKey} --skip-duplicate`)

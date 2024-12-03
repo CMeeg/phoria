@@ -1,7 +1,7 @@
 {
 	"name": "phoria-dotnet",
 	"private": true,
-	"version": "0.0.0",
+	"version": "0.1.1",
 	"scripts": {
 		"publish": "node \"../../scripts/dotnet/publish.js\" --name nuget",
 		"publish:local": "node \"../../scripts/dotnet/publish.js\" --name local"
