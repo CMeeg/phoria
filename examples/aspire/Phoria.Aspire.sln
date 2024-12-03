@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.AppHost", "Phoria.AppHost\Phoria.AppHost.csproj", "{DE04CFD9-5DB6-4C86-BAE8-4576761E1ED8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.ServiceDefaults", "Phoria.ServiceDefaults\Phoria.ServiceDefaults.csproj", "{8A69FB0F-76C3-4333-93FD-17E03DE05AD2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.ApiService", "Phoria.ApiService\Phoria.ApiService.csproj", "{8F0599A8-6D77-417D-A971-891BF3CF79F7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.Tests", "Phoria.Tests\Phoria.Tests.csproj", "{ADF9826F-6441-4C03-B374-81674201DD40}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria.Web", "Phoria.Web\Phoria.Web.csproj", "{02C16EC4-7766-4CB2-BCD0-077F1297B2E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Phoria", "..\..\packages\Phoria\Phoria.csproj", "{A71FCF51-C664-4C8C-A56E-0C33A071EB78}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DE04CFD9-5DB6-4C86-BAE8-4576761E1ED8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE04CFD9-5DB6-4C86-BAE8-4576761E1ED8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE04CFD9-5DB6-4C86-BAE8-4576761E1ED8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE04CFD9-5DB6-4C86-BAE8-4576761E1ED8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A69FB0F-76C3-4333-93FD-17E03DE05AD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A69FB0F-76C3-4333-93FD-17E03DE05AD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A69FB0F-76C3-4333-93FD-17E03DE05AD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A69FB0F-76C3-4333-93FD-17E03DE05AD2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F0599A8-6D77-417D-A971-891BF3CF79F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F0599A8-6D77-417D-A971-891BF3CF79F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F0599A8-6D77-417D-A971-891BF3CF79F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F0599A8-6D77-417D-A971-891BF3CF79F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADF9826F-6441-4C03-B374-81674201DD40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADF9826F-6441-4C03-B374-81674201DD40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADF9826F-6441-4C03-B374-81674201DD40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADF9826F-6441-4C03-B374-81674201DD40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02C16EC4-7766-4CB2-BCD0-077F1297B2E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02C16EC4-7766-4CB2-BCD0-077F1297B2E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02C16EC4-7766-4CB2-BCD0-077F1297B2E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02C16EC4-7766-4CB2-BCD0-077F1297B2E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A71FCF51-C664-4C8C-A56E-0C33A071EB78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A71FCF51-C664-4C8C-A56E-0C33A071EB78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A71FCF51-C664-4C8C-A56E-0C33A071EB78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A71FCF51-C664-4C8C-A56E-0C33A071EB78}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

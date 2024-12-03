@@ -4,5 +4,5 @@ name: phoria
 services:
   app:
     language: dotnet
-    project: ./packages/Phoria.AppHost/Phoria.AppHost.csproj
+    project: ./Phoria.AppHost/Phoria.AppHost.csproj
     host: containerapp
