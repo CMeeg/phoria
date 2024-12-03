@@ -1,8 +1,17 @@
 {
 	"name": "@phoria/phoria-react",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"description": "Use React with Phoria Islands for dotnet.",
-	"keywords": ["phoria", "phoria-plugin", "dotnet", "aspnet", "islands", "vite", "vite-plugin", "react"],
+	"keywords": [
+		"phoria",
+		"phoria-plugin",
+		"dotnet",
+		"aspnet",
+		"islands",
+		"vite",
+		"vite-plugin",
+		"react"
+	],
 	"author": "Chris Meagher",
 	"license": "MIT",
 	"repository": {
@@ -15,7 +24,11 @@
 	},
 	"homepage": "https://github.com/CMeeg/phoria#readme",
 	"type": "module",
-	"files": ["dist", "LICENSE", "README.md"],
+	"files": [
+		"dist",
+		"LICENSE",
+		"README.md"
+	],
 	"main": "./dist/main.cjs",
 	"module": "./dist/main.js",
 	"types": "./dist/main.d.ts",
