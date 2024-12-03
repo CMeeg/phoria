@@ -1,4 +1,6 @@
 packages:
+  - "examples/*"
+  - "examples/aspire/*"
   - "packages/*"
 
 catalog:

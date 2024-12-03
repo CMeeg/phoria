@@ -5,17 +5,18 @@ ENV PATH="$PNPM_HOME:$PATH"
 WORKDIR /src
 
 # Copy source code
-COPY . .
+COPY ./Phoria.Web .
 
 # Install deps
+
 RUN corepack enable
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Build the app
 ENV NODE_ENV=production
 ENV DOTNET_ENVIRONMENT=production
-RUN pnpm lerna run build \
-	&& pnpm deploy --filter="phoria.web" --prod /app
+RUN pnpm run build \
+	&& pnpm deploy --prod /app
 
 # dotnet build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS appbuild
@@ -25,13 +26,13 @@ WORKDIR /src
 COPY . .
 
 # Install Aspire workload
-RUN dotnet workload restore packages/Phoria.AppHost/Phoria.AppHost.csproj
+RUN dotnet workload restore Phoria.AppHost/Phoria.AppHost.csproj
 
 # Restore all projects
 RUN dotnet restore
 
 # Publish web app
-RUN dotnet publish packages/Phoria.Web/Phoria.Web.csproj -c Release --no-restore -o /app
+RUN dotnet publish Phoria.Web/Phoria.Web.csproj -c Release --no-restore -o /app
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0

@@ -1,11 +1,4 @@
 # directories
-.azure/
-.nx/
-.git/
-.vite-config/
-.vite-inspect/
-.vscode/
-infra/
 **/bin/
 **/dist/
 **/node_modules/
@@ -18,4 +11,3 @@ Dockerfile*
 **/*.md
 **/*.tmp
 **/*.tsbuildinfo
-**/lerna-debug.log

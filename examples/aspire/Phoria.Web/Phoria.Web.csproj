@@ -2,7 +2,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Phoria.ServiceDefaults\Phoria.ServiceDefaults.csproj" />
-		<ProjectReference Include="..\Phoria\Phoria.csproj" />
+		<ProjectReference Include="..\..\..\packages\Phoria\Phoria.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

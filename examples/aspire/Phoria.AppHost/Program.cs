@@ -13,7 +13,7 @@ else
 {
 	builder.AddDockerfile(
 		"webfrontend",
-		"../../",
+		"../",
 		"Dockerfile.phoria-web")
 		.WithExternalHttpEndpoints()
 		.WithReference(apiService);
