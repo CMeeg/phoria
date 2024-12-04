@@ -7,7 +7,11 @@ const service: PhoriaIslandComponentCsrService = {
 
 		const mode = options?.mode ?? csrMountMode.hydrate
 
-		Promise.all([import("react"), import("react-dom/client"), islandImport]).then(([React, ReactDOM, Island]) => {
+		Promise.all([
+			import("react").then((m) => m.default),
+			import("react-dom/client").then((m) => m.default),
+			islandImport
+		]).then(([React, ReactDOM, Island]) => {
 			if (mode === csrMountMode.hydrate) {
 				ReactDOM.hydrateRoot(
 					island,
