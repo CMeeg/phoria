@@ -3,8 +3,9 @@
 		"aaron-bond.better-comments",
 		"biomejs.biome",
 		"EditorConfig.EditorConfig",
+		"ms-dotnettools.csdevkit",
 		"redhat.vscode-yaml",
-		"vitest.explorer",
+		"svelte.svelte-vscode",
 		"Vue.volar"
 	]
 }

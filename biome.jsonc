@@ -19,6 +19,12 @@
 	"formatter": {
 		"enabled": true,
 		"formatWithErrors": true,
+		/* This is a bit of an annoying reason, but when changesets are applied it updates package.json
+		files and arrays get formatted as multi-line. Biome disagrees with this as it decides on single
+		vs multiline based on the `lineWidth` setting, but you can't disable that setting in isolation.
+		So formatting is disabled entirely for package.json files until there is time to find a better
+		solution. */
+		"ignore": ["**/package.json"],
 		"indentStyle": "tab",
 		"indentWidth": 2,
 		"lineEnding": "lf",

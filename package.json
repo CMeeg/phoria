@@ -2,18 +2,12 @@
 	"name": "phoria",
 	"private": true,
 	"version": "0.0.0",
-	"description": "Islands architecture for dotnet.",
-	"keywords": ["phoria", "dotnet", "aspnet", "islands", "vite", "react", "svelte", "vue"],
 	"author": "Chris Meagher",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/CMeeg/phoria.git"
 	},
-	"bugs": {
-		"url": "https://github.com/CMeeg/phoria/issues"
-	},
-	"homepage": "https://github.com/CMeeg/phoria#readme",
 	"type": "module",
 	"scripts": {
 		"lerna": "lerna",
