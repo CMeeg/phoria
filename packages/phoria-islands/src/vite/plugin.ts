@@ -2,22 +2,26 @@ import type { PluginOption, UserConfig } from "vite"
 import { type PhoriaAppSettings, parsePhoriaAppSettings } from "~/server/appsettings"
 
 interface PhoriaPluginOptions {
-	appsettings: PhoriaAppSettings
+	appsettings: Partial<PhoriaAppSettings>
 }
 
-function setRoot(config: UserConfig, appsettings: PhoriaAppSettings) {
+function setRoot(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 	if (typeof config.root === "undefined") {
 		config.root = appsettings.Root
 	}
 }
 
-function setBase(config: UserConfig, appsettings: PhoriaAppSettings) {
+function setBase(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 	if (typeof config.base === "undefined") {
 		config.base = appsettings.Base
 	}
 }
 
-function setBuild(config: UserConfig, appsettings: PhoriaAppSettings) {
+function setBuild(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
+	if (typeof appsettings.Entry === "undefined") {
+		return
+	}
+
 	if (typeof config.build === "undefined") {
 		config.build = {
 			rollupOptions: {
@@ -90,9 +94,10 @@ function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 		config: async (config) => {
 			const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "development"
 
-			const appsettings = options?.appsettings
-				? options.appsettings
-				: await parsePhoriaAppSettings({ environment: dotnetEnv })
+			const appsettings = await parsePhoriaAppSettings({
+				environment: dotnetEnv,
+				inlineSettings: options?.appsettings
+			})
 
 			setRoot(config, appsettings)
 			setBase(config, appsettings)
