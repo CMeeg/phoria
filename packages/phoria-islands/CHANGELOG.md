@@ -1,5 +1,11 @@
 # @phoria/phoria
 
+## 0.1.1
+
+### Patch Changes
+
+- 780ffad: Fixes appsettings supplied directly to the Vite plugin not being merged with defaults
+
 ## 0.1.0
 
 ### Minor Changes
