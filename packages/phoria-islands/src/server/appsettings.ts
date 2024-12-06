@@ -54,6 +54,7 @@ interface PhoriaAppSettingsOptions {
 	encoding: BufferEncoding
 	cwd: string
 	environment?: string
+	inlineSettings?: Partial<PhoriaAppSettings>
 }
 
 const defaultAppsettingsOptions: PhoriaAppSettingsOptions = {
@@ -76,12 +77,14 @@ async function getPhoriaAppSettings(options?: Partial<PhoriaAppSettingsOptions>)
 
 	const appsettings = await parseAppSettings(opts.fileName, opts.cwd, opts.encoding)
 
+	const baseappsettings = defu(appsettings, opts.inlineSettings ?? {})
+
 	const envAppsettings =
 		typeof opts.environment === "string"
 			? await parseAppSettings(getEnvAppsettingsFileName(opts.fileName, opts.environment), opts.cwd, opts.encoding)
 			: {}
 
-	return defu(envAppsettings, appsettings)
+	return defu(envAppsettings, baseappsettings)
 }
 
 // Defaults here must be in sync with the defaults set in `Phoria/PhoriaOptions.cs`
