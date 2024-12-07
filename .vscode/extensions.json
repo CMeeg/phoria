@@ -6,6 +6,7 @@
 		"ms-dotnettools.csdevkit",
 		"redhat.vscode-yaml",
 		"svelte.svelte-vscode",
+		"vitest.explorer",
 		"Vue.volar"
 	]
 }

@@ -5,6 +5,7 @@
 .vite-config/
 .vite-inspect/
 bin/
+coverage/
 dist/
 node_modules/
 obj/

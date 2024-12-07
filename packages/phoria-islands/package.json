@@ -57,8 +57,8 @@
 	},
 	"scripts": {
 		"build": "vite build",
-		"lint": "biome check",
-		"check": "tsc"
+		"check": "tsc",
+		"lint": "biome check"
 	},
 	"dependencies": {
 		"defu": "^6.1.4",

@@ -6,6 +6,7 @@ catalog:
   "@types/node": ^22.8.7
   "@types/react": npm:types-react@rc
   "@types/react-dom": npm:types-react-dom@rc
+  "@vitest/coverage-v8": ^2.1.8
   cross-env: ^7.0.3
   destr: ^2.0.3
   empathic: ^1.0.0
@@ -19,4 +20,5 @@ catalog:
   vite-plugin-dts: ^4.3.0
   vite-plugin-externalize-deps: ^0.8.0
   vite-tsconfig-paths: ^5.0.1
+  vitest: ^2.1.5
   vue: ^3.5.12
