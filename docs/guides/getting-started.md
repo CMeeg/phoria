@@ -366,7 +366,7 @@ Run the following commands in your terminal:
 
 ```shell
 # Create a dotnet web app
-dotnet new webapp --name WebApp --no-restore --framework net8.0 --output .
+dotnet new webapp --name WebApp --no-restore --framework net9.0 --output .
 
 # Create a solution file
 dotnet new sln --name GettingStarted --output .
@@ -510,7 +510,7 @@ From your terminal run:
 
 ```shell
 # Add dev certs
-dotnet dev-certs https
+dotnet dev-certs https --trust
 
 # Start the Phoria Server
 pnpm run dev
