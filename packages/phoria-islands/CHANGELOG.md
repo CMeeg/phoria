@@ -1,5 +1,11 @@
 # @phoria/phoria
 
+## 0.2.0
+
+### Minor Changes
+
+- a0e3be7: Set server config in phoria plugin
+
 ## 0.1.1
 
 ### Patch Changes
