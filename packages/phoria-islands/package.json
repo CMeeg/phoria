@@ -1,6 +1,6 @@
 {
 	"name": "@phoria/phoria",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"description": "Islands architecture for dotnet.",
 	"keywords": [
 		"phoria",
