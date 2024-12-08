@@ -27,6 +27,11 @@ jobs:
           node-version-file: ".nvmrc"
           cache: "pnpm"
 
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: "./global.json"
+
       - name: Install dependencies
         run: pnpm install
 
