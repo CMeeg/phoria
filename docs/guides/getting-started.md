@@ -52,9 +52,9 @@ cd getting-started
 # Install dependencies
 pnpm install
 
-# Phoria currently only supports React 19
-pnpm add react@rc react-dom@rc
-pnpm add -D @types/react@npm:types-react@rc @types/react-dom@npm:types-react-dom@rc
+# Phoria only supports React 19
+pnpm add react@^19.0.0 react-dom@^19.0.0
+pnpm add -D @types/react@^19.0.0 @types/react-dom@^19.0.0
 ```
 
 > This is optional and won't affect you working with Phoria, but you may want to take a look at the `README.md` that has been generated and apply any recommendations.
