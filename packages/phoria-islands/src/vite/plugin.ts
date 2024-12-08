@@ -17,6 +17,37 @@ function setBase(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 	}
 }
 
+function setServer(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
+	if (typeof appsettings.Server === "undefined") {
+		return
+	}
+
+	if (typeof config.server === "undefined") {
+		config.server = {
+			host: appsettings.Server.Host,
+			port: appsettings.Server.Port
+		}
+
+		if (typeof appsettings.Server.Port !== "undefined") {
+			config.server.strictPort = true
+		}
+
+		return
+	}
+
+	if (typeof config.server.host === "undefined") {
+		config.server.host = appsettings.Server.Host
+	}
+
+	if (typeof config.server.port === "undefined") {
+		config.server.port = appsettings.Server.Port
+
+		if (typeof appsettings.Server.Port !== "undefined") {
+			config.server.strictPort = true
+		}
+	}
+}
+
 function setBuild(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 	if (typeof appsettings.Entry === "undefined") {
 		return
@@ -63,6 +94,8 @@ function setBuild(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 			...config.build.rollupOptions.input,
 			"phoria-client-entry": appsettings.Entry
 		}
+
+		return
 	}
 }
 
@@ -85,6 +118,8 @@ function setSsr(config: UserConfig) {
 
 	if (Array.isArray(config.ssr.external)) {
 		config.ssr.external.push(...external)
+
+		return
 	}
 }
 
@@ -92,7 +127,7 @@ function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 	return {
 		name: "phoria",
 		config: async (config) => {
-			const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "development"
+			const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
 
 			const appsettings = await parsePhoriaAppSettings({
 				environment: dotnetEnv,
@@ -101,6 +136,7 @@ function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 
 			setRoot(config, appsettings)
 			setBase(config, appsettings)
+			setServer(config, appsettings)
 			setBuild(config, appsettings)
 			setSsr(config)
 		}
