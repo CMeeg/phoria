@@ -8,5 +8,9 @@
 	"ignore": [],
 	"linked": [],
 	"privatePackages": { "version": true, "tag": true },
-	"updateInternalDependencies": "patch"
+	"updateInternalDependencies": "minor",
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "onlyUpdatePeerDependentsWhenOutOfRange": true,
+    "updateInternalDependents": "always"
+  }
 }
