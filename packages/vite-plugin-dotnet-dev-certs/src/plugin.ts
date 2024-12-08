@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { safeDestr } from "destr"
 import { up } from "empathic/find"
+import { isLinux } from "std-env"
 import { x } from "tinyexec"
 import type { PluginOption, UserConfig } from "vite"
 
@@ -17,11 +18,29 @@ const defaultOptions: DotnetDevCertsPluginOptions = {
 }
 
 function getDevCertsBasePath(): string {
+	/* The location of the dotnet dev certs is an "implementation detail" of the dotnet CLI
+	so the following is a best effort to determine the default base path. See:
+	https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-dev-certs */
+
+	// If the default location isn't correct the user can specify their location in the plugin options
+
+	/* Presence of an APPDATA environment variable indicates Windows.
+	This is the default location for the dotnet dev certs on my Windows machine (I know, I know...). */
 	if (typeof process.env.APPDATA === "string" && process.env.APPDATA !== "") {
 		return join(process.env.APPDATA, "ASP.NET", "https")
 	}
 
-	return join(process.env.HOME ?? "~", ".aspnet", "https")
+	/* This is the default location for the dotnet dev certs on Linux when called with `--trust`
+	according to the dotnet 9 release notes. This is assuming of course that both dotnet 9 and `--trust`
+	are being used. See:
+	https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-9.0?view=aspnetcore-9.0#trust-the-aspnet-core-https-development-certificate-on-linux */
+	if (isLinux) {
+		return join(process.env.HOME ?? "~", ".aspnet", "dev-certs", "trust")
+	}
+
+	/* Assume macOS if we got this far and the default location is mentioned in this PR:
+	https://github.com/dotnet/aspnetcore/pull/42251 */
+	return join(process.env.HOME ?? "~", ".aspnet", "dev-certs", "https")
 }
 
 interface PackageJson {

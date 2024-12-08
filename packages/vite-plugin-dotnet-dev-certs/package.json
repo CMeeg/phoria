@@ -50,6 +50,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
+		"std-env": "^3.8.0",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",
