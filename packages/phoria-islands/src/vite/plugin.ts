@@ -1,4 +1,4 @@
-import type { PluginOption, UserConfig } from "vite"
+import type { PluginOption, UserConfig, EnvironmentOptions } from "vite"
 import { type PhoriaAppSettings, parsePhoriaAppSettings } from "~/server/appsettings"
 
 interface PhoriaPluginOptions {
@@ -18,34 +18,23 @@ function setBase(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 }
 
 function setServer(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
-	if (typeof appsettings.Server === "undefined") {
-		return
+	const options: typeof config.server = {
+		...config.server
 	}
 
-	if (typeof config.server === "undefined") {
-		config.server = {
-			host: appsettings.Server.Host,
-			port: appsettings.Server.Port
-		}
-
-		if (typeof appsettings.Server.Port !== "undefined") {
-			config.server.strictPort = true
-		}
-
-		return
+	if (typeof options.host === "undefined") {
+		options.host = appsettings.Server?.Host
 	}
 
-	if (typeof config.server.host === "undefined") {
-		config.server.host = appsettings.Server.Host
-	}
+	if (typeof options.port === "undefined") {
+		options.port = appsettings.Server?.Port
 
-	if (typeof config.server.port === "undefined") {
-		config.server.port = appsettings.Server.Port
-
-		if (typeof appsettings.Server.Port !== "undefined") {
-			config.server.strictPort = true
+		if (typeof appsettings.Server?.Port !== "undefined") {
+			options.strictPort = true
 		}
 	}
+
+	config.server = options
 }
 
 function setBuild(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
@@ -99,25 +88,19 @@ function setBuild(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 	}
 }
 
-function setSsr(config: UserConfig) {
+function setSsrEnvironment(options: EnvironmentOptions) {
 	const external = ["@phoria/phoria"]
 
-	if (typeof config.ssr === "undefined") {
-		config.ssr = {
-			external
-		}
+	options.resolve ??= {}
+
+	if (typeof options.resolve.external === "undefined") {
+		options.resolve.external = external
 
 		return
 	}
 
-	if (typeof config.ssr.external === "undefined") {
-		config.ssr.external = external
-
-		return
-	}
-
-	if (Array.isArray(config.ssr.external)) {
-		config.ssr.external.push(...external)
+	if (Array.isArray(options.resolve.external)) {
+		options.resolve.external.push(...external)
 
 		return
 	}
@@ -134,11 +117,18 @@ function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 				inlineSettings: options?.appsettings
 			})
 
+			config.environments ??= {}
+			config.environments.ssr ??= {}
+
 			setRoot(config, appsettings)
 			setBase(config, appsettings)
 			setServer(config, appsettings)
 			setBuild(config, appsettings)
-			setSsr(config)
+		},
+		configEnvironment(name, options) {
+			if (name === "ssr") {
+				setSsrEnvironment(options)
+			}
 		}
 	}
 }

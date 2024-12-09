@@ -60,7 +60,7 @@ function createPhoriaSsrRequestHandler(serverEntryLoader: PhoriaServerEntryLoade
 				})
 			}
 
-			const nodeEnv = process.env.NODE_ENV || "development"
+			const nodeEnv = process.env.NODE_ENV ?? "development"
 
 			return { mode: nodeEnv, frameworks: serverEntry.getFrameworks() }
 		})
