@@ -1,0 +1,36 @@
+﻿@page
+@model IndexModel
+@{
+	ViewData["Title"] = "Home page";
+}
+
+@section Styles {
+	<link rel="stylesheet" href="~/css/index.css" asp-append-version="true" />
+}
+
+<div>
+	<a href="https://vite.dev" target="_blank" rel="noreferrer">
+		<img src="~/img/vite.svg" class="logo" alt="Vite logo" asp-append-version="true" />
+	</a>
+</div>
+<h1>Phoria Islands</h1>
+@if (Model.ShowReactComponent)
+{
+	<div class="card">
+		<phoria-island component="ReactCounter" client="Client.Load" props="new { StartAt = 5 }"></phoria-island>
+	</div>
+}
+@if (Model.ShowVueComponent)
+{
+	<div class="card">
+		<phoria-island component="VueCounter" client="Client.Idle()" props="new { StartAt = 10 }"></phoria-island>
+	</div>
+}
+@if (Model.ShowSvelteComponent)
+{
+	<div class="card">
+		<phoria-island component="SvelteCounter" client="@(Client.Visible("50px"))"
+			props="new { StartAt = 15 }"></phoria-island>
+	</div>
+}
+<p class="read-the-docs">Click on the logos to learn more</p>
