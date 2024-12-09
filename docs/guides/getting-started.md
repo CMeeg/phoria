@@ -41,7 +41,7 @@ fnm use 22
 corepack install
 
 # Install Vite's React Project Scaffold
-pnpm create vite@5.5.5
+pnpm create vite
 #> Project name: getting-started
 #> Select a framework: React
 #> Select a variant: TypeScript
