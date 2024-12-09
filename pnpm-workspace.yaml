@@ -1,4 +1,5 @@
 packages:
+  - "e2e/*"
   - "packages/*"
 
 catalog:
@@ -6,14 +7,17 @@ catalog:
   "@types/node": ^22.10.1
   "@types/react": ^19.0.0
   "@types/react-dom": ^19.0.0
+  "@vitejs/plugin-react": ^4.3.4
   cross-env: ^7.0.3
   destr: ^2.0.3
   empathic: ^1.0.0
   h3: ^1.13.0
+  listhen: ^1.9.0
   magic-string: ^0.30.14
   react: ^19.0.0
   react-dom: ^19.0.0
   svelte: ^5.9.0
+  tsx: ^4.19.2
   typescript: ~5.7.2
   vite: ^6.0.3
   vite-plugin-dts: ^4.3.0
