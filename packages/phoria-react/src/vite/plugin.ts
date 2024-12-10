@@ -3,6 +3,13 @@ import react, { type Options as ViteReactPluginOptions } from "@vitejs/plugin-re
 import MagicString from "magic-string"
 import type { PluginOption, EnvironmentOptions } from "vite"
 
+const pluginName = "phoria-react"
+
+const environment = {
+	client: "client",
+	ssr: "ssr"
+} as const
+
 export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude" | "babel">
 
 type CreateFilterParams = Parameters<typeof createFilter>
@@ -27,14 +34,8 @@ function setSsrEnvironment(options: EnvironmentOptions) {
 
 	if (typeof options.resolve.external === "undefined") {
 		options.resolve.external = external
-
-		return
-	}
-
-	if (Array.isArray(options.resolve.external)) {
+	} else if (Array.isArray(options.resolve.external)) {
 		options.resolve.external.push(...external)
-
-		return
 	}
 }
 
@@ -49,13 +50,13 @@ function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): PluginO
 	// TODO: Maybe also add the client and server imports to client and server entries?
 
 	return {
-		name: "phoria-react",
+		name: pluginName,
 		config: (config) => {
 			config.environments ??= {}
-			config.environments.ssr ??= {}
+			config.environments[environment.ssr] ??= {}
 		},
 		configEnvironment(name, options) {
-			if (name === "ssr") {
+			if (name === environment.ssr) {
 				setSsrEnvironment(options)
 			}
 		},

@@ -4,6 +4,7 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
+		"build": "vite build --app",
 		"check": "tsc",
 		"dev": "tsx ./ui/src/server.ts",
 		"lint": "biome check"

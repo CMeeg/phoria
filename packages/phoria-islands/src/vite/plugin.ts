@@ -1,9 +1,14 @@
-import type { PluginOption, UserConfig, EnvironmentOptions } from "vite"
+import type { PluginOption, UserConfig, EnvironmentOptions, BuildEnvironmentOptions } from "vite"
 import { type PhoriaAppSettings, parsePhoriaAppSettings } from "~/server/appsettings"
 
-interface PhoriaPluginOptions {
-	appsettings: Partial<PhoriaAppSettings>
-}
+const pluginName = "phoria"
+
+const environment = {
+	client: "client",
+	ssr: "ssr"
+} as const
+
+const defaultOutDir = "dist"
 
 function setRoot(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 	if (typeof config.root === "undefined") {
@@ -37,97 +42,86 @@ function setServer(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) 
 	config.server = options
 }
 
-function setBuild(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
-	if (typeof appsettings.Entry === "undefined") {
+function setEntry(options: BuildEnvironmentOptions, root?: string, entryFile?: string) {
+	if (typeof entryFile === "undefined") {
 		return
 	}
 
-	if (typeof config.build === "undefined") {
-		config.build = {
-			rollupOptions: {
-				input: appsettings.Entry
-			}
-		}
+	const input = root ? `${root}/${entryFile}` : entryFile
 
-		return
-	}
-
-	if (typeof config.build.rollupOptions === "undefined") {
-		config.build.rollupOptions = {
-			input: appsettings.Entry
-		}
-
-		return
-	}
-
-	if (typeof config.build.rollupOptions.input === "undefined") {
-		config.build.rollupOptions.input = appsettings.Entry
-
-		return
-	}
-
-	if (typeof config.build.rollupOptions.input === "string") {
-		config.build.rollupOptions.input = [config.build.rollupOptions.input, appsettings.Entry]
-
-		return
-	}
-
-	if (Array.isArray(config.build.rollupOptions.input)) {
-		config.build.rollupOptions.input.push(appsettings.Entry)
-
-		return
-	}
-
-	if (typeof config.build.rollupOptions.input === "object") {
-		config.build.rollupOptions.input = {
-			...config.build.rollupOptions.input,
-			"phoria-client-entry": appsettings.Entry
-		}
-
-		return
+	options.rollupOptions = {
+		input
 	}
 }
 
-function setSsrEnvironment(options: EnvironmentOptions) {
+function setClientEnvironment(options: EnvironmentOptions, appsettings: Partial<PhoriaAppSettings>) {
+	// Set build options
+
+	options.build ??= {}
+	options.build.manifest ??= true
+	options.build.ssrManifest ??= true
+	options.build.emptyOutDir ??= true
+	options.build.outDir ??= `${appsettings.Build?.OutDir ?? defaultOutDir}/${pluginName}/${environment.client}`
+
+	setEntry(options.build, appsettings.Root, appsettings.Entry)
+}
+
+function setSsrEnvironment(options: EnvironmentOptions, appsettings: Partial<PhoriaAppSettings>) {
+	// Set resolve options
+
 	const external = ["@phoria/phoria"]
 
 	options.resolve ??= {}
 
 	if (typeof options.resolve.external === "undefined") {
 		options.resolve.external = external
-
-		return
-	}
-
-	if (Array.isArray(options.resolve.external)) {
+	} else if (Array.isArray(options.resolve.external)) {
 		options.resolve.external.push(...external)
-
-		return
 	}
+
+	// Set build options
+
+	options.build ??= {}
+	options.build.ssr ??= true
+	options.build.emptyOutDir ??= true
+	options.build.outDir ??= `${appsettings.Build?.OutDir ?? defaultOutDir}/${pluginName}/${environment.ssr}`
+
+	setEntry(options.build, appsettings.Root, appsettings.SsrEntry)
+}
+
+interface PhoriaPluginOptions {
+	appsettings: Partial<PhoriaAppSettings>
 }
 
 function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
+	let appsettings: Partial<PhoriaAppSettings> = {}
+
 	return {
-		name: "phoria",
+		name: pluginName,
 		config: async (config) => {
 			const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
 
-			const appsettings = await parsePhoriaAppSettings({
+			appsettings = await parsePhoriaAppSettings({
 				environment: dotnetEnv,
 				inlineSettings: options?.appsettings
 			})
 
 			config.environments ??= {}
-			config.environments.ssr ??= {}
+			config.environments[environment.client] ??= {}
+			config.environments[environment.ssr] ??= {}
 
 			setRoot(config, appsettings)
 			setBase(config, appsettings)
 			setServer(config, appsettings)
-			setBuild(config, appsettings)
 		},
 		configEnvironment(name, options) {
-			if (name === "ssr") {
-				setSsrEnvironment(options)
+			switch (name) {
+				case environment.client:
+					setClientEnvironment(options, appsettings)
+					break
+				case environment.ssr:
+					setSsrEnvironment(options, appsettings)
+					break
 			}
 		}
 	}

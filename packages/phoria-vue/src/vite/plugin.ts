@@ -3,6 +3,13 @@ import vue, { type Options as VueOptions } from "@vitejs/plugin-vue"
 import MagicString from "magic-string"
 import type { PluginOption, EnvironmentOptions } from "vite"
 
+const pluginName = "phoria-vue"
+
+const environment = {
+	client: "client",
+	ssr: "ssr"
+} as const
+
 type CreateFilterParams = Parameters<typeof createFilter>
 
 interface PhoriaVuePluginOptions {
@@ -25,14 +32,8 @@ function setSsrEnvironment(options: EnvironmentOptions) {
 
 	if (typeof options.resolve.external === "undefined") {
 		options.resolve.external = external
-
-		return
-	}
-
-	if (Array.isArray(options.resolve.external)) {
+	} else if (Array.isArray(options.resolve.external)) {
 		options.resolve.external.push(...external)
-
-		return
 	}
 }
 
@@ -47,13 +48,13 @@ function phoriaVuePlugin(options?: Partial<PhoriaVuePluginOptions>): PluginOptio
 	// TODO: Maybe also add the client and server imports to client and server entries?
 
 	return {
-		name: "phoria-vue",
+		name: pluginName,
 		config: (config) => {
 			config.environments ??= {}
-			config.environments.ssr ??= {}
+			config.environments[environment.ssr] ??= {}
 		},
 		configEnvironment(name, options) {
-			if (name === "ssr") {
+			if (name === environment.ssr) {
 				setSsrEnvironment(options)
 			}
 		},
