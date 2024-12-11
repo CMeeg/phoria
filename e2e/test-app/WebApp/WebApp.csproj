@@ -9,4 +9,8 @@
 		<ProjectReference Include="..\..\..\packages\Phoria\Phoria.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" />
+	</ItemGroup>
+
 </Project>

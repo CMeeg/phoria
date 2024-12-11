@@ -9,7 +9,12 @@ builder.Services.AddResponseCompression(options =>
 	options.EnableForHttps = true;
 });
 
-builder.Services.AddRazorPages();
+IMvcBuilder mvcBuilder = builder.Services.AddRazorPages();
+
+if (builder.Environment.IsDevelopment())
+{
+	mvcBuilder.AddRazorRuntimeCompilation();
+}
 
 builder.Services.AddPhoria();
 
