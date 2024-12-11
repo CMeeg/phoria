@@ -1,9 +1,11 @@
 import { readFile, stat } from "node:fs/promises"
-import { join } from "node:path"
+import { basename, join } from "node:path"
+import { pathToFileURL } from "node:url"
 import {
 	createError,
 	createRouter,
 	defineEventHandler,
+	fromNodeMiddleware,
 	getRouterParams,
 	readBody,
 	serveStatic,
@@ -11,14 +13,10 @@ import {
 	useBase
 } from "h3"
 import mime from "mime/lite"
+import { type ViteDevServer, isRunnableDevEnvironment } from "vite"
 import { type PhoriaIslandProps, getSsrService } from "~/register"
+import type { PhoriaAppSettings } from "./appsettings"
 import type { PhoriaServerEntry } from "./server-entry"
-
-type PhoriaServerEntryModule = {
-	serverEntry: PhoriaServerEntry
-}
-
-type PhoriaServerEntryLoader = () => Promise<Record<string, unknown>> | PhoriaServerEntryModule
 
 function isServerEntry(serverEntry: unknown): serverEntry is PhoriaServerEntry {
 	if (typeof serverEntry === "undefined" || serverEntry === null) {
@@ -40,9 +38,9 @@ function isServerEntry(serverEntry: unknown): serverEntry is PhoriaServerEntry {
 	return true
 }
 
-function createPhoriaSsrRequestHandler(serverEntryLoader: PhoriaServerEntryLoader, base: string) {
-	const loadServerEntry = typeof serverEntryLoader === "function" ? serverEntryLoader : () => serverEntryLoader
+type PhoriaServerEntryLoader = () => Promise<Record<string, unknown>>
 
+function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: string) {
 	const router = createRouter()
 
 	// Health check endpoint
@@ -148,7 +146,50 @@ function createPhoriaSsrRequestHandler(serverEntryLoader: PhoriaServerEntryLoade
 
 	router.use(`${base}/**`, useBase(base, ssrRouter.handler))
 
-	return router.handler
+	return router
+}
+
+interface PhoriaSsrRequestHandlerOptions {
+	cwd: string
+}
+
+const defaultSsrRequestHandlerOptions: PhoriaSsrRequestHandlerOptions = {
+	cwd: process.cwd()
+}
+
+function createPhoriaSsrRequestHandler(
+	appsettings: PhoriaAppSettings,
+	options?: Partial<PhoriaSsrRequestHandlerOptions>
+) {
+	const opts = { ...defaultSsrRequestHandlerOptions, ...options }
+
+	// Without `pathToFileURL` you will receive a `ERR_UNSUPPORTED_ESM_URL_SCHEME` error on Windows
+	const ssrEntry = pathToFileURL(
+		join(
+			opts.cwd,
+			appsettings.Root,
+			appsettings.Build.OutDir,
+			"phoria",
+			"ssr",
+			basename(appsettings.SsrEntry).replaceAll(".ts", ".js")
+		)
+	).href
+
+	const ssrRouter = createPhoriaSsrRouter(() => import(ssrEntry), appsettings.SsrBase)
+
+	return ssrRouter.handler
+}
+
+function createPhoriaDevSsrRequestHandler(viteDevServer: ViteDevServer, appsettings: PhoriaAppSettings) {
+	const environment = viteDevServer.environments.ssr
+
+	if (!isRunnableDevEnvironment(environment)) {
+		throw new Error("Vite dev server does not have a runnable SSR environment.")
+	}
+
+	const ssrRouter = createPhoriaSsrRouter(() => environment.runner.import(appsettings.SsrEntry), appsettings.SsrBase)
+
+	return ssrRouter.handler
 }
 
 interface PhoriaCsrRequestHandlerOptions {
@@ -159,21 +200,21 @@ const defaultCsrRequestHandlerOptions: PhoriaCsrRequestHandlerOptions = {
 	cwd: process.cwd()
 }
 
-function createPhoriaCsrRequestHandler(base: string, options?: Partial<PhoriaCsrRequestHandlerOptions>) {
+function createPhoriaCsrRequestHandler(
+	appsettings: PhoriaAppSettings,
+	options?: Partial<PhoriaCsrRequestHandlerOptions>
+) {
 	const opts = { ...defaultCsrRequestHandlerOptions, ...options }
-
-	const basePath = base.startsWith("/") ? base.substring(1) : base
-	const publicDir = "phoria/client"
 
 	const staticFilehandler = defineEventHandler((event) => {
 		return serveStatic(event, {
 			getContents: (id) => {
-				const filePath = join(opts.cwd, basePath, publicDir, id)
+				const filePath = join(opts.cwd, appsettings.Root, appsettings.Build.OutDir, "phoria", "client", id)
 
 				return readFile(filePath)
 			},
 			getMeta: async (id) => {
-				const filePath = join(opts.cwd, basePath, publicDir, id)
+				const filePath = join(opts.cwd, appsettings.Root, appsettings.Build.OutDir, "phoria", "client", id)
 
 				const stats = await stat(filePath).catch(() => {})
 
@@ -192,9 +233,20 @@ function createPhoriaCsrRequestHandler(base: string, options?: Partial<PhoriaCsr
 		})
 	})
 
+	const base = appsettings.Base
+
 	return createRouter().use(`${base}/**`, useBase(base, staticFilehandler)).handler
 }
 
-export { createPhoriaSsrRequestHandler, createPhoriaCsrRequestHandler }
+function createPhoriaDevCsrRequestHandler(viteDevServer: ViteDevServer) {
+	return fromNodeMiddleware(viteDevServer.middlewares)
+}
+
+export {
+	createPhoriaCsrRequestHandler,
+	createPhoriaDevCsrRequestHandler,
+	createPhoriaDevSsrRequestHandler,
+	createPhoriaSsrRequestHandler
+}
 
 export type { PhoriaServerEntry, PhoriaServerEntryLoader }

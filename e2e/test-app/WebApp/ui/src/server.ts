@@ -1,16 +1,15 @@
-import { pathToFileURL } from "node:url"
 import {
 	createPhoriaCsrRequestHandler,
+	createPhoriaDevCsrRequestHandler,
+	createPhoriaDevSsrRequestHandler,
 	createPhoriaSsrRequestHandler,
 	parsePhoriaAppSettings
 } from "@phoria/phoria/server"
-import { createApp, fromNodeMiddleware, toNodeListener } from "h3"
+import { createApp, toNodeListener } from "h3"
 import { type ListenOptions, listen } from "listhen"
-import { isRunnableDevEnvironment } from "vite"
 
 // Get environment and appsettings
 
-const cwd = process.cwd()
 const nodeEnv = process.env.NODE_ENV ?? "development"
 const isProduction = nodeEnv === "production"
 
@@ -37,24 +36,15 @@ const app = createApp()
 if (viteDevServer) {
 	// Let the Vite dev server handle CSR requests, HMR and SSR
 
-	const environment = viteDevServer.environments.ssr
+	app.use(createPhoriaDevCsrRequestHandler(viteDevServer))
 
-	if (!isRunnableDevEnvironment(environment)) {
-		throw new Error("Vite dev server does not have a runnable SSR environment.")
-	}
-
-	app.use(fromNodeMiddleware(viteDevServer.middlewares))
-
-	app.use(createPhoriaSsrRequestHandler(() => environment.runner.import(appsettings.SsrEntry), appsettings.SsrBase))
+	app.use(createPhoriaDevSsrRequestHandler(viteDevServer, appsettings))
 } else {
 	// Configure the server to handle CSR and SSR requests
 
-	app.use(createPhoriaCsrRequestHandler(appsettings.Base))
+	app.use(createPhoriaCsrRequestHandler(appsettings))
 
-	// Without `pathToFileURL` you will receive a `ERR_UNSUPPORTED_ESM_URL_SCHEME` error on Windows
-	const ssrEntry = pathToFileURL(`${cwd}/${appsettings.Root}/${appsettings.SsrEntry}`).href
-
-	app.use(createPhoriaSsrRequestHandler(await import(ssrEntry), appsettings.SsrBase))
+	app.use(createPhoriaSsrRequestHandler(appsettings))
 }
 
 // Handle errors
@@ -105,7 +95,7 @@ if (viteDevServer) {
 	listenOptions.hostname = appsettings.Server.Host
 	listenOptions.port = appsettings.Server.Port ?? 5173
 
-	// If using https in production, you will need to source and pass the https options to the listener
+	// NOTE: If using https in production, you will need to source and pass the https options to the listener
 }
 
 const listener = await listen(toNodeListener(app), listenOptions)
