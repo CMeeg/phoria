@@ -22,17 +22,25 @@ public interface IViteSsrManifestReader
 }
 
 /// <inheritdoc cref="IViteSsrManifestReader">
-public sealed class ViteSsrManifestReader
-	: IViteSsrManifestReader, IDisposable
+/// <param name="logger">The service used to log messages.</param>
+/// <param name="options">Phoria configuration options.</param>
+/// <param name="viteDevServer">Vite Dev Server status.</param>
+/// <param name="environment">Information about the web hosting environment.</param>
+public sealed class ViteSsrManifestReader(
+	ILogger<ViteSsrManifestReader> logger,
+	IOptions<PhoriaOptions> options,
+	IPhoriaServerMonitor serverMonitor,
+	IWebHostEnvironment environment)
+		: IViteSsrManifestReader, IDisposable
 {
 	private const string ManifestName = "ssr-manifest.json";
 
 	private static bool warnAboutManifestOnce = true;
 
-	private readonly ILogger<ViteSsrManifestReader> logger;
-	private readonly IPhoriaServerMonitor serverMonitor;
-	private readonly IWebHostEnvironment environment;
-	private readonly PhoriaOptions options;
+	private readonly ILogger<ViteSsrManifestReader> logger = logger;
+	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
+	private readonly IWebHostEnvironment environment = environment;
+	private readonly PhoriaOptions options = options.Value;
 
 	private PhysicalFileProvider? fileProvider;
 	private IChangeToken? changeToken;
@@ -43,22 +51,6 @@ public sealed class ViteSsrManifestReader
 	{
 		PropertyNameCaseInsensitive = true
 	};
-
-	/// <param name="logger">The service used to log messages.</param>
-	/// <param name="options">Phoria configuration options.</param>
-	/// <param name="viteDevServer">Vite Dev Server status.</param>
-	/// <param name="environment">Information about the web hosting environment.</param>
-	public ViteSsrManifestReader(
-		ILogger<ViteSsrManifestReader> logger,
-		IOptions<PhoriaOptions> options,
-		IPhoriaServerMonitor serverMonitor,
-		IWebHostEnvironment environment)
-	{
-		this.logger = logger;
-		this.options = options.Value;
-		this.serverMonitor = serverMonitor;
-		this.environment = environment;
-	}
 
 	public IViteSsrManifest ReadSsrManifest()
 	{
@@ -104,10 +96,8 @@ public sealed class ViteSsrManifestReader
 	{
 		// Read the name of the SSR manifest file from the configuration
 
-		string basePath = options.GetBasePath().TrimStart('/');
-
 		// TODO: Can this be injected? ViteManifestReader and ViteSsrManifestReader can use the same fileprovider
-		fileProvider ??= new PhysicalFileProvider(Path.Combine(environment.ContentRootPath, basePath, "phoria", "client", ".vite"));
+		fileProvider ??= new PhysicalFileProvider(Path.Combine(environment.ContentRootPath, options.Root, options.Build.OutDir, "phoria", "client", ".vite"));
 
 		IFileInfo ssrManifestFile = fileProvider.GetFileInfo(ManifestName);
 
@@ -120,7 +110,7 @@ public sealed class ViteSsrManifestReader
 			// Read the SSR manifest file and deserialize it into a dictionary
 
 			using Stream readStream = ssrManifestFile.CreateReadStream();
-			var files = JsonSerializer.Deserialize<IReadOnlyDictionary<string, string[]>>(
+			IReadOnlyDictionary<string, string[]> files = JsonSerializer.Deserialize<IReadOnlyDictionary<string, string[]>>(
 				readStream,
 				jsonDeserializeOptions
 			)!;

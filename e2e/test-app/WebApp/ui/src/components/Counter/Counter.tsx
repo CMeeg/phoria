@@ -18,7 +18,7 @@ function Counter({ startAt }: CounterProps) {
 				count is {count}
 			</button>
 			<p>
-				Edit <code>ui/src/app/components/Counter/Counter.tsx</code> to test HMR
+				Edit <code>ui/src/components/Counter/Counter.tsx</code> to test HMR
 			</p>
 		</div>
 	)

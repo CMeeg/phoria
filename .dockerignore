@@ -1,0 +1,13 @@
+# directories
+**/bin/
+**/dist/
+**/node_modules/
+**/obj/
+
+# files
+Dockerfile*
+**/*.DS_Store
+**/*.env
+**/*.md
+**/*.tmp
+**/*.tsbuildinfo

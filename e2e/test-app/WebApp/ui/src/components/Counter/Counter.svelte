@@ -15,7 +15,7 @@ let count = $state(startAt)
 	<button type="button" onclick={() => count++}>count is {count}</button>
 	<p>
 		Edit
-		<code>ui/src/app/components/Counter/Counter.svelte</code> to test HMR
+		<code>ui/src/components/Counter/Counter.svelte</code> to test HMR
 	</p>
 </div>
 
