@@ -10,6 +10,10 @@
 		},
 		"lint": {
 			"cache": true
+		},
+		"preview": {
+			"cache": true,
+			"dependsOn": ["^build"]
 		}
 	}
 }

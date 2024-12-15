@@ -3,6 +3,7 @@
 	"private": true,
 	"version": "0.2.0",
 	"scripts": {
+		"build": "dotnet build --configuration Release",
 		"publish": "node \"../../scripts/dotnet/publish.js\" --name nuget",
 		"publish:local": "node \"../../scripts/dotnet/publish.js\" --name local"
 	}

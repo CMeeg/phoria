@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.ResponseCompression;
 using Phoria;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddResponseCompression(options =>
 {
 	options.EnableForHttps = true;
+	options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["image/svg+xml"]);
 });
 
 IMvcBuilder mvcBuilder = builder.Services.AddRazorPages();

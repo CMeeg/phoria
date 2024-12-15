@@ -32,9 +32,9 @@ public class PhoriaIslandPreloadTagHelper(
 		output.TagName = null;
 		output.TagMode = TagMode.StartTagAndEndTag;
 
-		if (serverMonitor.ServerStatus.Mode != PhoriaServerMode.Production)
+		if (serverMonitor.ServerStatus.Mode == PhoriaServerMode.Development)
 		{
-			// Only production will have a usable SSR manifest
+			// Development mode will not have a usable SSR manifest
 
 			return;
 		}
