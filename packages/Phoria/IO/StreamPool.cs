@@ -30,13 +30,7 @@ public sealed class StreamPool
 		});
 	}
 
-	public StreamPool()
-	{
-		Stream = manager.GetStream();
-	}
+	public StreamPool() => Stream = manager.GetStream();
 
-	public void Dispose()
-	{
-		Stream?.Dispose();
-	}
+	public void Dispose() => Stream?.Dispose();
 }

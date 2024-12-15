@@ -1,42 +1,31 @@
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Phoria.Server;
 using Phoria.Vite;
 
 namespace Phoria.Islands;
 
-public class PhoriaIslandPreloadTagHelper
+public class PhoriaIslandPreloadTagHelper(
+	IPhoriaServerMonitor serverMonitor,
+	IPhoriaIslandScopedContext scopedContext,
+	IViteSsrManifestReader ssrManifestReader,
+	IOptions<PhoriaOptions> options,
+	IUrlHelperFactory urlHelperFactory)
 	: TagHelper
 {
-	private readonly IPhoriaServerMonitor serverMonitor;
-	private readonly IPhoriaIslandScopedContext scopedContext;
-	private readonly IViteSsrManifestReader ssrManifestReader;
-	private readonly IUrlHelperFactory urlHelperFactory;
-	private readonly PhoriaOptions options;
+	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
+	private readonly IPhoriaIslandScopedContext scopedContext = scopedContext;
+	private readonly IViteSsrManifestReader ssrManifestReader = ssrManifestReader;
+	private readonly IUrlHelperFactory urlHelperFactory = urlHelperFactory;
+	private readonly PhoriaOptions options = options.Value;
 
 	/// <inheritdoc />
 	[ViewContext]
 	[HtmlAttributeNotBound]
 	public ViewContext ViewContext { get; set; } = default!;
-
-	public PhoriaIslandPreloadTagHelper(
-		IPhoriaServerMonitor serverMonitor,
-		IPhoriaIslandScopedContext scopedContext,
-		IViteSsrManifestReader ssrManifestReader,
-		IOptions<PhoriaOptions> options,
-		IUrlHelperFactory urlHelperFactory)
-	{
-		this.serverMonitor = serverMonitor;
-		this.scopedContext = scopedContext;
-		this.ssrManifestReader = ssrManifestReader;
-		this.urlHelperFactory = urlHelperFactory;
-		this.options = options.Value;
-	}
 
 	public override void Process(TagHelperContext context, TagHelperOutput output)
 	{
@@ -58,7 +47,7 @@ public class PhoriaIslandPreloadTagHelper
 
 		string basePath = options.GetBasePath().TrimStart('/');
 
-		HashSet<string> seenFiles = new();
+		HashSet<string> seenFiles = [];
 
 		foreach (PhoriaIslandComponent component in scopedContext.Components)
 		{

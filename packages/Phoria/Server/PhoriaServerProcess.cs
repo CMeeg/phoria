@@ -14,28 +14,20 @@ public interface IPhoriaServerProcess
 	Task StopServer();
 }
 
-public sealed class PhoriaServerProcess
+public sealed class PhoriaServerProcess(
+	ILogger<PhoriaServerProcess> logger,
+	IPhoriaServerMonitor serverMonitor,
+	IHostEnvironment environment,
+	IOptions<PhoriaOptions> options)
 	: IPhoriaServerProcess, IDisposable
 {
-	private readonly ILogger<PhoriaServerProcess> logger;
-	private readonly IPhoriaServerMonitor serverMonitor;
-	private readonly IHostEnvironment environment;
-	private readonly PhoriaOptions options;
+	private readonly ILogger<PhoriaServerProcess> logger = logger;
+	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
+	private readonly IHostEnvironment environment = environment;
+	private readonly PhoriaOptions options = options.Value;
 	private SemaphoreSlim? semaphore;
 	private PeriodicTimer? periodicTimer;
 	private int? processId;
-
-	public PhoriaServerProcess(
-		ILogger<PhoriaServerProcess> logger,
-		IPhoriaServerMonitor serverMonitor,
-		IHostEnvironment environment,
-		IOptions<PhoriaOptions> options)
-	{
-		this.logger = logger;
-		this.serverMonitor = serverMonitor;
-		this.environment = environment;
-		this.options = options.Value;
-	}
 
 	public async Task StartServer(CancellationToken stoppingToken)
 	{
@@ -96,10 +88,12 @@ public sealed class PhoriaServerProcess
 
 		if (await semaphore!.WaitAsync(0, cancellationToken))
 		{
+			logger.LogServerProcessIsStarting(processOptions.Command, string.Join(" ", processOptions.Arguments ?? []));
+
 			try
 			{
-				var cmd = Cli.Wrap(processOptions.Command)
-					.WithArguments(processOptions.Arguments ?? Array.Empty<string>())
+				Command cmd = Cli.Wrap(processOptions.Command)
+					.WithArguments(processOptions.Arguments ?? [])
 					.WithWorkingDirectory(environment.ContentRootPath)
 					.WithValidation(CommandResultValidation.None);
 
@@ -192,6 +186,15 @@ internal static partial class PhoriaServerProcessLogMessages
 	internal static partial void LogServerProcessIsHealthy(this ILogger logger);
 
 	[LoggerMessage(
+		EventId = EventFeature.Server + 14,
+		Message = "Phoria server process starting {Command} {Args}.",
+		Level = LogLevel.Information)]
+	internal static partial void LogServerProcessIsStarting(
+		this ILogger logger,
+		string command,
+		string args);
+
+	[LoggerMessage(
 		EventId = EventFeature.Server + 9,
 		Message = "Phoria server process is running on pid {ProcessId}.",
 		Level = LogLevel.Debug)]
@@ -229,8 +232,5 @@ internal static partial class PhoriaServerProcessLogMessages
 		"Phoria server process caused exception.");
 	internal static void LogServerProcessException(
 		this ILogger logger,
-		Exception? exception = null)
-	{
-		logServerProcessException(logger, exception);
-	}
+		Exception? exception = null) => logServerProcessException(logger, exception);
 }

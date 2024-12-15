@@ -3,19 +3,11 @@ using Microsoft.AspNetCore.Html;
 
 namespace Phoria.Islands;
 
-public class PhoriaIslandPreloadHtmlContent
+public class PhoriaIslandPreloadHtmlContent(PhoriaIslandUrlHelper urlHelper, string file)
 	: IHtmlContent
 {
-	private readonly PhoriaIslandUrlHelper urlHelper;
-	private readonly string file;
-
-	public PhoriaIslandPreloadHtmlContent(
-		PhoriaIslandUrlHelper urlHelper,
-		string file)
-	{
-		this.urlHelper = urlHelper;
-		this.file = file;
-	}
+	private readonly PhoriaIslandUrlHelper urlHelper = urlHelper;
+	private readonly string file = file;
 
 	public void WriteTo(TextWriter writer, HtmlEncoder encoder)
 	{

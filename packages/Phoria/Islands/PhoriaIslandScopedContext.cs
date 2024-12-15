@@ -14,8 +14,5 @@ public sealed class PhoriaIslandScopedContext
 
 	public IReadOnlyList<PhoriaIslandComponent> Components => components;
 
-	public void AddComponent(PhoriaIslandComponent component)
-	{
-		components.Add(component);
-	}
+	public void AddComponent(PhoriaIslandComponent component) => components.Add(component);
 }

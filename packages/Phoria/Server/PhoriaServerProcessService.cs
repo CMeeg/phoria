@@ -2,15 +2,10 @@ using Microsoft.Extensions.Hosting;
 
 namespace Phoria.Server;
 
-public sealed class PhoriaServerProcessService
+public sealed class PhoriaServerProcessService(IPhoriaServerProcess serverProcess)
 	: BackgroundService
 {
-	private readonly IPhoriaServerProcess serverProcess;
-
-	public PhoriaServerProcessService(IPhoriaServerProcess serverProcess)
-	{
-		this.serverProcess = serverProcess;
-	}
+	private readonly IPhoriaServerProcess serverProcess = serverProcess;
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{

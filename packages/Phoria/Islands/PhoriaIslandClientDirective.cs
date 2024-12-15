@@ -27,7 +27,7 @@ public class PhoriaIslandClientIdleDirective
 
 	public PhoriaIslandClientIdleDirective(int? timeout = null)
 	{
-		if (timeout != null && timeout > 0)
+		if (timeout is not null and > 0)
 		{
 			Value = timeout.Value.ToString(CultureInfo.InvariantCulture);
 		}
@@ -39,10 +39,7 @@ public class PhoriaIslandClientVisibleDirective
 {
 	public override string Name => "client:visible";
 
-	public PhoriaIslandClientVisibleDirective(string? rootMargin = null)
-	{
-		Value = rootMargin;
-	}
+	public PhoriaIslandClientVisibleDirective(string? rootMargin = null) => Value = rootMargin;
 }
 
 public class PhoriaIslandClientMediaDirective
@@ -50,8 +47,5 @@ public class PhoriaIslandClientMediaDirective
 {
 	public override string Name => "client:media";
 
-	public PhoriaIslandClientMediaDirective(string mediaQuery)
-	{
-		Value = mediaQuery;
-	}
+	public PhoriaIslandClientMediaDirective(string mediaQuery) => Value = mediaQuery;
 }

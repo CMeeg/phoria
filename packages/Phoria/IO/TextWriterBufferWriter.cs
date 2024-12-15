@@ -16,10 +16,7 @@ internal sealed class TextWriterBufferWriter
 
 	private IMemoryOwner<char>? memoryOwner;
 
-	public TextWriterBufferWriter(TextWriter textWriter)
-	{
-		this.textWriter = textWriter;
-	}
+	public TextWriterBufferWriter(TextWriter textWriter) => this.textWriter = textWriter;
 
 	public TextWriterBufferWriter(TextWriter textWriter, TextEncoder? encoder)
 	{

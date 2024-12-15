@@ -18,6 +18,6 @@ public record PhoriaServerStatus
 {
 	public PhoriaServerHealth Health { get; init; } = PhoriaServerHealth.Unknown;
 	public PhoriaServerMode Mode { get; init; } = PhoriaServerMode.Development;
-	public string[] Frameworks { get; init; } = Array.Empty<string>();
+	public string[] Frameworks { get; init; } = [];
 	public required string Url { get; init; }
 }

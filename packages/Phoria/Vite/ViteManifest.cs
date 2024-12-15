@@ -42,42 +42,22 @@ public sealed class ViteManifest
 	private readonly IReadOnlyDictionary<string, ViteChunk> chunks;
 
 
-	public IViteChunk? this[string key]
-	{
-		get
-		{
-			if (!chunks.TryGetValue(key, out ViteChunk? chunk))
-			{
-				return null;
-			}
-
-			return chunk;
-		}
-	}
+	public IViteChunk? this[string key] => !chunks.TryGetValue(key, out ViteChunk? chunk) ? null : (IViteChunk)chunk;
 
 	IEnumerable<string> IViteManifest.Keys => chunks.Keys;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="ViteManifest"/> class.
 	/// </summary>
-	public ViteManifest()
-	{
-		chunks = new Dictionary<string, ViteChunk>();
-	}
+	public ViteManifest() => chunks = new Dictionary<string, ViteChunk>();
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="ViteManifest"/> class.
 	/// </summary>
 	/// <param name="chunks">Vite manfest chunks.</param>
-	public ViteManifest(IReadOnlyDictionary<string, ViteChunk> chunks)
-	{
-		this.chunks = chunks;
-	}
+	public ViteManifest(IReadOnlyDictionary<string, ViteChunk> chunks) => this.chunks = chunks;
 
-	IEnumerator<IViteChunk> IEnumerable<IViteChunk>.GetEnumerator()
-	{
-		return chunks.Values.GetEnumerator();
-	}
+	IEnumerator<IViteChunk> IEnumerable<IViteChunk>.GetEnumerator() => chunks.Values.GetEnumerator();
 
 	IEnumerator IEnumerable.GetEnumerator() => chunks.Values.GetEnumerator();
 

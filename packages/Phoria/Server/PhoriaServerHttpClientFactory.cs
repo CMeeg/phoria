@@ -7,21 +7,15 @@ public interface IPhoriaServerHttpClientFactory
 	HttpClient CreateClient();
 }
 
-internal sealed class PhoriaServerHttpClientFactory
+internal sealed class PhoriaServerHttpClientFactory(
+	IHttpClientFactory httpClientFactory,
+	IOptions<PhoriaOptions> options)
 	: IPhoriaServerHttpClientFactory
 {
 	internal const string HttpClientName = "PhoriaServerHttpClient";
 
-	private readonly IHttpClientFactory httpClientFactory;
-	private readonly PhoriaOptions options;
-
-	public PhoriaServerHttpClientFactory(
-		IHttpClientFactory httpClientFactory,
-		IOptions<PhoriaOptions> options)
-	{
-		this.httpClientFactory = httpClientFactory;
-		this.options = options.Value;
-	}
+	private readonly IHttpClientFactory httpClientFactory = httpClientFactory;
+	private readonly PhoriaOptions options = options.Value;
 
 	public HttpClient CreateClient()
 	{

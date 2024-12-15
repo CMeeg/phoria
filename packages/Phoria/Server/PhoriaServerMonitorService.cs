@@ -2,15 +2,10 @@ using Microsoft.Extensions.Hosting;
 
 namespace Phoria.Server;
 
-public class PhoriaServerMonitorService
+public class PhoriaServerMonitorService(IPhoriaServerMonitor serverMonitor)
 	: BackgroundService
 {
-	private readonly IPhoriaServerMonitor serverMonitor;
-
-	public PhoriaServerMonitorService(IPhoriaServerMonitor serverMonitor)
-	{
-		this.serverMonitor = serverMonitor;
-	}
+	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{

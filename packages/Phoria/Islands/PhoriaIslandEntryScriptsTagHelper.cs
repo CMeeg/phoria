@@ -8,22 +8,16 @@ using Phoria.Vite;
 namespace Phoria.Islands;
 
 [HtmlTargetElement("phoria-island-scripts", TagStructure = TagStructure.NormalOrSelfClosing)]
-public class PhoriaIslandEntryScriptsTagHelper
-	: PhoriaIslandEntryTagHelper
+public class PhoriaIslandEntryScriptsTagHelper(
+	ILogger<PhoriaIslandEntryScriptsTagHelper> logger,
+	IViteManifestReader manifestReader,
+	IPhoriaServerMonitor serverMonitor,
+	PhoriaIslandEntryTagHelperMonitor tagHelperMonitor,
+	IOptions<PhoriaOptions> options,
+	IUrlHelperFactory urlHelperFactory)
+	: PhoriaIslandEntryTagHelper(logger, manifestReader, serverMonitor, tagHelperMonitor, options, urlHelperFactory)
 {
-	private readonly PhoriaOptions options;
-
-	public PhoriaIslandEntryScriptsTagHelper(
-		ILogger<PhoriaIslandEntryScriptsTagHelper> logger,
-		IViteManifestReader manifestReader,
-		IPhoriaServerMonitor serverMonitor,
-		PhoriaIslandEntryTagHelperMonitor tagHelperMonitor,
-		IOptions<PhoriaOptions> options,
-		IUrlHelperFactory urlHelperFactory)
-		: base(logger, manifestReader, serverMonitor, tagHelperMonitor, options, urlHelperFactory)
-	{
-		this.options = options.Value;
-	}
+	private readonly PhoriaOptions options = options.Value;
 
 	public override void Process(TagHelperContext context, TagHelperOutput output)
 	{
