@@ -7,8 +7,8 @@ settings:
 catalogs:
   default:
     '@meeg/vite-plugin-inspect-config':
-      specifier: ~0.1.0
-      version: 0.1.0
+      specifier: ~0.2.0
+      version: 0.2.0
     '@rollup/pluginutils':
       specifier: ^5.1.3
       version: 5.1.3
@@ -134,7 +134,7 @@ importers:
     devDependencies:
       '@meeg/vite-plugin-inspect-config':
         specifier: 'catalog:'
-        version: 0.1.0(vite@6.0.3(@types/node@22.10.1)(jiti@2.4.1)(tsx@4.19.2))
+        version: 0.2.0(vite@6.0.3(@types/node@22.10.1)(jiti@2.4.1)(tsx@4.19.2))
       '@phoria/vite-plugin-dotnet-dev-certs':
         specifier: workspace:*
         version: link:../../../packages/vite-plugin-dotnet-dev-certs
@@ -213,7 +213,7 @@ importers:
     devDependencies:
       '@meeg/vite-plugin-inspect-config':
         specifier: 'catalog:'
-        version: 0.1.0(vite@6.0.3(@types/node@22.10.1)(jiti@2.4.1)(tsx@4.19.2))
+        version: 0.2.0(vite@6.0.3(@types/node@22.10.1)(jiti@2.4.1)(tsx@4.19.2))
       '@phoria/vite-plugin-dotnet-dev-certs':
         specifier: workspace:*
         version: link:../../../../../../packages/vite-plugin-dotnet-dev-certs
@@ -1233,11 +1233,11 @@ packages:
   '@manypkg/get-packages@1.1.3':
     resolution: {integrity: sha512-fo+QhuU3qE/2TQMQmbVMqaQ6EWbMhi4ABWP+O4AM1NqPBuy0OrApV5LO6BrrgnhtAHS2NH6RrVk9OL181tTi8A==}
 
-  '@meeg/vite-plugin-inspect-config@0.1.0':
-    resolution: {integrity: sha512-NDP3Oe2mkb3kLbr9b6xK9fbb7gis7Mk0rp22mpnmhXc+ZI0yCAvrg9auiz5SWyomVYYbAz3uXmx2KM+VerqPaQ==}
+  '@meeg/vite-plugin-inspect-config@0.2.0':
+    resolution: {integrity: sha512-zpMASIx4i+Q3d5Q12639CiNEV3OWkOu4x7pYErcwWPeQwYL4+2WMJUrWv6P7TloWfUFbAk9uTPA4wVxMRnjV4Q==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0}
     peerDependencies:
-      vite: ^5.0.0
+      vite: ^5.0.0 || ^6.0.0
 
   '@microsoft/api-extractor-model@7.29.8':
     resolution: {integrity: sha512-t3Z/xcO6TRbMcnKGVMs4uMzv/gd5j0NhMiJIGjD4cJMeFJ1Hf8wnLSx37vxlRlL0GWlGJhnFgxvnaL6JlS+73g==}
@@ -5652,7 +5652,7 @@ snapshots:
       globby: 11.1.0
       read-yaml-file: 1.1.0
 
-  '@meeg/vite-plugin-inspect-config@0.1.0(vite@6.0.3(@types/node@22.10.1)(jiti@2.4.1)(tsx@4.19.2))':
+  '@meeg/vite-plugin-inspect-config@0.2.0(vite@6.0.3(@types/node@22.10.1)(jiti@2.4.1)(tsx@4.19.2))':
     dependencies:
       vite: 6.0.3(@types/node@22.10.1)(jiti@2.4.1)(tsx@4.19.2)
 
