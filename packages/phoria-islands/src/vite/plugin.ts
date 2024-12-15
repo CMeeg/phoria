@@ -12,13 +12,13 @@ const defaultOutDir = "dist"
 
 function setRoot(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 	if (typeof config.root === "undefined") {
-		config.root = appsettings.Root
+		config.root = appsettings.root
 	}
 }
 
 function setBase(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 	if (typeof config.base === "undefined") {
-		config.base = appsettings.Base
+		config.base = appsettings.base
 	}
 }
 
@@ -28,13 +28,13 @@ function setServer(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) 
 	}
 
 	if (typeof options.host === "undefined") {
-		options.host = appsettings.Server?.Host
+		options.host = appsettings.server?.host
 	}
 
 	if (typeof options.port === "undefined") {
-		options.port = appsettings.Server?.Port
+		options.port = appsettings.server?.port
 
-		if (typeof appsettings.Server?.Port !== "undefined") {
+		if (typeof appsettings.server?.port !== "undefined") {
 			options.strictPort = true
 		}
 	}
@@ -61,9 +61,9 @@ function setClientEnvironment(options: EnvironmentOptions, appsettings: Partial<
 	options.build.manifest ??= true
 	options.build.ssrManifest ??= true
 	options.build.emptyOutDir ??= true
-	options.build.outDir ??= `${appsettings.Build?.OutDir ?? defaultOutDir}/${pluginName}/${environment.client}`
+	options.build.outDir ??= `${appsettings.build?.outDir ?? defaultOutDir}/${pluginName}/${environment.client}`
 
-	setEntry(options.build, appsettings.Root, appsettings.Entry)
+	setEntry(options.build, appsettings.root, appsettings.entry)
 }
 
 function setSsrEnvironment(options: EnvironmentOptions, appsettings: Partial<PhoriaAppSettings>) {
@@ -84,9 +84,9 @@ function setSsrEnvironment(options: EnvironmentOptions, appsettings: Partial<Pho
 	options.build ??= {}
 	options.build.ssr ??= true
 	options.build.emptyOutDir ??= true
-	options.build.outDir ??= `${appsettings.Build?.OutDir ?? defaultOutDir}/${pluginName}/${environment.ssr}`
+	options.build.outDir ??= `${appsettings.build?.outDir ?? defaultOutDir}/${pluginName}/${environment.ssr}`
 
-	setEntry(options.build, appsettings.Root, appsettings.SsrEntry)
+	setEntry(options.build, appsettings.root, appsettings.ssrEntry)
 }
 
 interface PhoriaPluginOptions {

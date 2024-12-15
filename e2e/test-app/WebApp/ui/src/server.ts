@@ -92,8 +92,8 @@ if (viteDevServer) {
 } else {
 	// In production, we will source the listener options from appsettings
 
-	listenOptions.hostname = appsettings.Server.Host
-	listenOptions.port = appsettings.Server.Port ?? 5173
+	listenOptions.hostname = appsettings.server.host
+	listenOptions.port = appsettings.server.port ?? 5173
 
 	// NOTE: If using https in production, you will need to source and pass the https options to the listener
 }

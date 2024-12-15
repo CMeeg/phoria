@@ -7,16 +7,16 @@ export default defineConfig(async () => {
 
 	// https://vite.dev/config/
 	return {
-		root: appsettings.Root,
-		base: appsettings.Base,
+		root: appsettings.root,
+		base: appsettings.base,
 		build: {
 			ssr: true,
 			target: "es2022",
 			copyPublicDir: false,
 			emptyOutDir: true,
-			outDir: `${appsettings.Build.OutDir}/server`,
+			outDir: `${appsettings.build.outDir}/server`,
 			rollupOptions: {
-				input: `${appsettings.Root}/src/server.ts`
+				input: `${appsettings.root}/src/server.ts`
 			}
 		},
 		environments: {

@@ -4,27 +4,27 @@ import { safeDestr } from "destr"
 import { up } from "empathic/find"
 
 interface AppSettings {
-	Phoria?: Partial<PhoriaAppSettings>
+	phoria?: Partial<PhoriaAppSettings>
 }
 
 interface PhoriaAppSettings {
-	Root: string
-	Base: string
-	Entry: string
-	SsrBase: string
-	SsrEntry: string
-	Server: PhoriaServerAppSettings
-	Build: PhoriaBuildAppSettings
+	root: string
+	base: string
+	entry: string
+	ssrBase: string
+	ssrEntry: string
+	server: PhoriaServerAppSettings
+	build: PhoriaBuildAppSettings
 }
 
 interface PhoriaServerAppSettings {
-	Host: string
-	Port?: number
-	Https: boolean
+	host: string
+	port?: number
+	https: boolean
 }
 
 interface PhoriaBuildAppSettings {
-	OutDir: string
+	outDir: string
 }
 
 async function parseAppSettings(
@@ -43,7 +43,7 @@ async function parseAppSettings(
 
 		const appsettings = safeDestr<AppSettings>(appsettingsContent)
 
-		return appsettings.Phoria ?? {}
+		return appsettings.phoria ?? {}
 	} catch (error) {
 		throw new Error(`Failed to parse appsettings file: ${appsettingsPath}`, { cause: error })
 	}
@@ -89,16 +89,16 @@ async function getPhoriaAppSettings(options?: Partial<PhoriaAppSettingsOptions>)
 
 // Defaults here must be in sync with the defaults set in `Phoria/PhoriaOptions.cs`
 const defaultAppsettings: Partial<PhoriaAppSettings> = {
-	Root: "ui",
-	Base: "/ui",
-	SsrBase: "/ssr",
-	Server: {
-		Host: "localhost",
-		Port: 5173,
-		Https: false
+	root: "ui",
+	base: "/ui",
+	ssrBase: "/ssr",
+	server: {
+		host: "localhost",
+		port: 5173,
+		https: false
 	},
-	Build: {
-		OutDir: "dist"
+	build: {
+		outDir: "dist"
 	}
 }
 
@@ -107,12 +107,12 @@ async function parsePhoriaAppSettings(options?: Partial<PhoriaAppSettingsOptions
 
 	const parsedAppSettings = defu(appsettings, defaultAppsettings) as PhoriaAppSettings
 
-	if (!parsedAppSettings.Entry) {
-		throw new Error("`Entry` is required in `Phoria` app settings.")
+	if (!parsedAppSettings.entry) {
+		throw new Error("`entry` is required in `Phoria` app settings.")
 	}
 
-	if (!parsedAppSettings.SsrEntry) {
-		throw new Error("`SsrEntry` is required in `Phoria` app settings.")
+	if (!parsedAppSettings.ssrEntry) {
+		throw new Error("`ssrEntry` is required in `Phoria` app settings.")
 	}
 
 	return parsedAppSettings

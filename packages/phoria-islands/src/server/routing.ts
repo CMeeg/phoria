@@ -167,15 +167,15 @@ function createPhoriaSsrRequestHandler(
 	const ssrEntry = pathToFileURL(
 		join(
 			opts.cwd,
-			appsettings.Root,
-			appsettings.Build.OutDir,
+			appsettings.root,
+			appsettings.build.outDir,
 			"phoria",
 			"ssr",
-			basename(appsettings.SsrEntry).replaceAll(".ts", ".js")
+			basename(appsettings.ssrEntry).replaceAll(".ts", ".js")
 		)
 	).href
 
-	const ssrRouter = createPhoriaSsrRouter(() => import(ssrEntry), appsettings.SsrBase)
+	const ssrRouter = createPhoriaSsrRouter(() => import(ssrEntry), appsettings.ssrBase)
 
 	return ssrRouter.handler
 }
@@ -193,7 +193,7 @@ function createPhoriaDevSsrRequestHandler(viteDevServer: ViteDevServer, appsetti
 		throw new Error("Vite dev server does not have a runnable SSR environment.")
 	}
 
-	const ssrRouter = createPhoriaSsrRouter(() => environment.runner.import(appsettings.SsrEntry), appsettings.SsrBase)
+	const ssrRouter = createPhoriaSsrRouter(() => environment.runner.import(appsettings.ssrEntry), appsettings.ssrBase)
 
 	return ssrRouter.handler
 }
@@ -215,12 +215,12 @@ function createPhoriaCsrRequestHandler(
 	const staticFilehandler = defineEventHandler((event) => {
 		return serveStatic(event, {
 			getContents: (id) => {
-				const filePath = join(opts.cwd, appsettings.Root, appsettings.Build.OutDir, "phoria", "client", id)
+				const filePath = join(opts.cwd, appsettings.root, appsettings.build.outDir, "phoria", "client", id)
 
 				return readFile(filePath)
 			},
 			getMeta: async (id) => {
-				const filePath = join(opts.cwd, appsettings.Root, appsettings.Build.OutDir, "phoria", "client", id)
+				const filePath = join(opts.cwd, appsettings.root, appsettings.build.outDir, "phoria", "client", id)
 
 				const stats = await stat(filePath).catch(() => {})
 
@@ -239,7 +239,7 @@ function createPhoriaCsrRequestHandler(
 		})
 	})
 
-	const base = appsettings.Base
+	const base = appsettings.base
 
 	return createRouter().use(`${base}/**`, useBase(base, staticFilehandler)).handler
 }
