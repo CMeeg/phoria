@@ -1,8 +1,18 @@
-# phoria
-
-🏝️ Islands architecture for dotnet powered by ⚡ Vite.
+<div align="center">
+  <img width="120" height="133" src="/docs/assets/phoria.svg">
+  <h1>phoria</h1>
+  <p><i>🏝️ Islands architecture for dotnet powered by ⚡ Vite.</i></p>
+  <hr /><br />
+</div>
 
 Phoria allows you to easily and efficiently render [islands of interactivity](https://docs.astro.build/en/concepts/islands/) using [React](https://react.dev/), [Svelte](https://svelte.dev/) or [Vue](https://vuejs.org/) within your dotnet web app (Razor Pages or MVC) using both Client Side Rendering (CSR) and Server Side Rendering (SSR).
+
+* ⚡ Built around [Vite](https://vite.dev/), which means you can enjoy a first class development experience, lightning fast HMR and access to its expansive plugin catalogue and ecosystem
+* 🏝️ Easily and efficiently render [islands of interactivity](https://docs.astro.build/en/concepts/islands/) using any supported UI framework(s)
+* 🌊 Client Side Rendering (CSR) and support for multiple client hydration strategies via client directives such as on load, on idle, on visible and on match media query
+* 🔋 Server Side Rendering (SSR) of Islands within your dotnet web app (Razor Pages or MVC) views
+* 📦 Easily pass props from your dotnet web app to your UI components
+* ⚙️ Shared configuration between dotnet and Vite using `appsettings.json` files and a `dotnet dev-certs` plugin
 
 ## Getting started
 
