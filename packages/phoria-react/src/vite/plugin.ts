@@ -1,7 +1,14 @@
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import react, { type Options as ViteReactPluginOptions } from "@vitejs/plugin-react"
 import MagicString from "magic-string"
-import type { PluginOption, UserConfig } from "vite"
+import type { EnvironmentOptions, PluginOption } from "vite"
+
+const pluginName = "phoria-react"
+
+const environment = {
+	client: "client",
+	ssr: "ssr"
+} as const
 
 export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude" | "babel">
 
@@ -20,25 +27,15 @@ const defaultOptions: PhoriaReactPluginOptions = {
 	cwd: process.cwd()
 }
 
-function setSsr(config: UserConfig) {
+function setSsrEnvironment(options: EnvironmentOptions) {
 	const external = ["@phoria/phoria-react/server"]
 
-	if (typeof config.ssr === "undefined") {
-		config.ssr = {
-			external
-		}
+	options.resolve ??= {}
 
-		return
-	}
-
-	if (typeof config.ssr.external === "undefined") {
-		config.ssr.external = external
-
-		return
-	}
-
-	if (Array.isArray(config.ssr.external)) {
-		config.ssr.external.push(...external)
+	if (typeof options.resolve.external === "undefined") {
+		options.resolve.external = external
+	} else if (Array.isArray(options.resolve.external)) {
+		options.resolve.external.push(...external)
 	}
 }
 
@@ -53,9 +50,15 @@ function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): PluginO
 	// TODO: Maybe also add the client and server imports to client and server entries?
 
 	return {
-		name: "phoria-react",
-		config: async (config) => {
-			setSsr(config)
+		name: pluginName,
+		config: (config) => {
+			config.environments ??= {}
+			config.environments[environment.ssr] ??= {}
+		},
+		configEnvironment(name, options) {
+			if (name === environment.ssr) {
+				setSsrEnvironment(options)
+			}
 		},
 		transform(code, id) {
 			if (!filter(id)) {

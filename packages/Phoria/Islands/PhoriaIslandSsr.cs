@@ -12,19 +12,13 @@ public interface IPhoriaIslandSsr
 		CancellationToken cancellationToken = default);
 }
 
-public class PhoriaIslandSsr
+public class PhoriaIslandSsr(
+	IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory,
+	IOptions<PhoriaOptions> options)
 	: IPhoriaIslandSsr
 {
-	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory;
-	private readonly PhoriaOptions options;
-
-	public PhoriaIslandSsr(
-		IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory,
-		IOptions<PhoriaOptions> options)
-	{
-		this.phoriaServerHttpClientFactory = phoriaServerHttpClientFactory;
-		this.options = options.Value;
-	}
+	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory = phoriaServerHttpClientFactory;
+	private readonly PhoriaOptions options = options.Value;
 
 	public async Task<PhoriaIslandSsrResult> RenderComponent(
 		PhoriaIslandComponent component,
@@ -41,7 +35,7 @@ public class PhoriaIslandSsr
 
 		StreamContent? body = CreatePropsContent(propsStreamPool);
 
-		var response = await client.PostAsync(
+		HttpResponseMessage response = await client.PostAsync(
 			$"{options.SsrBase}/render/{component.ComponentName}",
 			body,
 			cancellationToken);

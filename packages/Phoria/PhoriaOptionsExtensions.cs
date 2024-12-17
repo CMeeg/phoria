@@ -16,10 +16,7 @@ internal static class PhoriaOptionsExtensions
 		return serverUrl;
 	}
 
-	internal static string GetServerUrlWithBasePath(this PhoriaOptions options)
-	{
-		return $"{GetServerUrl(options)}{GetBasePath(options)}";
-	}
+	internal static string GetServerUrlWithBasePath(this PhoriaOptions options) => $"{GetServerUrl(options)}{GetBasePath(options)}";
 
 	internal static string GetBasePath(this PhoriaOptions options)
 	{

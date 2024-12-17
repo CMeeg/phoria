@@ -20,21 +20,15 @@ public interface IViteDevServerHmrProxy
 /// <summary>
 /// WebSocket bi-directional proxy for Vite HMR.
 /// </summary>
-internal sealed class ViteDevServerHmrProxy
+internal sealed class ViteDevServerHmrProxy(
+	ILogger<ViteDevServerHmrProxy> logger,
+	IOptions<PhoriaOptions> options)
 	: IViteDevServerHmrProxy
 {
 	internal const string SubProtocol = "vite-hmr";
 
-	private readonly ILogger<ViteDevServerHmrProxy> logger;
-	private readonly PhoriaOptions options;
-
-	public ViteDevServerHmrProxy(
-		ILogger<ViteDevServerHmrProxy> logger,
-		IOptions<PhoriaOptions> options)
-	{
-		this.logger = logger;
-		this.options = options.Value;
-	}
+	private readonly ILogger<ViteDevServerHmrProxy> logger = logger;
+	private readonly PhoriaOptions options = options.Value;
 
 	public static bool IsHmrRequest(HttpContext context)
 	{
@@ -63,7 +57,7 @@ internal sealed class ViteDevServerHmrProxy
 			_ => throw new ArgumentException(nameof(wsUriBuilder.Scheme))
 		};
 
-		var targetUri = wsUriBuilder.Uri;
+		Uri targetUri = wsUriBuilder.Uri;
 		var clientUri = new Uri(context.Request.GetDisplayUrl());
 
 		logger.LogEstablishingWebSocketProxy(clientUri, targetUri);

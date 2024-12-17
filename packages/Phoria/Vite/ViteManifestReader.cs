@@ -25,17 +25,25 @@ public interface IViteManifestReader
 }
 
 /// <inheritdoc cref="IViteManifestReader">
-public sealed class ViteManifestReader
-	: IViteManifestReader, IDisposable
+/// <param name="logger">The service used to log messages.</param>
+/// <param name="options">Phoria configuration options.</param>
+/// <param name="viteDevServer">Vite Dev Server status.</param>
+/// <param name="environment">Information about the web hosting environment.</param>
+public sealed class ViteManifestReader(
+	ILogger<ViteManifestReader> logger,
+	IOptions<PhoriaOptions> options,
+	IPhoriaServerMonitor serverMonitor,
+	IWebHostEnvironment environment)
+		: IViteManifestReader, IDisposable
 {
 	private const string ManifestName = "manifest.json";
 
 	private static bool warnAboutManifestOnce = true;
 
-	private readonly ILogger<ViteManifestReader> logger;
-	private readonly IPhoriaServerMonitor serverMonitor;
-	private readonly IWebHostEnvironment environment;
-	private readonly PhoriaOptions options;
+	private readonly ILogger<ViteManifestReader> logger = logger;
+	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
+	private readonly IWebHostEnvironment environment = environment;
+	private readonly PhoriaOptions options = options.Value;
 
 	private PhysicalFileProvider? fileProvider;
 	private IChangeToken? changeToken;
@@ -46,22 +54,6 @@ public sealed class ViteManifestReader
 	{
 		PropertyNameCaseInsensitive = true
 	};
-
-	/// <param name="logger">The service used to log messages.</param>
-	/// <param name="options">Phoria configuration options.</param>
-	/// <param name="viteDevServer">Vite Dev Server status.</param>
-	/// <param name="environment">Information about the web hosting environment.</param>
-	public ViteManifestReader(
-		ILogger<ViteManifestReader> logger,
-		IOptions<PhoriaOptions> options,
-		IPhoriaServerMonitor serverMonitor,
-		IWebHostEnvironment environment)
-	{
-		this.logger = logger;
-		this.options = options.Value;
-		this.serverMonitor = serverMonitor;
-		this.environment = environment;
-	}
 
 	public IViteManifest ReadManifest()
 	{
@@ -107,10 +99,8 @@ public sealed class ViteManifestReader
 	{
 		// Read the name of the manifest file from the configuration
 
-		string basePath = options.GetBasePath().TrimStart('/');
-
 		// TODO: Can this be injected? ViteManifestReader and ViteSsrManifestReader can use the same fileprovider
-		fileProvider ??= new PhysicalFileProvider(Path.Combine(environment.ContentRootPath, basePath, "phoria", "client", ".vite"));
+		fileProvider ??= new PhysicalFileProvider(Path.Combine(environment.ContentRootPath, options.Root, options.Build.OutDir, "phoria", "client", ".vite"));
 
 		IFileInfo manifestFile = fileProvider.GetFileInfo(ManifestName);
 
@@ -123,7 +113,7 @@ public sealed class ViteManifestReader
 			// Read the manifest file and deserialize it into a dictionary
 
 			using Stream readStream = manifestFile.CreateReadStream();
-			var chunks = JsonSerializer.Deserialize<IReadOnlyDictionary<string, ViteChunk>>(
+			IReadOnlyDictionary<string, ViteChunk> chunks = JsonSerializer.Deserialize<IReadOnlyDictionary<string, ViteChunk>>(
 				readStream,
 				jsonDeserializeOptions
 			)!;

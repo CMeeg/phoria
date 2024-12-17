@@ -8,24 +8,16 @@ using Phoria.Logging;
 
 namespace Phoria.Server;
 
-internal sealed class PhoriaServerMiddleware
+internal sealed class PhoriaServerMiddleware(
+	ILogger<PhoriaServerMiddleware> logger,
+	IPhoriaServerMonitor serverMonitor,
+	IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory,
+	RequestDelegate next)
 {
-	private readonly ILogger<PhoriaServerMiddleware> logger;
-	private readonly IPhoriaServerMonitor serverMonitor;
-	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory;
-	private readonly RequestDelegate next;
-
-	public PhoriaServerMiddleware(
-		ILogger<PhoriaServerMiddleware> logger,
-		IPhoriaServerMonitor serverMonitor,
-		IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory,
-		RequestDelegate next)
-	{
-		this.logger = logger;
-		this.serverMonitor = serverMonitor;
-		this.phoriaServerHttpClientFactory = phoriaServerHttpClientFactory;
-		this.next = next;
-	}
+	private readonly ILogger<PhoriaServerMiddleware> logger = logger;
+	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
+	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory = phoriaServerHttpClientFactory;
+	private readonly RequestDelegate next = next;
 
 	/// <inheritdoc />
 	public async Task InvokeAsync(
@@ -117,8 +109,5 @@ internal static partial class PhoriaServerMiddlewareLogMessages
 	internal static void LogMiddlewareProxyViaHttpError(
 		this ILogger logger,
 		string url,
-		Exception? exception = null)
-	{
-		logMiddlewareProxyViaHttpError(logger, url, exception);
-	}
+		Exception? exception = null) => logMiddlewareProxyViaHttpError(logger, url, exception);
 }

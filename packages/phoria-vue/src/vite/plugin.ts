@@ -1,7 +1,14 @@
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import vue, { type Options as VueOptions } from "@vitejs/plugin-vue"
 import MagicString from "magic-string"
-import type { PluginOption, UserConfig } from "vite"
+import type { EnvironmentOptions, PluginOption } from "vite"
+
+const pluginName = "phoria-vue"
+
+const environment = {
+	client: "client",
+	ssr: "ssr"
+} as const
 
 type CreateFilterParams = Parameters<typeof createFilter>
 
@@ -18,25 +25,15 @@ const defaultOptions: PhoriaVuePluginOptions = {
 	cwd: process.cwd()
 }
 
-function setSsr(config: UserConfig) {
+function setSsrEnvironment(options: EnvironmentOptions) {
 	const external = ["@phoria/phoria-vue/server"]
 
-	if (typeof config.ssr === "undefined") {
-		config.ssr = {
-			external
-		}
+	options.resolve ??= {}
 
-		return
-	}
-
-	if (typeof config.ssr.external === "undefined") {
-		config.ssr.external = external
-
-		return
-	}
-
-	if (Array.isArray(config.ssr.external)) {
-		config.ssr.external.push(...external)
+	if (typeof options.resolve.external === "undefined") {
+		options.resolve.external = external
+	} else if (Array.isArray(options.resolve.external)) {
+		options.resolve.external.push(...external)
 	}
 }
 
@@ -51,9 +48,15 @@ function phoriaVuePlugin(options?: Partial<PhoriaVuePluginOptions>): PluginOptio
 	// TODO: Maybe also add the client and server imports to client and server entries?
 
 	return {
-		name: "phoria-vue",
-		config: async (config) => {
-			setSsr(config)
+		name: pluginName,
+		config: (config) => {
+			config.environments ??= {}
+			config.environments[environment.ssr] ??= {}
+		},
+		configEnvironment(name, options) {
+			if (name === environment.ssr) {
+				setSsrEnvironment(options)
+			}
 		},
 		transform(code, id) {
 			if (!filter(id)) {

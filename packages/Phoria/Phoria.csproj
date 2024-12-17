@@ -1,6 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<AnalysisLevel>9.0-recommended</AnalysisLevel>
+	</PropertyGroup>
+
+	<PropertyGroup>
 		<PackageId>Phoria</PackageId>
 		<Title>Phoria</Title>
 		<Description>Islands architecture for dotnet powered by Vite.</Description>

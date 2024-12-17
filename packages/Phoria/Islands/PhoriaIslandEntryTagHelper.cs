@@ -3,10 +3,8 @@
 
 using System.ComponentModel;
 using System.Globalization;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -19,10 +17,25 @@ using Phoria.Vite;
 
 namespace Phoria.Islands;
 
+/// <summary>
+/// This tag helper is used to replace the phoria-src and phoria-href attributes with the correct client entry file path according to the Vite manifest.
+/// </summary>
+/// <param name="logger">An ILogger instance.</param>
+/// <param name="manifestReader">The Vite manifest reader.</param>
+/// <param name="serverMonitor">The Phoria server monitor.</param>
+/// <param name="tagHelperMonitor">The tag helper monitor.</param>
+/// <param name="options">Phoria options.</param>
+/// <param name="urlHelperFactory">Url helper factory to build the file path.</param>
 [HtmlTargetElement(ScriptTag, Attributes = PhoriaSrcAttribute)]
 [HtmlTargetElement(LinkTag, Attributes = PhoriaHrefAttribute)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public class PhoriaIslandEntryTagHelper
+public class PhoriaIslandEntryTagHelper(
+	ILogger<PhoriaIslandEntryTagHelper> logger,
+	IViteManifestReader manifestReader,
+	IPhoriaServerMonitor serverMonitor,
+	PhoriaIslandEntryTagHelperMonitor tagHelperMonitor,
+	IOptions<PhoriaOptions> options,
+	IUrlHelperFactory urlHelperFactory)
 	: TagHelper
 {
 	private static readonly Regex scriptRegex =
@@ -40,12 +53,12 @@ public class PhoriaIslandEntryTagHelper
 	private const string LinkAsAttribute = "as";
 	private const string LinkAsStyle = "style";
 
-	private readonly ILogger<PhoriaIslandEntryTagHelper> logger;
-	private readonly IViteManifestReader manifestReader;
-	private readonly IPhoriaServerMonitor serverMonitor;
-	private readonly PhoriaIslandEntryTagHelperMonitor tagHelperMonitor;
-	private readonly PhoriaOptions options;
-	private readonly IUrlHelperFactory urlHelperFactory;
+	private readonly ILogger<PhoriaIslandEntryTagHelper> logger = logger;
+	private readonly IViteManifestReader manifestReader = manifestReader;
+	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
+	private readonly PhoriaIslandEntryTagHelperMonitor tagHelperMonitor = tagHelperMonitor;
+	private readonly PhoriaOptions options = options.Value;
+	private readonly IUrlHelperFactory urlHelperFactory = urlHelperFactory;
 
 	/// <summary>
 	/// The path to your Phoria client entry file.
@@ -66,31 +79,6 @@ public class PhoriaIslandEntryTagHelper
 
 	// Set the Order property to int.MinValue to ensure this tag helper is executed before any other tag helpers with a higher Order value
 	public override int Order => int.MinValue;
-
-	/// <summary>
-	/// This tag helper is used to replace the phoria-src and phoria-href attributes with the correct client entry file path according to the Vite manifest.
-	/// </summary>
-	/// <param name="logger">An ILogger instance.</param>
-	/// <param name="manifestReader">The Vite manifest reader.</param>
-	/// <param name="serverMonitor">The Phoria server monitor.</param>
-	/// <param name="tagHelperMonitor">The tag helper monitor.</param>
-	/// <param name="options">Phoria options.</param>
-	/// <param name="urlHelperFactory">Url helper factory to build the file path.</param>
-	public PhoriaIslandEntryTagHelper(
-		ILogger<PhoriaIslandEntryTagHelper> logger,
-		IViteManifestReader manifestReader,
-		IPhoriaServerMonitor serverMonitor,
-		PhoriaIslandEntryTagHelperMonitor tagHelperMonitor,
-		IOptions<PhoriaOptions> options,
-		IUrlHelperFactory urlHelperFactory)
-	{
-		this.logger = logger;
-		this.manifestReader = manifestReader;
-		this.serverMonitor = serverMonitor;
-		this.tagHelperMonitor = tagHelperMonitor;
-		this.options = options.Value;
-		this.urlHelperFactory = urlHelperFactory;
-	}
 
 	/// <inheritdoc />
 	public override void Process(TagHelperContext context, TagHelperOutput output)

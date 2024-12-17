@@ -2,18 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Phoria.Islands;
 
-public class PhoriaIslandUrlHelper
+public class PhoriaIslandUrlHelper(IUrlHelper urlHelper, PhoriaOptions options)
 {
-	private readonly IUrlHelper urlHelper;
-	private readonly string? basePath;
-
-	public PhoriaIslandUrlHelper(
-		IUrlHelper urlHelper,
-		PhoriaOptions options)
-	{
-		this.urlHelper = urlHelper;
-		basePath = options.Base?.Trim('/');
-	}
+	private readonly IUrlHelper urlHelper = urlHelper;
+	private readonly string? basePath = options.Base?.Trim('/');
 
 	public string GetContentUrl(string filePath)
 	{

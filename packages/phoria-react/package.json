@@ -67,7 +67,7 @@
 		"@phoria/phoria": "workspace:*",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
-		"@vitejs/plugin-react": "^4.3.3",
+		"@vitejs/plugin-react": "^4.3.4",
 		"cross-env": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
@@ -78,15 +78,15 @@
 		"vite-tsconfig-paths": "catalog:"
 	},
 	"peerDependencies": {
-		"@phoria/phoria": "~0.2.0",
+		"@phoria/phoria": "~0.3.0",
 		"@types/react": "^19.0.0",
 		"@types/react-dom": "^19.0.0",
 		"@vitejs/plugin-react": "^4.0.0",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
-		"vite": "^5.0.0"
+		"vite": "^6.0.0"
 	},
 	"engines": {
-		"node": "^18.17.1 || ^20.3.0 || >=21.0.0"
+		"node": "^18.17.1 || ^20.3.0 || >=22.0.0"
 	}
 }

@@ -22,12 +22,10 @@ public sealed class PhoriaServerMonitor
 	private readonly ILogger<PhoriaServerMonitor> logger;
 	private readonly PhoriaOptions options;
 	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory;
-
-	private PhoriaServerStatus serverStatus;
 	private SemaphoreSlim? semaphore;
 	private PeriodicTimer? periodicTimer;
 
-	public PhoriaServerStatus ServerStatus => serverStatus;
+	public PhoriaServerStatus ServerStatus { get; private set; }
 
 	private static readonly JsonSerializerOptions jsonDeserializeOptions = new()
 	{
@@ -44,7 +42,7 @@ public sealed class PhoriaServerMonitor
 		this.options = options.Value;
 		this.phoriaServerHttpClientFactory = phoriaServerHttpClientFactory;
 
-		serverStatus = CreateUnknownServerStatus();
+		ServerStatus = CreateUnknownServerStatus();
 	}
 
 	public async Task StartMonitoring(CancellationToken cancellationToken)
@@ -90,23 +88,23 @@ public sealed class PhoriaServerMonitor
 
 					if (result != null)
 					{
-						logger.LogServerIsHealthy(serverStatus.Url);
+						logger.LogServerIsHealthy(ServerStatus.Url);
 
-						serverStatus = CreateHealthyServerStatus(result);
+						ServerStatus = CreateHealthyServerStatus(result);
 
 						return;
 					}
 				}
 
-				logger.LogServerIsUnhealthy(serverStatus.Url);
+				logger.LogServerIsUnhealthy(ServerStatus.Url);
 
-				serverStatus = CreateUnhealthyServerStatus();
+				ServerStatus = CreateUnhealthyServerStatus();
 			}
 			catch (Exception ex)
 			{
-				logger.LogServerIsUnhealthy(serverStatus.Url, ex);
+				logger.LogServerIsUnhealthy(ServerStatus.Url, ex);
 
-				serverStatus = CreateUnhealthyServerStatus();
+				ServerStatus = CreateUnhealthyServerStatus();
 			}
 			finally
 			{
@@ -115,33 +113,24 @@ public sealed class PhoriaServerMonitor
 		}
 	}
 
-	private PhoriaServerStatus CreateHealthyServerStatus(PhoriaHealthCheckResult result)
+	private PhoriaServerStatus CreateHealthyServerStatus(PhoriaHealthCheckResult result) => new()
 	{
-		return new PhoriaServerStatus
-		{
-			Health = PhoriaServerHealth.Healthy,
-			Mode = result.Mode,
-			Frameworks = result.Frameworks,
-			Url = options.GetServerUrl()
-		};
-	}
+		Health = PhoriaServerHealth.Healthy,
+		Mode = result.Mode,
+		Frameworks = result.Frameworks,
+		Url = options.GetServerUrl()
+	};
 
-	private PhoriaServerStatus CreateUnhealthyServerStatus()
+	private PhoriaServerStatus CreateUnhealthyServerStatus() => new()
 	{
-		return new PhoriaServerStatus
-		{
-			Health = PhoriaServerHealth.Unhealthy,
-			Url = options.GetServerUrl()
-		};
-	}
+		Health = PhoriaServerHealth.Unhealthy,
+		Url = options.GetServerUrl()
+	};
 
-	private PhoriaServerStatus CreateUnknownServerStatus()
+	private PhoriaServerStatus CreateUnknownServerStatus() => new()
 	{
-		return new PhoriaServerStatus
-		{
-			Url = options.GetServerUrl()
-		};
-	}
+		Url = options.GetServerUrl()
+	};
 
 	public Task StopMonitoring()
 	{
@@ -183,8 +172,5 @@ internal static partial class PhoriaServerMonitorLogMessages
 	internal static void LogServerIsUnhealthy(
 		this ILogger logger,
 		string url,
-		Exception? exception = null)
-	{
-		logServerIsUnhealthy(logger, url, exception);
-	}
+		Exception? exception = null) => logServerIsUnhealthy(logger, url, exception);
 }

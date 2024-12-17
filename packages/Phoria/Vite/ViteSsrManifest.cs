@@ -15,35 +15,15 @@ public sealed class ViteSsrManifest
 {
 	private readonly IReadOnlyDictionary<string, string[]> files;
 
-	public string[]? this[string key]
-	{
-		get
-		{
-			if (!files.TryGetValue(key, out string[]? file))
-			{
-				return null;
-			}
-
-			return file;
-		}
-	}
+	public string[]? this[string key] => !files.TryGetValue(key, out string[]? file) ? null : file;
 
 	IEnumerable<string> IViteSsrManifest.Keys => files.Keys;
 
-	public ViteSsrManifest()
-	{
-		files = new Dictionary<string, string[]>();
-	}
+	public ViteSsrManifest() => files = new Dictionary<string, string[]>();
 
-	public ViteSsrManifest(IReadOnlyDictionary<string, string[]> files)
-	{
-		this.files = files;
-	}
+	public ViteSsrManifest(IReadOnlyDictionary<string, string[]> files) => this.files = files;
 
-	IEnumerator<string[]> IEnumerable<string[]>.GetEnumerator()
-	{
-		return files.Values.GetEnumerator();
-	}
+	IEnumerator<string[]> IEnumerable<string[]>.GetEnumerator() => files.Values.GetEnumerator();
 
 	IEnumerator IEnumerable.GetEnumerator() => files.Values.GetEnumerator();
 

@@ -7,24 +7,17 @@ using Phoria.IO;
 
 namespace Phoria.Islands;
 
-public class PhoriaIslandHtmlContent
+public class PhoriaIslandHtmlContent(
+	PhoriaIslandComponent component,
+	PhoriaIslandSsrResult? ssrResult,
+	PhoriaOptions options)
 	: IHtmlContent
 {
 	private const string TagName = "phoria-island";
 
-	private readonly PhoriaIslandComponent component;
-	private readonly PhoriaIslandSsrResult? ssrResult;
-	private readonly PhoriaOptions options;
-
-	public PhoriaIslandHtmlContent(
-		PhoriaIslandComponent component,
-		PhoriaIslandSsrResult? ssrResult,
-		PhoriaOptions options)
-	{
-		this.component = component;
-		this.ssrResult = ssrResult;
-		this.options = options;
-	}
+	private readonly PhoriaIslandComponent component = component;
+	private readonly PhoriaIslandSsrResult? ssrResult = ssrResult;
+	private readonly PhoriaOptions options = options;
 
 	public void WriteTo(TextWriter writer, HtmlEncoder encoder)
 	{

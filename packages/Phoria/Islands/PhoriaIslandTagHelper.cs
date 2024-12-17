@@ -4,29 +4,21 @@ using Phoria.Server;
 
 namespace Phoria.Islands;
 
-public class PhoriaIslandTagHelper
+public class PhoriaIslandTagHelper(
+	IPhoriaIslandScopedContext scopedContext,
+	IPhoriaServerMonitor serverMonitor,
+	IPhoriaIslandSsr phoriaIslandSsr,
+	IOptions<PhoriaOptions> options)
 	: TagHelper
 {
-	private readonly IPhoriaIslandScopedContext scopedContext;
-	private readonly IPhoriaServerMonitor serverMonitor;
-	private readonly IPhoriaIslandSsr phoriaIslandSsr;
-	private readonly PhoriaOptions options;
+	private readonly IPhoriaIslandScopedContext scopedContext = scopedContext;
+	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
+	private readonly IPhoriaIslandSsr phoriaIslandSsr = phoriaIslandSsr;
+	private readonly PhoriaOptions options = options.Value;
 
 	public required string Component { get; set; }
 	public object? Props { get; set; }
 	public PhoriaIslandClientDirective? Client { get; set; }
-
-	public PhoriaIslandTagHelper(
-		IPhoriaIslandScopedContext scopedContext,
-		IPhoriaServerMonitor serverMonitor,
-		IPhoriaIslandSsr phoriaIslandSsr,
-		IOptions<PhoriaOptions> options)
-	{
-		this.scopedContext = scopedContext;
-		this.serverMonitor = serverMonitor;
-		this.phoriaIslandSsr = phoriaIslandSsr;
-		this.options = options.Value;
-	}
 
 	public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
 	{

@@ -1,144 +1,128 @@
-import type { PluginOption, UserConfig } from "vite"
+import type { BuildEnvironmentOptions, EnvironmentOptions, PluginOption, UserConfig } from "vite"
 import { type PhoriaAppSettings, parsePhoriaAppSettings } from "~/server/appsettings"
 
-interface PhoriaPluginOptions {
-	appsettings: Partial<PhoriaAppSettings>
-}
+const pluginName = "phoria"
+
+const environment = {
+	client: "client",
+	ssr: "ssr"
+} as const
+
+const defaultOutDir = "dist"
 
 function setRoot(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 	if (typeof config.root === "undefined") {
-		config.root = appsettings.Root
+		config.root = appsettings.root
 	}
 }
 
 function setBase(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
 	if (typeof config.base === "undefined") {
-		config.base = appsettings.Base
+		config.base = appsettings.base
 	}
 }
 
 function setServer(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
-	if (typeof appsettings.Server === "undefined") {
+	const options: typeof config.server = {
+		...config.server
+	}
+
+	if (typeof options.host === "undefined") {
+		options.host = appsettings.server?.host
+	}
+
+	if (typeof options.port === "undefined") {
+		options.port = appsettings.server?.port
+
+		if (typeof appsettings.server?.port !== "undefined") {
+			options.strictPort = true
+		}
+	}
+
+	config.server = options
+}
+
+function setEntry(options: BuildEnvironmentOptions, root?: string, entryFile?: string) {
+	if (typeof entryFile === "undefined") {
 		return
 	}
 
-	if (typeof config.server === "undefined") {
-		config.server = {
-			host: appsettings.Server.Host,
-			port: appsettings.Server.Port
-		}
+	const input = root ? `${root}/${entryFile}` : entryFile
 
-		if (typeof appsettings.Server.Port !== "undefined") {
-			config.server.strictPort = true
-		}
-
-		return
-	}
-
-	if (typeof config.server.host === "undefined") {
-		config.server.host = appsettings.Server.Host
-	}
-
-	if (typeof config.server.port === "undefined") {
-		config.server.port = appsettings.Server.Port
-
-		if (typeof appsettings.Server.Port !== "undefined") {
-			config.server.strictPort = true
-		}
+	options.rollupOptions = {
+		input
 	}
 }
 
-function setBuild(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) {
-	if (typeof appsettings.Entry === "undefined") {
-		return
-	}
+function setClientEnvironment(options: EnvironmentOptions, appsettings: Partial<PhoriaAppSettings>) {
+	// Set build options
 
-	if (typeof config.build === "undefined") {
-		config.build = {
-			rollupOptions: {
-				input: appsettings.Entry
-			}
-		}
+	options.build ??= {}
+	options.build.manifest ??= true
+	options.build.ssrManifest ??= true
+	options.build.emptyOutDir ??= true
+	options.build.outDir ??= `${appsettings.build?.outDir ?? defaultOutDir}/${pluginName}/${environment.client}`
 
-		return
-	}
-
-	if (typeof config.build.rollupOptions === "undefined") {
-		config.build.rollupOptions = {
-			input: appsettings.Entry
-		}
-
-		return
-	}
-
-	if (typeof config.build.rollupOptions.input === "undefined") {
-		config.build.rollupOptions.input = appsettings.Entry
-
-		return
-	}
-
-	if (typeof config.build.rollupOptions.input === "string") {
-		config.build.rollupOptions.input = [config.build.rollupOptions.input, appsettings.Entry]
-
-		return
-	}
-
-	if (Array.isArray(config.build.rollupOptions.input)) {
-		config.build.rollupOptions.input.push(appsettings.Entry)
-
-		return
-	}
-
-	if (typeof config.build.rollupOptions.input === "object") {
-		config.build.rollupOptions.input = {
-			...config.build.rollupOptions.input,
-			"phoria-client-entry": appsettings.Entry
-		}
-
-		return
-	}
+	setEntry(options.build, appsettings.root, appsettings.entry)
 }
 
-function setSsr(config: UserConfig) {
+function setSsrEnvironment(options: EnvironmentOptions, appsettings: Partial<PhoriaAppSettings>) {
+	// Set resolve options
+
 	const external = ["@phoria/phoria"]
 
-	if (typeof config.ssr === "undefined") {
-		config.ssr = {
-			external
-		}
+	options.resolve ??= {}
 
-		return
+	if (typeof options.resolve.external === "undefined") {
+		options.resolve.external = external
+	} else if (Array.isArray(options.resolve.external)) {
+		options.resolve.external.push(...external)
 	}
 
-	if (typeof config.ssr.external === "undefined") {
-		config.ssr.external = external
+	// Set build options
 
-		return
-	}
+	options.build ??= {}
+	options.build.ssr ??= true
+	options.build.emptyOutDir ??= true
+	options.build.outDir ??= `${appsettings.build?.outDir ?? defaultOutDir}/${pluginName}/${environment.ssr}`
 
-	if (Array.isArray(config.ssr.external)) {
-		config.ssr.external.push(...external)
+	setEntry(options.build, appsettings.root, appsettings.ssrEntry)
+}
 
-		return
-	}
+interface PhoriaPluginOptions {
+	appsettings: Partial<PhoriaAppSettings>
 }
 
 function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
+	let appsettings: Partial<PhoriaAppSettings> = {}
+
 	return {
-		name: "phoria",
+		name: pluginName,
 		config: async (config) => {
 			const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
 
-			const appsettings = await parsePhoriaAppSettings({
+			appsettings = await parsePhoriaAppSettings({
 				environment: dotnetEnv,
 				inlineSettings: options?.appsettings
 			})
 
+			config.environments ??= {}
+			config.environments[environment.client] ??= {}
+			config.environments[environment.ssr] ??= {}
+
 			setRoot(config, appsettings)
 			setBase(config, appsettings)
 			setServer(config, appsettings)
-			setBuild(config, appsettings)
-			setSsr(config)
+		},
+		configEnvironment(name, options) {
+			switch (name) {
+				case environment.client:
+					setClientEnvironment(options, appsettings)
+					break
+				case environment.ssr:
+					setSsrEnvironment(options, appsettings)
+					break
+			}
 		}
 	}
 }
