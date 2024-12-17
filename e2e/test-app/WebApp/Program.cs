@@ -48,7 +48,7 @@ app.MapRazorPages()
 
 if (app.Environment.IsDevelopment())
 {
-	// WebSockets support is required for Vite HMR (hot module reload)
+	// WebSockets are required for the Vite Dev Server's HMR (Hot Module Reload) feature
 	app.UseWebSockets();
 }
 
