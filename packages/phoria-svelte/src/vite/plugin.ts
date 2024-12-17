@@ -1,7 +1,7 @@
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import { type Options as SvelteOptions, svelte } from "@sveltejs/vite-plugin-svelte"
 import MagicString from "magic-string"
-import type { PluginOption, EnvironmentOptions } from "vite"
+import type { EnvironmentOptions, PluginOption } from "vite"
 
 const pluginName = "phoria-svelte"
 

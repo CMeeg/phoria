@@ -26,11 +26,5 @@
 		"useDefineForClassFields": true,
 		"verbatimModuleSyntax": true
 	},
-	"include": [
-		"ui/src/**/*.ts",
-		"ui/src/**/*.d.ts",
-		"ui/src/**/*.tsx",
-		"ui/src/**/*.vue",
-		"ui/src/**/*.svelte"
-	]
+	"include": ["ui/src/**/*.ts", "ui/src/**/*.d.ts", "ui/src/**/*.tsx", "ui/src/**/*.vue", "ui/src/**/*.svelte"]
 }

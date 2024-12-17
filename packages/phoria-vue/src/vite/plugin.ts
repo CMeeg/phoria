@@ -1,7 +1,7 @@
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import vue, { type Options as VueOptions } from "@vitejs/plugin-vue"
 import MagicString from "magic-string"
-import type { PluginOption, EnvironmentOptions } from "vite"
+import type { EnvironmentOptions, PluginOption } from "vite"
 
 const pluginName = "phoria-vue"
 

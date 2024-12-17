@@ -1,4 +1,4 @@
-import type { PluginOption, UserConfig, EnvironmentOptions, BuildEnvironmentOptions } from "vite"
+import type { BuildEnvironmentOptions, EnvironmentOptions, PluginOption, UserConfig } from "vite"
 import { type PhoriaAppSettings, parsePhoriaAppSettings } from "~/server/appsettings"
 
 const pluginName = "phoria"
