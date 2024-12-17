@@ -1,6 +1,6 @@
 {
 	"name": "@phoria/phoria-vue",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Use Vue with Phoria Islands for dotnet.",
 	"keywords": [
 		"phoria",
