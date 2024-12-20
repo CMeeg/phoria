@@ -58,10 +58,10 @@ function setClientEnvironment(options: EnvironmentOptions, appsettings: Partial<
 	// Set build options
 
 	options.build ??= {}
-	options.build.manifest ??= true
-	options.build.ssrManifest ??= true
+	options.build.manifest = true
+	options.build.ssrManifest = true
 	options.build.emptyOutDir ??= true
-	options.build.outDir ??= `${appsettings.build?.outDir ?? defaultOutDir}/${pluginName}/${environment.client}`
+	options.build.outDir = `${appsettings.build?.outDir ?? defaultOutDir}/${pluginName}/${environment.client}`
 
 	setEntry(options.build, appsettings.root, appsettings.entry)
 }
@@ -82,9 +82,9 @@ function setSsrEnvironment(options: EnvironmentOptions, appsettings: Partial<Pho
 	// Set build options
 
 	options.build ??= {}
-	options.build.ssr ??= true
+	options.build.ssr = true
 	options.build.emptyOutDir ??= true
-	options.build.outDir ??= `${appsettings.build?.outDir ?? defaultOutDir}/${pluginName}/${environment.ssr}`
+	options.build.outDir = `${appsettings.build?.outDir ?? defaultOutDir}/${pluginName}/${environment.ssr}`
 
 	setEntry(options.build, appsettings.root, appsettings.ssrEntry)
 }
