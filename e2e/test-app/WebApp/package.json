@@ -12,7 +12,7 @@
 		"dev": "tsx ./ui/src/server.ts",
 		"lint": "biome check",
 		"preview": "run-p preview:* -c",
-		"preview:dotnet": "cross-env DOTNET_ENVIRONMENT=Preview dotnet run ./WebApp/bin/Release/net9.0/WebApp.dll",
+		"preview:dotnet": "cross-env DOTNET_ENVIRONMENT=Preview dotnet run ./WebApp/bin/Release/net9.0/WebApp.dll --launch-profile Preview",
 		"preview:phoria": "cross-env NODE_ENV=production DOTNET_ENVIRONMENT=Preview node ./ui/dist/server/server.js"
 	},
 	"dependencies": {
