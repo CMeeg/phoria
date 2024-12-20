@@ -1,5 +1,11 @@
 # @phoria/phoria
 
+## 0.3.1
+
+### Patch Changes
+
+- bc0ed79: Fix ssr outdir not always being set
+
 ## 0.3.0
 
 ### Minor Changes
