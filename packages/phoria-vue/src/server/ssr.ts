@@ -1,33 +1,45 @@
-import {
-	type PhoriaIsland,
-	type PhoriaIslandComponentSsrService,
-	type PhoriaIslandProps,
-	createIslandImport
-} from "@phoria/phoria"
+import { type PhoriaIslandComponentSsrService, createIslandImport } from "@phoria/phoria"
+import type { PhoriaIslandSsrRender } from "@phoria/phoria/server"
 import { type Component, createSSRApp } from "vue"
 import { renderToWebStream, renderToString as vueRenderToString } from "vue/server-renderer"
 import { framework } from "~/main"
 
-async function renderToString<P extends PhoriaIslandProps>(island: PhoriaIsland<Component>, props?: P) {
+const renderIslandToString: PhoriaIslandSsrRender<Component> = (island, props) => {
 	const app = createSSRApp(island.component, props)
 	const ctx = {}
 	return vueRenderToString(app, ctx)
 }
 
-async function renderToStream<P extends PhoriaIslandProps>(island: PhoriaIsland<Component>, props?: P) {
+const renderIslandToStream: PhoriaIslandSsrRender<Component> = async (island, props) => {
 	const app = createSSRApp(island.component, props)
 	const ctx = {}
 	return renderToWebStream(app, ctx)
 }
 
+// TODO: Align naming convention with other frameworks
+interface VueSsrOptions {
+	renderIsland: PhoriaIslandSsrRender<Component>
+}
+
+const ssrOptions: VueSsrOptions = {
+	renderIsland: renderIslandToStream
+}
+
+
+// TODO: Export
+function configureVueSsr(options: Partial<VueSsrOptions>) {
+	if (typeof options.renderIsland !== "undefined") {
+		ssrOptions.renderIsland = options.renderIsland
+	}
+}
+
 const service: PhoriaIslandComponentSsrService = {
-	render: async (component, props, options) => {
+	render: async (component, props) => {
 		// TODO: Can "cache" the imported component? Maybe only in production?
 		const islandImport = createIslandImport<Component>(component)
 		const island = await islandImport
 
-		const html =
-			(options?.preferStream ?? true) ? await renderToStream(island, props) : await renderToString(island, props)
+		const html = await ssrOptions.renderIsland(island, props)
 
 		return {
 			framework: framework.name,

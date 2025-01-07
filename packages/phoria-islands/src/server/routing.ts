@@ -131,8 +131,7 @@ function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: s
 
 			// Render the component to the response
 
-			// TODO: Expose a way to set `preferStream` from the request?
-			const result = await ssr.render(component, props, { preferStream: true })
+			const result = await ssr.render(component, props)
 
 			setResponseHeader(event, "x-phoria-island-framework", result.framework)
 

@@ -44,6 +44,7 @@ interface PhoriaIslandCsrOptions {
 	mode: PhoriaIslandCsrMountMode
 }
 
+// TODO: Relocate these to a client entry?
 interface PhoriaIslandComponentCsrService {
 	mount: (
 		island: HTMLElement,
@@ -53,21 +54,17 @@ interface PhoriaIslandComponentCsrService {
 	) => Promise<void>
 }
 
-interface PhoriaIslandSsrOptions {
-	preferStream: boolean
-}
-
 interface PhoriaIslandSsrResult {
 	framework: string
 	componentPath?: string
 	html: string | ReadableStream
 }
 
+// TODO: Relocate these to the server entry?
 interface PhoriaIslandComponentSsrService {
 	render: (
 		component: PhoriaIslandComponent<PhoriaIslandComponentModule, unknown>,
-		props: PhoriaIslandProps,
-		options?: Partial<PhoriaIslandSsrOptions>
+		props: PhoriaIslandProps
 	) => Promise<PhoriaIslandSsrResult>
 }
 
@@ -225,6 +222,5 @@ export type {
 	PhoriaIslandCsrOptions,
 	PhoriaIslandCsrMountMode,
 	PhoriaIslandComponentSsrService,
-	PhoriaIslandSsrOptions,
 	PhoriaIslandSsrResult
 }

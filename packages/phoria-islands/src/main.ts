@@ -9,7 +9,6 @@ import type {
 	PhoriaIslandCsrOptions,
 	PhoriaIslandImport,
 	PhoriaIslandProps,
-	PhoriaIslandSsrOptions,
 	PhoriaIslandSsrResult
 } from "./register"
 import {
@@ -49,6 +48,5 @@ export type {
 	PhoriaIslandCsrOptions,
 	PhoriaIslandImport,
 	PhoriaIslandProps,
-	PhoriaIslandSsrOptions,
 	PhoriaIslandSsrResult
 }

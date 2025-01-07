@@ -1,4 +1,4 @@
-import { getComponent, getFrameworks } from "~/register"
+import { type PhoriaIsland, type PhoriaIslandProps, getComponent, getFrameworks } from "~/register"
 
 interface PhoriaServerEntry {
 	getComponent: typeof getComponent
@@ -10,6 +10,11 @@ const serverEntry = {
 	getFrameworks
 } satisfies PhoriaServerEntry
 
+type PhoriaIslandSsrRender<C, P = PhoriaIslandProps> = (
+	island: PhoriaIsland<C>,
+	props?: P
+) => string | Promise<string | ReadableStream>
+
 export { serverEntry }
 
-export type { PhoriaServerEntry }
+export type { PhoriaServerEntry, PhoriaIslandSsrRender }
