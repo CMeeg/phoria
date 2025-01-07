@@ -1,19 +1,21 @@
-import { type PhoriaIslandComponentSsrService, createIslandImport } from "@phoria/phoria"
-import type { PhoriaIslandSsrRender } from "@phoria/phoria/server"
+import { type PhoriaIslandComponentSsrService, type PhoriaIslandProps, createIslandImport } from "@phoria/phoria"
+import type { RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import { type FunctionComponent, StrictMode } from "react"
-import { renderToString as reactRenderToString } from "react-dom/server"
+import { renderToString } from "react-dom/server"
 import { renderToReadableStream } from "react-dom/server.edge"
 import { framework } from "~/main"
 
-const renderIslandToString: PhoriaIslandSsrRender<FunctionComponent> = (island, props) => {
-	return reactRenderToString(
+type RenderReactPhoriaIslandComponent<P = PhoriaIslandProps> = RenderPhoriaIslandComponent<FunctionComponent, P>
+
+const renderComponentToString: RenderReactPhoriaIslandComponent = (island, props) => {
+	return renderToString(
 		<StrictMode>
 			<island.component {...props} />
 		</StrictMode>
 	)
 }
 
-const renderIslandToStream: PhoriaIslandSsrRender<FunctionComponent> = async (island, props) => {
+const renderComponentToStream: RenderReactPhoriaIslandComponent = async (island, props) => {
 	// `react-dom/server.edge` is used because of https://github.com/facebook/react/issues/26906
 	// Implemented workaround as per https://github.com/redwoodjs/redwood/pull/10284
 	return await renderToReadableStream(
@@ -23,18 +25,17 @@ const renderIslandToStream: PhoriaIslandSsrRender<FunctionComponent> = async (is
 	)
 }
 
-// TODO: Align naming convention with other frameworks
-interface ReactSsrOptions {
-	renderIsland: PhoriaIslandSsrRender<FunctionComponent>
+interface PhoriaReactSsrOptions {
+	renderComponent: RenderReactPhoriaIslandComponent
 }
 
-const ssrOptions: ReactSsrOptions = {
-	renderIsland: renderIslandToStream
+const ssrOptions: PhoriaReactSsrOptions = {
+	renderComponent: renderComponentToStream
 }
 
-function configureReactSsr(options: Partial<ReactSsrOptions>) {
-	if (typeof options.renderIsland !== "undefined") {
-		ssrOptions.renderIsland = options.renderIsland
+function configureReactSsrService(options: Partial<PhoriaReactSsrOptions>) {
+	if (typeof options.renderComponent !== "undefined") {
+		ssrOptions.renderComponent = options.renderComponent
 	}
 }
 
@@ -44,7 +45,7 @@ const service: PhoriaIslandComponentSsrService = {
 		const islandImport = createIslandImport<FunctionComponent>(component)
 		const island = await islandImport
 
-		const html = await ssrOptions.renderIsland(island, props)
+		const html = await ssrOptions.renderComponent(island, props)
 
 		return {
 			framework: framework.name,
@@ -54,4 +55,6 @@ const service: PhoriaIslandComponentSsrService = {
 	}
 }
 
-export { service, configureReactSsr, renderIslandToStream, renderIslandToString }
+export { service, configureReactSsrService, renderComponentToStream, renderComponentToString }
+
+export type { PhoriaReactSsrOptions, RenderReactPhoriaIslandComponent }

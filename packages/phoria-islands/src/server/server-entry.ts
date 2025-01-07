@@ -10,11 +10,11 @@ const serverEntry = {
 	getFrameworks
 } satisfies PhoriaServerEntry
 
-type PhoriaIslandSsrRender<C, P = PhoriaIslandProps> = (
+type RenderPhoriaIslandComponent<C, P = PhoriaIslandProps> = (
 	island: PhoriaIsland<C>,
 	props?: P
 ) => string | Promise<string | ReadableStream>
 
 export { serverEntry }
 
-export type { PhoriaServerEntry, PhoriaIslandSsrRender }
+export type { PhoriaServerEntry, RenderPhoriaIslandComponent }

@@ -1,35 +1,35 @@
-import { type PhoriaIslandComponentSsrService, createIslandImport } from "@phoria/phoria"
-import type { PhoriaIslandSsrRender } from "@phoria/phoria/server"
+import { type PhoriaIslandComponentSsrService, type PhoriaIslandProps, createIslandImport } from "@phoria/phoria"
+import type { RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import { type Component, createSSRApp } from "vue"
-import { renderToWebStream, renderToString as vueRenderToString } from "vue/server-renderer"
+import { renderToWebStream, renderToString } from "vue/server-renderer"
 import { framework } from "~/main"
 
-const renderIslandToString: PhoriaIslandSsrRender<Component> = (island, props) => {
+type RenderVuePhoriaIslandComponent<P = PhoriaIslandProps> = RenderPhoriaIslandComponent<Component, P>
+
+const renderComponentToString: RenderVuePhoriaIslandComponent = (island, props) => {
 	const app = createSSRApp(island.component, props)
 	const ctx = {}
-	return vueRenderToString(app, ctx)
+	return renderToString(app, ctx)
 }
 
-const renderIslandToStream: PhoriaIslandSsrRender<Component> = async (island, props) => {
+const renderComponentToStream: RenderVuePhoriaIslandComponent = async (island, props) => {
 	const app = createSSRApp(island.component, props)
 	const ctx = {}
 	return renderToWebStream(app, ctx)
 }
 
-// TODO: Align naming convention with other frameworks
-interface VueSsrOptions {
-	renderIsland: PhoriaIslandSsrRender<Component>
+interface PhoriaVueSsrOptions {
+	renderComponent: RenderVuePhoriaIslandComponent
 }
 
-const ssrOptions: VueSsrOptions = {
-	renderIsland: renderIslandToStream
+const ssrOptions: PhoriaVueSsrOptions = {
+	renderComponent: renderComponentToStream
 }
 
 
-// TODO: Export
-function configureVueSsr(options: Partial<VueSsrOptions>) {
-	if (typeof options.renderIsland !== "undefined") {
-		ssrOptions.renderIsland = options.renderIsland
+function configureVueSsrService(options: Partial<PhoriaVueSsrOptions>) {
+	if (typeof options.renderComponent !== "undefined") {
+		ssrOptions.renderComponent = options.renderComponent
 	}
 }
 
@@ -39,7 +39,7 @@ const service: PhoriaIslandComponentSsrService = {
 		const islandImport = createIslandImport<Component>(component)
 		const island = await islandImport
 
-		const html = await ssrOptions.renderIsland(island, props)
+		const html = await ssrOptions.renderComponent(island, props)
 
 		return {
 			framework: framework.name,
@@ -50,4 +50,6 @@ const service: PhoriaIslandComponentSsrService = {
 	}
 }
 
-export { service }
+export { service, configureVueSsrService, renderComponentToStream, renderComponentToString }
+
+export type { PhoriaVueSsrOptions, RenderVuePhoriaIslandComponent }

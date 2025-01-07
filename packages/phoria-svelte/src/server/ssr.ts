@@ -1,10 +1,12 @@
-import { type PhoriaIslandComponentSsrService, createIslandImport } from "@phoria/phoria"
-import type { PhoriaIslandSsrRender } from "@phoria/phoria/server"
+import { type PhoriaIslandComponentSsrService, type PhoriaIslandProps, createIslandImport } from "@phoria/phoria"
+import type { RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import type { Component, ComponentProps } from "svelte"
 import { render } from "svelte/server"
 import { framework } from "~/main"
 
-const renderIslandToString: PhoriaIslandSsrRender<Component> = (island, props) => {
+type RenderSveltePhoriaIslandComponent<P = PhoriaIslandProps> = RenderPhoriaIslandComponent<Component, P>
+
+const renderComponentToString: RenderSveltePhoriaIslandComponent = (island, props) => {
 	const ctx = new Map()
 	const html = render(island.component, {
 		props: props as ComponentProps<typeof island.component>,
@@ -14,20 +16,18 @@ const renderIslandToString: PhoriaIslandSsrRender<Component> = (island, props) =
 	return html.body
 }
 
-interface SvelteSsrOptions {
-	renderIsland: PhoriaIslandSsrRender<Component>
+interface PhoriaSvelteSsrOptions {
+	renderComponent: RenderSveltePhoriaIslandComponent
 }
 
-// TODO: Align naming convention with other frameworks
-const ssrOptions: SvelteSsrOptions = {
+const ssrOptions: PhoriaSvelteSsrOptions = {
 	// TODO: Svelte doesn't support streaming - should I acknowledge that somehow?
-	renderIsland: renderIslandToString
+	renderComponent: renderComponentToString
 }
 
-// TODO: Export
-function configureSvelteSsr(options: Partial<SvelteSsrOptions>) {
-	if (typeof options.renderIsland !== "undefined") {
-		ssrOptions.renderIsland = options.renderIsland
+function configureSvelteSsrService(options: Partial<PhoriaSvelteSsrOptions>) {
+	if (typeof options.renderComponent !== "undefined") {
+		ssrOptions.renderComponent = options.renderComponent
 	}
 }
 
@@ -37,7 +37,7 @@ const service: PhoriaIslandComponentSsrService = {
 		const islandImport = createIslandImport<Component>(component)
 		const island = await islandImport
 
-		const html = await ssrOptions.renderIsland(island, props)
+		const html = await ssrOptions.renderComponent(island, props)
 
 		return {
 			framework: framework.name,
@@ -47,4 +47,6 @@ const service: PhoriaIslandComponentSsrService = {
 	}
 }
 
-export { service }
+export { service, configureSvelteSsrService, renderComponentToString }
+
+export type { PhoriaSvelteSsrOptions, RenderSveltePhoriaIslandComponent }

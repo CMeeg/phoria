@@ -6,7 +6,7 @@ import {
 	createPhoriaDevSsrRequestHandler,
 	createPhoriaSsrRequestHandler
 } from "./routing"
-import { type PhoriaIslandSsrRender, type PhoriaServerEntry, serverEntry } from "./server-entry"
+import { type RenderPhoriaIslandComponent, type PhoriaServerEntry, serverEntry } from "./server-entry"
 
 export {
 	createPhoriaCsrRequestHandler,
@@ -18,4 +18,4 @@ export {
 	serverEntry
 }
 
-export type { PhoriaAppSettings, PhoriaIslandSsrRender, PhoriaServerEntry, PhoriaServerEntryLoader }
+export type { PhoriaAppSettings, RenderPhoriaIslandComponent, PhoriaServerEntry, PhoriaServerEntryLoader }
