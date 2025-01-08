@@ -9,7 +9,9 @@ import type {
 	PhoriaIslandCsrOptions,
 	PhoriaIslandImport,
 	PhoriaIslandProps,
-	PhoriaIslandSsrResult
+	PhoriaIslandSsrResult,
+	RenderPhoriaIslandComponent,
+	RenderPhoriaIslandComponentOptions
 } from "./register"
 import {
 	createIslandImport,
@@ -48,5 +50,7 @@ export type {
 	PhoriaIslandCsrOptions,
 	PhoriaIslandImport,
 	PhoriaIslandProps,
-	PhoriaIslandSsrResult
+	PhoriaIslandSsrResult,
+	RenderPhoriaIslandComponent,
+	RenderPhoriaIslandComponentOptions
 }

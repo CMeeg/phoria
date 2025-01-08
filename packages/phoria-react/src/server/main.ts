@@ -1,9 +1,7 @@
 import { registerSsrService } from "@phoria/phoria"
 import { framework } from "~/main"
 import {
-	type PhoriaReactSsrOptions,
 	type RenderReactPhoriaIslandComponent,
-	configureReactSsrService,
 	renderComponentToStream,
 	renderComponentToString,
 	service
@@ -11,6 +9,6 @@ import {
 
 registerSsrService(framework.name, service)
 
-export { configureReactSsrService, renderComponentToStream, renderComponentToString }
+export { renderComponentToStream, renderComponentToString }
 
-export type { PhoriaReactSsrOptions, RenderReactPhoriaIslandComponent }
+export type { RenderReactPhoriaIslandComponent }

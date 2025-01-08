@@ -1,20 +1,8 @@
-import { type PhoriaIsland, type PhoriaIslandProps, getComponent, getFrameworks } from "~/register"
+import type { PhoriaIslandSsrResult } from "~/register"
+import type { PhoriaIsland } from "./phoria-island"
 
 interface PhoriaServerEntry {
-	getComponent: typeof getComponent
-	getFrameworks: typeof getFrameworks
+	renderPhoriaIsland: (phoriaIsland: PhoriaIsland<unknown>) => Promise<PhoriaIslandSsrResult>
 }
 
-const serverEntry = {
-	getComponent,
-	getFrameworks
-} satisfies PhoriaServerEntry
-
-type RenderPhoriaIslandComponent<C, P = PhoriaIslandProps> = (
-	island: PhoriaIsland<C>,
-	props?: P
-) => string | Promise<string | ReadableStream>
-
-export { serverEntry }
-
-export type { PhoriaServerEntry, RenderPhoriaIslandComponent }
+export type { PhoriaServerEntry }

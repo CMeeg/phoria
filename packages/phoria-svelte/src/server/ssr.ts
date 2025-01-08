@@ -1,5 +1,5 @@
 import { type PhoriaIslandComponentSsrService, type PhoriaIslandProps, createIslandImport } from "@phoria/phoria"
-import type { RenderPhoriaIslandComponent } from "@phoria/phoria/server"
+import type { RenderPhoriaIslandComponent } from "@phoria/phoria"
 import type { Component, ComponentProps } from "svelte"
 import { render } from "svelte/server"
 import { framework } from "~/main"
@@ -16,28 +16,15 @@ const renderComponentToString: RenderSveltePhoriaIslandComponent = (island, prop
 	return html.body
 }
 
-interface PhoriaSvelteSsrOptions {
-	renderComponent: RenderSveltePhoriaIslandComponent
-}
-
-const ssrOptions: PhoriaSvelteSsrOptions = {
-	// TODO: Svelte doesn't support streaming - should I acknowledge that somehow?
-	renderComponent: renderComponentToString
-}
-
-function configureSvelteSsrService(options: Partial<PhoriaSvelteSsrOptions>) {
-	if (typeof options.renderComponent !== "undefined") {
-		ssrOptions.renderComponent = options.renderComponent
-	}
-}
-
-const service: PhoriaIslandComponentSsrService = {
-	render: async (component, props) => {
+const service: PhoriaIslandComponentSsrService<Component> = {
+	render: async (component, props, options) => {
 		// TODO: Can "cache" the imported component? Maybe only in production?
 		const islandImport = createIslandImport<Component>(component)
 		const island = await islandImport
 
-		const html = await ssrOptions.renderComponent(island, props)
+		const renderComponent = options?.renderComponent ?? renderComponentToString
+
+		const html = await renderComponent(island, props)
 
 		return {
 			framework: framework.name,
@@ -47,6 +34,6 @@ const service: PhoriaIslandComponentSsrService = {
 	}
 }
 
-export { service, configureSvelteSsrService, renderComponentToString }
+export { service, renderComponentToString }
 
-export type { PhoriaSvelteSsrOptions, RenderSveltePhoriaIslandComponent }
+export type { RenderSveltePhoriaIslandComponent }

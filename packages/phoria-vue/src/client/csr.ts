@@ -1,7 +1,7 @@
 import { type PhoriaIslandComponentCsrService, createIslandImport } from "@phoria/phoria"
 import type { Component } from "vue"
 
-const service: PhoriaIslandComponentCsrService = {
+const service: PhoriaIslandComponentCsrService<Component> = {
 	mount: async (island, component, props) => {
 		const islandImport = createIslandImport<Component>(component)
 

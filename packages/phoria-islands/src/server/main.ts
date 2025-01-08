@@ -1,4 +1,5 @@
 import { type PhoriaAppSettings, getPhoriaAppSettings, parsePhoriaAppSettings } from "./appsettings"
+import { PhoriaIsland } from "./phoria-island"
 import {
 	type PhoriaServerEntryLoader,
 	createPhoriaCsrRequestHandler,
@@ -6,7 +7,7 @@ import {
 	createPhoriaDevSsrRequestHandler,
 	createPhoriaSsrRequestHandler
 } from "./routing"
-import { type RenderPhoriaIslandComponent, type PhoriaServerEntry, serverEntry } from "./server-entry"
+import type { PhoriaServerEntry } from "./server-entry"
 
 export {
 	createPhoriaCsrRequestHandler,
@@ -15,7 +16,7 @@ export {
 	createPhoriaSsrRequestHandler,
 	getPhoriaAppSettings,
 	parsePhoriaAppSettings,
-	serverEntry
+	PhoriaIsland
 }
 
-export type { PhoriaAppSettings, RenderPhoriaIslandComponent, PhoriaServerEntry, PhoriaServerEntryLoader }
+export type { PhoriaAppSettings, PhoriaServerEntry, PhoriaServerEntryLoader }

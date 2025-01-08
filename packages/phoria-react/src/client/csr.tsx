@@ -1,7 +1,7 @@
 import { type PhoriaIslandComponentCsrService, createIslandImport, csrMountMode } from "@phoria/phoria"
 import type { FunctionComponent } from "react"
 
-const service: PhoriaIslandComponentCsrService = {
+const service: PhoriaIslandComponentCsrService<FunctionComponent> = {
 	mount: async (island, component, props, options) => {
 		const islandImport = createIslandImport<FunctionComponent>(component)
 

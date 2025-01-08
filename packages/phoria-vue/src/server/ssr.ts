@@ -1,5 +1,5 @@
 import { type PhoriaIslandComponentSsrService, type PhoriaIslandProps, createIslandImport } from "@phoria/phoria"
-import type { RenderPhoriaIslandComponent } from "@phoria/phoria/server"
+import type { RenderPhoriaIslandComponent } from "@phoria/phoria"
 import { type Component, createSSRApp } from "vue"
 import { renderToWebStream, renderToString } from "vue/server-renderer"
 import { framework } from "~/main"
@@ -18,28 +18,15 @@ const renderComponentToStream: RenderVuePhoriaIslandComponent = async (island, p
 	return renderToWebStream(app, ctx)
 }
 
-interface PhoriaVueSsrOptions {
-	renderComponent: RenderVuePhoriaIslandComponent
-}
-
-const ssrOptions: PhoriaVueSsrOptions = {
-	renderComponent: renderComponentToStream
-}
-
-
-function configureVueSsrService(options: Partial<PhoriaVueSsrOptions>) {
-	if (typeof options.renderComponent !== "undefined") {
-		ssrOptions.renderComponent = options.renderComponent
-	}
-}
-
-const service: PhoriaIslandComponentSsrService = {
-	render: async (component, props) => {
+const service: PhoriaIslandComponentSsrService<Component> = {
+	render: async (component, props, options) => {
 		// TODO: Can "cache" the imported component? Maybe only in production?
 		const islandImport = createIslandImport<Component>(component)
 		const island = await islandImport
 
-		const html = await ssrOptions.renderComponent(island, props)
+		const renderComponent = options?.renderComponent ?? renderComponentToStream
+
+		const html = await renderComponent(island, props)
 
 		return {
 			framework: framework.name,
@@ -50,6 +37,6 @@ const service: PhoriaIslandComponentSsrService = {
 	}
 }
 
-export { service, configureVueSsrService, renderComponentToStream, renderComponentToString }
+export { service, renderComponentToStream, renderComponentToString }
 
-export type { PhoriaVueSsrOptions, RenderVuePhoriaIslandComponent }
+export type { RenderVuePhoriaIslandComponent }

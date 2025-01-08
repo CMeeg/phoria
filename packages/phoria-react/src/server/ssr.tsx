@@ -1,5 +1,4 @@
-import { type PhoriaIslandComponentSsrService, type PhoriaIslandProps, createIslandImport } from "@phoria/phoria"
-import type { RenderPhoriaIslandComponent } from "@phoria/phoria/server"
+import { type PhoriaIslandComponentSsrService, type PhoriaIslandProps, type RenderPhoriaIslandComponent, createIslandImport } from "@phoria/phoria"
 import { type FunctionComponent, StrictMode } from "react"
 import { renderToString } from "react-dom/server"
 import { renderToReadableStream } from "react-dom/server.edge"
@@ -25,27 +24,15 @@ const renderComponentToStream: RenderReactPhoriaIslandComponent = async (island,
 	)
 }
 
-interface PhoriaReactSsrOptions {
-	renderComponent: RenderReactPhoriaIslandComponent
-}
-
-const ssrOptions: PhoriaReactSsrOptions = {
-	renderComponent: renderComponentToStream
-}
-
-function configureReactSsrService(options: Partial<PhoriaReactSsrOptions>) {
-	if (typeof options.renderComponent !== "undefined") {
-		ssrOptions.renderComponent = options.renderComponent
-	}
-}
-
-const service: PhoriaIslandComponentSsrService = {
-	render: async (component, props) => {
+const service: PhoriaIslandComponentSsrService<FunctionComponent> = {
+	render: async (component, props, options) => {
 		// TODO: Can "cache" the imported component? Maybe only in production?
 		const islandImport = createIslandImport<FunctionComponent>(component)
 		const island = await islandImport
 
-		const html = await ssrOptions.renderComponent(island, props)
+		const renderComponent = options?.renderComponent ?? renderComponentToStream
+
+		const html = await renderComponent(island, props)
 
 		return {
 			framework: framework.name,
@@ -55,6 +42,6 @@ const service: PhoriaIslandComponentSsrService = {
 	}
 }
 
-export { service, configureReactSsrService, renderComponentToStream, renderComponentToString }
+export { service, renderComponentToStream, renderComponentToString }
 
-export type { PhoriaReactSsrOptions, RenderReactPhoriaIslandComponent }
+export type { RenderReactPhoriaIslandComponent }

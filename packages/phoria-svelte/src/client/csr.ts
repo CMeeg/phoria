@@ -1,7 +1,7 @@
 import { type PhoriaIslandComponentCsrService, createIslandImport, csrMountMode } from "@phoria/phoria"
 import type { Component } from "svelte"
 
-const service: PhoriaIslandComponentCsrService = {
+const service: PhoriaIslandComponentCsrService<Component> = {
 	mount: async (island, component, props, options) => {
 		const islandImport = createIslandImport<Component>(component)
 

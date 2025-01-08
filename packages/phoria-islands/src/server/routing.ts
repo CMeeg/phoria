@@ -6,17 +6,16 @@ import {
 	createRouter,
 	defineEventHandler,
 	fromNodeMiddleware,
-	getRouterParams,
-	readBody,
 	serveStatic,
 	setResponseHeader,
 	useBase
 } from "h3"
 import mime from "mime/lite"
 import type { DevEnvironment, RunnableDevEnvironment, ViteDevServer } from "vite"
-import { type PhoriaIslandProps, getSsrService } from "~/register"
+import { getFrameworks } from "~/register"
 import type { PhoriaAppSettings } from "./appsettings"
 import type { PhoriaServerEntry } from "./server-entry"
+import { PhoriaIsland } from "./phoria-island"
 
 function isServerEntry(serverEntry: unknown): serverEntry is PhoriaServerEntry {
 	if (typeof serverEntry === "undefined" || serverEntry === null) {
@@ -27,11 +26,7 @@ function isServerEntry(serverEntry: unknown): serverEntry is PhoriaServerEntry {
 		return false
 	}
 
-	if (!("getComponent" in serverEntry)) {
-		return false
-	}
-
-	if (!("getFrameworks" in serverEntry)) {
+	if (!("renderPhoriaIsland" in serverEntry)) {
 		return false
 	}
 
@@ -48,19 +43,19 @@ function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: s
 	router.get(
 		"/hc",
 		defineEventHandler(async () => {
-			const { serverEntry } = await loadServerEntry()
+			const serverEntry = await loadServerEntry()
 
 			if (!isServerEntry(serverEntry)) {
 				throw createError({
 					status: 500,
 					message:
-						"Server entry does not have a named export `serverEntry` or export is not of type `PhoriaServerEntry`."
+						"Server entry is not of type `PhoriaServerEntry`."
 				})
 			}
 
 			const nodeEnv = process.env.NODE_ENV ?? "development"
 
-			return { mode: nodeEnv, frameworks: serverEntry.getFrameworks() }
+			return { mode: nodeEnv, frameworks: getFrameworks() }
 		})
 	)
 
@@ -73,73 +68,35 @@ function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: s
 	ssrRouter.post(
 		renderRoutePath,
 		defineEventHandler(async (event) => {
-			const params = getRouterParams(event)
-
-			// Try to get the component to render
-
-			const componentName = params.component
-
-			if (!componentName) {
-				throw createError({
-					status: 400,
-					message: `No "component" was provided in the request path. Please make the request to ${renderRoutePath}.`
-				})
-			}
-			const { serverEntry } = await loadServerEntry()
+			const serverEntry = await loadServerEntry()
 
 			if (!isServerEntry(serverEntry)) {
 				throw createError({
 					status: 500,
 					message:
-						"Server entry does not have a named export `serverEntry` or export is not of type `PhoriaServerEntry`."
+						"Server entry is not of type `PhoriaServerEntry`."
 				})
 			}
 
-			const component = serverEntry.getComponent(componentName)
+			try {
+				const phoriaIsland = await PhoriaIsland.create(event)
 
-			if (!component) {
-				throw createError({
-					status: 404,
-					message: `Component "${componentName}" not found in registry.`
-				})
-			}
+				const result = await serverEntry.renderPhoriaIsland(phoriaIsland)
 
-			// Try to get the SSR service to use to render the component
+				setResponseHeader(event, "x-phoria-island-framework", result.framework)
 
-			const ssr = getSsrService(component.framework)
-
-			if (typeof ssr === "undefined") {
-				throw new Error(`No SSR service could be found for framework "${component.framework}".`)
-			}
-
-			// Try get props from body
-
-			let props: PhoriaIslandProps = null
-
-			const body = await readBody(event)
-
-			if (typeof body !== "undefined" && body !== null) {
-				if (typeof body !== "object" || Array.isArray(body)) {
-					throw createError({
-						status: 400,
-						message: "Props sent in body must be a JSON object."
-					})
+				if (typeof result.componentPath === "string") {
+					setResponseHeader(event, "x-phoria-island-path", result.componentPath)
 				}
 
-				props = body
+				return result.html
+			} catch (error) {
+				throw createError({
+					status: 500,
+					message: "Error rendering component.",
+					cause: error
+				})
 			}
-
-			// Render the component to the response
-
-			const result = await ssr.render(component, props)
-
-			setResponseHeader(event, "x-phoria-island-framework", result.framework)
-
-			if (typeof result.componentPath === "string") {
-				setResponseHeader(event, "x-phoria-island-path", result.componentPath)
-			}
-
-			return result.html
 		})
 	)
 
