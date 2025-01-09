@@ -45,7 +45,7 @@ public class PhoriaIslandTagHelper(
 			return;
 		}
 
-		var component = new PhoriaIslandComponent
+		var island = new PhoriaIsland
 		{
 			ComponentName = Component,
 			Props = Props,
@@ -53,17 +53,17 @@ public class PhoriaIslandTagHelper(
 			Client = Client
 		};
 
-		scopedContext.AddComponent(component);
+		scopedContext.AddIsland(island);
 
 		output.TagName = null;
 		output.TagMode = TagMode.StartTagAndEndTag;
 
-		PhoriaIslandSsrResult? ssrResult = component.RenderMode != PhoriaIslandRenderMode.ClientOnly
-			? await phoriaIslandSsr.RenderComponent(component)
+		PhoriaIslandSsrResult? ssrResult = island.RenderMode != PhoriaIslandRenderMode.ClientOnly
+			? await phoriaIslandSsr.RenderIsland(island)
 			: null;
 
 		var content = new PhoriaIslandHtmlContent(
-			component,
+			island,
 			ssrResult,
 			options);
 

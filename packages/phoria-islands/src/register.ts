@@ -1,5 +1,5 @@
 import type { PhoriaIslandComponentCsrService } from "./client/csr"
-import type { PhoriaIslandComponent, PhoriaIslandComponentLoader, PhoriaIslandComponentModule } from "./phoria-island"
+import type { PhoriaIslandComponentEntry, PhoriaIslandComponentLoader, PhoriaIslandComponentModule } from "./phoria-island"
 import type { PhoriaIslandComponentSsrService } from "./server/ssr"
 
 const frameworkRegistry = new Set<string>()
@@ -67,7 +67,7 @@ function getCsrService(framework: string) {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: The registry must be able to store any type of component
-const componentRegistry = new Map<string, PhoriaIslandComponent<PhoriaIslandComponentModule, any>>()
+const componentRegistry = new Map<string, PhoriaIslandComponentEntry<PhoriaIslandComponentModule, any>>()
 
 interface PhoriaIslandComponentOptions<M extends PhoriaIslandComponentModule, T> {
 	loader: PhoriaIslandComponentLoader<M, T>

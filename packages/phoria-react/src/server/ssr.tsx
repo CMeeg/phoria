@@ -1,11 +1,14 @@
-import { type PhoriaIslandProps, createIslandImport } from "@phoria/phoria"
+import { type PhoriaIslandProps, importComponent } from "@phoria/phoria"
 import type { PhoriaIslandComponentSsrService, RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import { type FunctionComponent, StrictMode } from "react"
 import { renderToString } from "react-dom/server"
 import { renderToReadableStream } from "react-dom/server.edge"
 import { framework } from "~/main"
 
-type RenderReactPhoriaIslandComponent<P = PhoriaIslandProps> = RenderPhoriaIslandComponent<FunctionComponent, P>
+type RenderReactPhoriaIslandComponent<P extends PhoriaIslandProps = PhoriaIslandProps> = RenderPhoriaIslandComponent<
+	FunctionComponent,
+	P
+>
 
 const renderComponentToString: RenderReactPhoriaIslandComponent = (island, props) => {
 	return renderToString(
@@ -27,9 +30,12 @@ const renderComponentToStream: RenderReactPhoriaIslandComponent = async (island,
 
 const service: PhoriaIslandComponentSsrService<FunctionComponent> = {
 	render: async (component, props, options) => {
+		if (component.framework !== framework.name) {
+			throw new Error(`${framework.name} cannot render the ${component.framework} component named "${component.name}".`)
+		}
+
 		// TODO: Can "cache" the imported component? Maybe only in production?
-		const islandImport = createIslandImport<FunctionComponent>(component)
-		const island = await islandImport
+		const island = await importComponent<FunctionComponent>(component)
 
 		const renderComponent = options?.renderComponent ?? renderComponentToStream
 

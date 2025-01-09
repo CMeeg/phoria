@@ -8,20 +8,20 @@ using Phoria.IO;
 namespace Phoria.Islands;
 
 public class PhoriaIslandHtmlContent(
-	PhoriaIslandComponent component,
+	PhoriaIsland island,
 	PhoriaIslandSsrResult? ssrResult,
 	PhoriaOptions options)
 	: IHtmlContent
 {
 	private const string TagName = "phoria-island";
 
-	private readonly PhoriaIslandComponent component = component;
+	private readonly PhoriaIsland island = island;
 	private readonly PhoriaIslandSsrResult? ssrResult = ssrResult;
 	private readonly PhoriaOptions options = options;
 
 	public void WriteTo(TextWriter writer, HtmlEncoder encoder)
 	{
-		if (component.RenderMode == PhoriaIslandRenderMode.ServerOnly)
+		if (island.RenderMode == PhoriaIslandRenderMode.ServerOnly)
 		{
 			if (ssrResult != null)
 			{
@@ -35,17 +35,17 @@ public class PhoriaIslandHtmlContent(
 
 		// Render the phoria-island web component
 
-		writer.Write($"<{TagName} component=\"{component.ComponentName}\"");
+		writer.Write($"<{TagName} component=\"{island.ComponentName}\"");
 
-		if (component.Client != null)
+		if (island.Client != null)
 		{
-			if (component.Client.Value == null)
+			if (island.Client.Value == null)
 			{
-				writer.Write($" {component.Client.Name}");
+				writer.Write($" {island.Client.Name}");
 			}
 			else
 			{
-				writer.Write($" {component.Client.Name}=\"{encoder.Encode(component.Client.Value)}\"");
+				writer.Write($" {island.Client.Name}=\"{encoder.Encode(island.Client.Value)}\"");
 			}
 		}
 
@@ -56,14 +56,14 @@ public class PhoriaIslandHtmlContent(
 			WriteUtf8Stream(writer, ssrResult.Props.Stream, encoder);
 			writer.Write("\"");
 		}
-		else if (component.Props != null)
+		else if (island.Props != null)
 		{
-			writer.Write($" props=\"{encoder.Encode(options.Islands.PropsSerializer.Serialize(component.Props))}\"");
+			writer.Write($" props=\"{encoder.Encode(options.Islands.PropsSerializer.Serialize(island.Props))}\"");
 		}
 
-		if (component.Framework != null)
+		if (island.Framework != null)
 		{
-			writer.Write($" framework=\"{component.Framework}\"");
+			writer.Write($" framework=\"{island.Framework}\"");
 		}
 
 		writer.Write(">");

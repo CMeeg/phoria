@@ -16,7 +16,7 @@ public static class Client
 	public static PhoriaIslandClientDirective Media(string mediaQuery) => new PhoriaIslandClientMediaDirective(mediaQuery);
 }
 
-public class PhoriaIslandComponent
+public class PhoriaIsland
 {
 	/// <summary>
 	/// Gets or sets the name of the component

@@ -1,4 +1,4 @@
-import type { PhoriaIslandComponent, PhoriaIslandComponentModule, PhoriaIslandProps } from "~/phoria-island"
+import type { PhoriaIslandComponentEntry, PhoriaIslandComponentModule, PhoriaIslandProps } from "~/phoria-island"
 
 type PhoriaIslandCsrMountMode = keyof typeof csrMountMode
 
@@ -14,7 +14,7 @@ interface PhoriaIslandCsrOptions {
 interface PhoriaIslandComponentCsrService<T> {
 	mount: (
 		island: HTMLElement,
-		component: PhoriaIslandComponent<PhoriaIslandComponentModule, T>,
+		component: PhoriaIslandComponentEntry<PhoriaIslandComponentModule, T>,
 		props: PhoriaIslandProps,
 		options?: Partial<PhoriaIslandCsrOptions>
 	) => Promise<void>

@@ -138,7 +138,7 @@ public class PhoriaIslandEntryTagHelper(
 
 			// If the Vite client script was not inserted, it will be prepended to the current element tag
 
-			// TODO: Don't render the client script if no components in scoped context
+			// TODO: Don't render the client script if no islands in scoped context
 
 			if (!tagHelperMonitor.IsViteClientScriptInjected)
 			{

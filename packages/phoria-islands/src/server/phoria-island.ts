@@ -1,11 +1,11 @@
 import { type EventHandlerRequest, type H3Event, getRouterParams, readBody } from "h3"
 import type { PhoriaIslandComponentSsrService, RenderPhoriaIslandComponentOptions } from "./ssr"
-import type { PhoriaIslandComponent, PhoriaIslandComponentModule, PhoriaIslandProps } from "~/phoria-island"
+import type { PhoriaIslandComponentEntry, PhoriaIslandComponentModule, PhoriaIslandProps } from "~/phoria-island"
 import { getComponent, getSsrService } from "~/register"
 
 // biome-ignore lint/suspicious/noExplicitAny: The island can be any type of component
 class PhoriaIsland<C = any, P extends PhoriaIslandProps = PhoriaIslandProps> {
-	private component: PhoriaIslandComponent<PhoriaIslandComponentModule, C>
+	private component: PhoriaIslandComponentEntry<PhoriaIslandComponentModule, C>
 	private ssr: PhoriaIslandComponentSsrService<C>
 
 	componentName: string
@@ -13,7 +13,7 @@ class PhoriaIsland<C = any, P extends PhoriaIslandProps = PhoriaIslandProps> {
 	framework: string
 
 	constructor(
-		component: PhoriaIslandComponent<PhoriaIslandComponentModule, C>,
+		component: PhoriaIslandComponentEntry<PhoriaIslandComponentModule, C>,
 		props: P,
 		ssr: PhoriaIslandComponentSsrService<C>
 	) {

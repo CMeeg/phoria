@@ -2,17 +2,17 @@ namespace Phoria.Islands;
 
 public interface IPhoriaIslandScopedContext
 {
-	IReadOnlyList<PhoriaIslandComponent> Components { get; }
+	IReadOnlyList<PhoriaIsland> Islands { get; }
 
-	void AddComponent(PhoriaIslandComponent component);
+	void AddIsland(PhoriaIsland island);
 }
 
 public sealed class PhoriaIslandScopedContext
 	: IPhoriaIslandScopedContext
 {
-	private readonly List<PhoriaIslandComponent> components = [];
+	private readonly List<PhoriaIsland> islands = [];
 
-	public IReadOnlyList<PhoriaIslandComponent> Components => components;
+	public IReadOnlyList<PhoriaIsland> Islands => islands;
 
-	public void AddComponent(PhoriaIslandComponent component) => components.Add(component);
+	public void AddIsland(PhoriaIsland island) => islands.Add(island);
 }
