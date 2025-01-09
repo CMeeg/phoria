@@ -1,5 +1,11 @@
 # phoria-dotnet
 
+## 0.4.0
+
+### Minor Changes
+
+- 95978f0: Rename some types to fix some inconsistencies and conflicts
+
 ## 0.3.0
 
 ### Minor Changes

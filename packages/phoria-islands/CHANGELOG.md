@@ -1,5 +1,12 @@
 # @phoria/phoria
 
+## 0.4.0
+
+### Minor Changes
+
+- 95978f0: Rename some types to fix some inconsistencies and conflicts
+- 95978f0: Allow for custom SSR render strategies
+
 ## 0.3.1
 
 ### Patch Changes
