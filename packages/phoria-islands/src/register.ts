@@ -1,82 +1,6 @@
-type PhoriaIslandProps = Record<string, unknown> | null
-
-type PhoriaIslandComponentModule = {
-	[key: string]: unknown
-	__phoriaComponentPath?: string
-}
-
-type PhoriaIslandComponentDefaultModule<T> = PhoriaIslandComponentModule & {
-	default?: T
-}
-
-type PhoriaIslandComponentModuleLoader<M extends PhoriaIslandComponentModule, T> = {
-	module: () => Promise<M>
-	component: (module: M) => T
-}
-
-type PhoriaIslandComponentDefaultModuleLoader<T> = () => Promise<PhoriaIslandComponentDefaultModule<T>>
-
-type PhoriaIslandComponentLoader<M extends PhoriaIslandComponentModule, T> =
-	| PhoriaIslandComponentModuleLoader<M, T>
-	| PhoriaIslandComponentDefaultModuleLoader<T>
-
-interface PhoriaIslandComponentOptions<M extends PhoriaIslandComponentModule, T> {
-	loader: PhoriaIslandComponentLoader<M, T>
-	framework: string
-}
-
-interface PhoriaIslandComponent<M extends PhoriaIslandComponentModule, T> {
-	name: string
-	framework: string
-	loader: PhoriaIslandComponentLoader<M, T>
-}
-
-interface PhoriaIsland<T> {
-	component: T
-	componentPath?: string
-}
-
-type PhoriaIslandImport<T> = Promise<PhoriaIsland<T>>
-
-type PhoriaIslandCsrMountMode = keyof typeof csrMountMode
-
-interface PhoriaIslandCsrOptions {
-	mode: PhoriaIslandCsrMountMode
-}
-
-// TODO: Relocate these to a client entry?
-interface PhoriaIslandComponentCsrService<T> {
-	mount: (
-		island: HTMLElement,
-		component: PhoriaIslandComponent<PhoriaIslandComponentModule, T>,
-		props: PhoriaIslandProps,
-		options?: Partial<PhoriaIslandCsrOptions>
-	) => Promise<void>
-}
-
-interface PhoriaIslandSsrResult {
-	framework: string
-	componentPath?: string
-	html: string | ReadableStream
-}
-
-// TODO: Relocate these to the server entry?
-interface PhoriaIslandComponentSsrService<T> {
-	render: (
-		component: PhoriaIslandComponent<PhoriaIslandComponentModule, T>,
-		props: PhoriaIslandProps,
-		options?: Partial<RenderPhoriaIslandComponentOptions<T>>
-	) => Promise<PhoriaIslandSsrResult>
-}
-
-type RenderPhoriaIslandComponent<C, P = PhoriaIslandProps> = (
-	island: PhoriaIsland<C>,
-	props?: P
-) => string | Promise<string | ReadableStream>
-
-interface RenderPhoriaIslandComponentOptions<C> {
-	renderComponent: RenderPhoriaIslandComponent<C>
-}
+import type { PhoriaIslandComponentCsrService } from "./client/csr"
+import type { PhoriaIslandComponent, PhoriaIslandComponentLoader, PhoriaIslandComponentModule } from "./phoria-island"
+import type { PhoriaIslandComponentSsrService } from "./server/ssr"
 
 const frameworkRegistry = new Set<string>()
 
@@ -123,11 +47,6 @@ function getSsrService(framework: string) {
 	return ssrServiceRegistry.get(frameworkName)
 }
 
-const csrMountMode = {
-	render: "render",
-	hydrate: "hydrate"
-} as const
-
 // biome-ignore lint/suspicious/noExplicitAny: The registry must be able to store any type of service
 const csrServiceRegistry = new Map<string, PhoriaIslandComponentCsrService<any>>()
 
@@ -147,36 +66,13 @@ function getCsrService(framework: string) {
 	return csrServiceRegistry.get(frameworkName)
 }
 
-async function createIslandImport<T>(
-	component: PhoriaIslandComponent<PhoriaIslandComponentModule, T>
-): PhoriaIslandImport<T> {
-	if (typeof component.loader === "function") {
-		const defaultExportModule = await component.loader()
-
-		if (typeof defaultExportModule.default === "undefined") {
-			throw new Error(
-				`"${component.name}" component must be exposed as the default export for the specified module import, or you must also specify the named export that exposes the component when registering the component.`
-			)
-		}
-
-		return {
-			component: defaultExportModule.default,
-			componentPath: defaultExportModule.__phoriaComponentPath
-		}
-	}
-
-	const { loader } = component
-
-	const namedExportModule = await loader.module()
-
-	return ({
-		component: loader.component(namedExportModule),
-		componentPath: namedExportModule.__phoriaComponentPath
-	})
-}
-
 // biome-ignore lint/suspicious/noExplicitAny: The registry must be able to store any type of component
 const componentRegistry = new Map<string, PhoriaIslandComponent<PhoriaIslandComponentModule, any>>()
+
+interface PhoriaIslandComponentOptions<M extends PhoriaIslandComponentModule, T> {
+	loader: PhoriaIslandComponentLoader<M, T>
+	framework: string
+}
 
 function registerComponent<M extends PhoriaIslandComponentModule, T>(
 	name: string,
@@ -214,30 +110,14 @@ function getComponent(name: string) {
 }
 
 export {
+	getComponent,
+	getCsrService,
 	getFrameworks,
+	getSsrService,
 	registerComponent,
 	registerComponents,
-	getComponent,
-	createIslandImport,
 	registerCsrService,
-	getCsrService,
-	csrMountMode,
-	registerSsrService,
-	getSsrService
+	registerSsrService
 }
 
-export type {
-	PhoriaIslandComponent,
-	PhoriaIslandComponentModule,
-	PhoriaIslandComponentOptions,
-	PhoriaIslandProps,
-	PhoriaIsland,
-	PhoriaIslandImport,
-	PhoriaIslandComponentCsrService,
-	PhoriaIslandCsrOptions,
-	PhoriaIslandCsrMountMode,
-	PhoriaIslandComponentSsrService,
-	PhoriaIslandSsrResult,
-	RenderPhoriaIslandComponent,
-	RenderPhoriaIslandComponentOptions
-}
+export type { PhoriaIslandComponentOptions }

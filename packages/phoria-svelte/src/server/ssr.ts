@@ -1,5 +1,5 @@
-import { type PhoriaIslandComponentSsrService, type PhoriaIslandProps, createIslandImport } from "@phoria/phoria"
-import type { RenderPhoriaIslandComponent } from "@phoria/phoria"
+import { type PhoriaIslandProps, createIslandImport } from "@phoria/phoria"
+import type { PhoriaIslandComponentSsrService, RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import type { Component, ComponentProps } from "svelte"
 import { render } from "svelte/server"
 import { framework } from "~/main"

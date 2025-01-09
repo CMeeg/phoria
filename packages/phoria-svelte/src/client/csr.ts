@@ -1,4 +1,5 @@
-import { type PhoriaIslandComponentCsrService, createIslandImport, csrMountMode } from "@phoria/phoria"
+import { createIslandImport } from "@phoria/phoria"
+import { type PhoriaIslandComponentCsrService, csrMountMode } from "@phoria/phoria/client"
 import type { Component } from "svelte"
 
 const service: PhoriaIslandComponentCsrService<Component> = {

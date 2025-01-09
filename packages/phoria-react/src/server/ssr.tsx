@@ -1,4 +1,5 @@
-import { type PhoriaIslandComponentSsrService, type PhoriaIslandProps, type RenderPhoriaIslandComponent, createIslandImport } from "@phoria/phoria"
+import { type PhoriaIslandProps, createIslandImport } from "@phoria/phoria"
+import type { PhoriaIslandComponentSsrService, RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import { type FunctionComponent, StrictMode } from "react"
 import { renderToString } from "react-dom/server"
 import { renderToReadableStream } from "react-dom/server.edge"

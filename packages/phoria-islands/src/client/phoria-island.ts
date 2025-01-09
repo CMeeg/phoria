@@ -1,4 +1,6 @@
-import { type PhoriaIslandProps, csrMountMode, getComponent, getCsrService } from "~/register"
+import type { PhoriaIslandProps } from "~/phoria-island"
+import { getComponent, getCsrService } from "~/register"
+import { csrMountMode } from "./csr"
 import { type PhoriaIslandDirective, idle, media, visible } from "./directives"
 
 const directives = new Map<string, PhoriaIslandDirective>()

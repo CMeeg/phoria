@@ -14,7 +14,7 @@ import mime from "mime/lite"
 import type { DevEnvironment, RunnableDevEnvironment, ViteDevServer } from "vite"
 import { getFrameworks } from "~/register"
 import type { PhoriaAppSettings } from "./appsettings"
-import type { PhoriaServerEntry } from "./server-entry"
+import type { PhoriaServerEntry } from "./ssr"
 import { PhoriaIsland } from "./phoria-island"
 
 function isServerEntry(serverEntry: unknown): serverEntry is PhoriaServerEntry {
