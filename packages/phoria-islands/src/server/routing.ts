@@ -14,8 +14,8 @@ import mime from "mime/lite"
 import type { DevEnvironment, RunnableDevEnvironment, ViteDevServer } from "vite"
 import { getFrameworks } from "~/register"
 import type { PhoriaAppSettings } from "./appsettings"
-import type { PhoriaServerEntry } from "./ssr"
 import { PhoriaIsland } from "./phoria-island"
+import type { PhoriaServerEntry } from "./ssr"
 
 function isServerEntry(serverEntry: unknown): serverEntry is PhoriaServerEntry {
 	if (typeof serverEntry === "undefined" || serverEntry === null) {
@@ -48,8 +48,7 @@ function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: s
 			if (!isServerEntry(serverEntry)) {
 				throw createError({
 					status: 500,
-					message:
-						"Server entry is not of type `PhoriaServerEntry`."
+					message: "Server entry is not of type `PhoriaServerEntry`."
 				})
 			}
 
@@ -73,8 +72,7 @@ function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: s
 			if (!isServerEntry(serverEntry)) {
 				throw createError({
 					status: 500,
-					message:
-						"Server entry is not of type `PhoriaServerEntry`."
+					message: "Server entry is not of type `PhoriaServerEntry`."
 				})
 			}
 

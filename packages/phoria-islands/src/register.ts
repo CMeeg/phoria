@@ -1,5 +1,9 @@
 import type { PhoriaIslandComponentCsrService } from "./client/csr"
-import type { PhoriaIslandComponentEntry, PhoriaIslandComponentLoader, PhoriaIslandComponentModule } from "./phoria-island"
+import type {
+	PhoriaIslandComponentEntry,
+	PhoriaIslandComponentLoader,
+	PhoriaIslandComponentModule
+} from "./phoria-island"
 import type { PhoriaIslandComponentSsrService } from "./server/ssr"
 
 const frameworkRegistry = new Set<string>()

@@ -9,4 +9,9 @@ import { PhoriaIsland } from "./phoria-island"
 
 export { csrMountMode, PhoriaIsland }
 
-export type { PhoriaIslandComponentCsrService, PhoriaIslandCsrMountMode, PhoriaIslandCsrOptions, PhoriaIslandClientDirective }
+export type {
+	PhoriaIslandComponentCsrService,
+	PhoriaIslandCsrMountMode,
+	PhoriaIslandCsrOptions,
+	PhoriaIslandClientDirective
+}

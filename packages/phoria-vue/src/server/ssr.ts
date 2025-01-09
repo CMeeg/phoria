@@ -1,7 +1,7 @@
 import { type PhoriaIslandProps, importComponent } from "@phoria/phoria"
 import type { PhoriaIslandComponentSsrService, RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import { type Component, createSSRApp } from "vue"
-import { renderToWebStream, renderToString } from "vue/server-renderer"
+import { renderToString, renderToWebStream } from "vue/server-renderer"
 import { framework } from "~/main"
 
 type RenderVuePhoriaIslandComponent<P extends PhoriaIslandProps = PhoriaIslandProps> = RenderPhoriaIslandComponent<
