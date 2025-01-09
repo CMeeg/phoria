@@ -30,7 +30,7 @@ interface RenderPhoriaIslandComponentOptions<C> {
 }
 
 interface PhoriaServerEntry {
-	renderPhoriaIsland: (phoriaIsland: PhoriaIsland<unknown>) => Promise<PhoriaIslandSsrResult>
+	renderPhoriaIsland: (island: PhoriaIsland<unknown>) => Promise<PhoriaIslandSsrResult>
 }
 
 export type {

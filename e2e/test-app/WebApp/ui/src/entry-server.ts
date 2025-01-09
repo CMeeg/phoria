@@ -4,8 +4,8 @@ import "@phoria/phoria-vue/server"
 import "./components/register"
 import type { PhoriaIsland } from "@phoria/phoria/server"
 
-async function renderPhoriaIsland(phoriaIsland: PhoriaIsland) {
-	return phoriaIsland.render()
+async function renderPhoriaIsland(island: PhoriaIsland) {
+	return island.render()
 }
 
 export { renderPhoriaIsland }

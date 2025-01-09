@@ -29,6 +29,7 @@ Read on if you would like more info about each of the scripts, or you can feel f
 
 We are using the [`npm-run-all`](https://github.com/mysticatea/npm-run-all) package to run the other three build scripts in parallel.
 
+> [!NOTE]
 > `npm-run-all` is not required and you can use some other package or tool or shell feature (e.g. `&`) to do the same thing. The reason we are using it is because `&` doesn't work consistently on Windows.
 
 ### `build:app`
@@ -45,6 +46,7 @@ The build configuration for Vite is provided via your Vite config file (e.g. `vi
 
 This script uses the [dotnet CLI](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build) to build the Phoria Web App in its `Release` configuration.
 
+> [!WARNING]
 > You may need to adjust this command depending on the structure of your project to point to a specific solution (`.sln`) or project (`.csproj`) file.
 
 ### `build:server`
@@ -79,6 +81,7 @@ export default defineConfig(async () => {
 })
 ```
 
+> [!NOTE]
 > You don't need to use Vite to build the Phoria Server. You could use something like [`tsup`](https://github.com/egoist/tsup) or any other TypeScript to JavaScript transpiler or bundler if you prefer. We are using Vite because we are already using it so its convenient.
 >
 > Equally you could decide to just use JavaScript for your Phoria Server and avoid a build step entirely though we don't recommend it.
@@ -110,10 +113,12 @@ We are using the [dotnet CLI](https://learn.microsoft.com/en-us/dotnet/core/tool
 
 The [`cross-env`](https://github.com/kentcdodds/cross-env) package is used to set the `DOTNET_ENVIRONMENT` so you can use specific configuration or conditional branching in your code etc that targets the `Preview` environment. This script also assumes that you have a launch profile named `Preview`.
 
+> [!WARNING]
 > You may need to adjust this command depending on the structure of your project to point to the actual `.dll` of your Phoria Web App produced by the `build:dotnet` script.
 
 ### `preview:phoria`
 
 This script uses `node` to run the Phoria Server produced by the `build:server` script.
 
+> [!WARNING]
 > You may need to adjust this command depending on your configuration to point to the Phoria Server script produced by the `build:server` script.

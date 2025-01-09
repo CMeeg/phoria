@@ -1,3 +1,3 @@
 # phoria-react
 
-Use React islands in a Phoria Islands for dotnet project.
+Use React components in a Phoria Islands for dotnet project.
