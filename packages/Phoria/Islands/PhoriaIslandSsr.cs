@@ -7,8 +7,8 @@ namespace Phoria.Islands;
 
 public interface IPhoriaIslandSsr
 {
-	Task<PhoriaIslandSsrResult> RenderComponent(
-		PhoriaIslandComponent component,
+	Task<PhoriaIslandSsrResult> RenderIsland(
+		PhoriaIsland island,
 		CancellationToken cancellationToken = default);
 }
 
@@ -20,15 +20,15 @@ public class PhoriaIslandSsr(
 	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory = phoriaServerHttpClientFactory;
 	private readonly PhoriaOptions options = options.Value;
 
-	public async Task<PhoriaIslandSsrResult> RenderComponent(
-		PhoriaIslandComponent component,
+	public async Task<PhoriaIslandSsrResult> RenderIsland(
+		PhoriaIsland island,
 		CancellationToken cancellationToken = default)
 	{
 		StreamPool? propsStreamPool = null;
-		if (component.Props != null)
+		if (island.Props != null)
 		{
 			propsStreamPool = new StreamPool();
-			options.Islands.PropsSerializer.Serialize(component.Props, propsStreamPool);
+			options.Islands.PropsSerializer.Serialize(island.Props, propsStreamPool);
 		}
 
 		using HttpClient client = phoriaServerHttpClientFactory.CreateClient();
@@ -36,7 +36,7 @@ public class PhoriaIslandSsr(
 		StreamContent? body = CreatePropsContent(propsStreamPool);
 
 		HttpResponseMessage response = await client.PostAsync(
-			$"{options.SsrBase}/render/{component.ComponentName}",
+			$"{options.SsrBase}/render/{island.ComponentName}",
 			body,
 			cancellationToken);
 
@@ -47,14 +47,14 @@ public class PhoriaIslandSsr(
 			"x-phoria-island-framework",
 			out IEnumerable<string>? componentFrameworkHeader))
 		{
-			component.Framework = componentFrameworkHeader.FirstOrDefault();
+			island.Framework = componentFrameworkHeader.FirstOrDefault();
 		}
 
 		if (response.Headers.TryGetValues(
 			"x-phoria-island-path",
 			out IEnumerable<string>? componentPathHeader))
 		{
-			component.ComponentPath = componentPathHeader.FirstOrDefault();
+			island.ComponentPath = componentPathHeader.FirstOrDefault();
 		}
 
 		return new PhoriaIslandSsrResult

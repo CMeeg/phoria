@@ -49,14 +49,14 @@ public class PhoriaIslandPreloadTagHelper(
 
 		HashSet<string> seenFiles = [];
 
-		foreach (PhoriaIslandComponent component in scopedContext.Components)
+		foreach (PhoriaIsland island in scopedContext.Islands)
 		{
-			if (string.IsNullOrEmpty(component.ComponentPath))
+			if (string.IsNullOrEmpty(island.ComponentPath))
 			{
 				continue;
 			}
 
-			string componentPath = component.ComponentPath.TrimStart('/');
+			string componentPath = island.ComponentPath.TrimStart('/');
 
 			// We then need to remove the base path to get the island's module ID
 

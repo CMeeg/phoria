@@ -1,3 +1,3 @@
 # phoria-vue
 
-Use Vue islands in a Phoria Islands for dotnet project.
+Use Vue components in a Phoria Islands for dotnet project.

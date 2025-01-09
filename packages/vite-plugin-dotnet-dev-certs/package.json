@@ -46,7 +46,7 @@
 	"dependencies": {
 		"destr": "catalog:",
 		"empathic": "catalog:",
-		"tinyexec": "^0.3.1"
+		"tinyexec": "^0.3.2"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",

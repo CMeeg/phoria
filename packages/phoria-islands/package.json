@@ -65,7 +65,7 @@
 		"destr": "catalog:",
 		"empathic": "catalog:",
 		"h3": "catalog:",
-		"mime": "^4.0.4"
+		"mime": "^4.0.6"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",

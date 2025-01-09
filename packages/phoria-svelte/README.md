@@ -1,3 +1,3 @@
 # phoria-svelte
 
-Use Svelte islands in a Phoria Islands for dotnet project.
+Use Svelte components in a Phoria Islands for dotnet project.

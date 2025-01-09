@@ -1,33 +1,38 @@
-import {
-	type PhoriaIsland,
-	type PhoriaIslandComponentSsrService,
-	type PhoriaIslandProps,
-	createIslandImport
-} from "@phoria/phoria"
+import { type PhoriaIslandProps, importComponent } from "@phoria/phoria"
+import type { PhoriaIslandComponentSsrService, RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import { type Component, createSSRApp } from "vue"
-import { renderToWebStream, renderToString as vueRenderToString } from "vue/server-renderer"
+import { renderToString, renderToWebStream } from "vue/server-renderer"
 import { framework } from "~/main"
 
-async function renderToString<P extends PhoriaIslandProps>(island: PhoriaIsland<Component>, props?: P) {
+type RenderVuePhoriaIslandComponent<P extends PhoriaIslandProps = PhoriaIslandProps> = RenderPhoriaIslandComponent<
+	Component,
+	P
+>
+
+const renderComponentToString: RenderVuePhoriaIslandComponent = (island, props) => {
 	const app = createSSRApp(island.component, props)
 	const ctx = {}
-	return vueRenderToString(app, ctx)
+	return renderToString(app, ctx)
 }
 
-async function renderToStream<P extends PhoriaIslandProps>(island: PhoriaIsland<Component>, props?: P) {
+const renderComponentToStream: RenderVuePhoriaIslandComponent = async (island, props) => {
 	const app = createSSRApp(island.component, props)
 	const ctx = {}
 	return renderToWebStream(app, ctx)
 }
 
-const service: PhoriaIslandComponentSsrService = {
+const service: PhoriaIslandComponentSsrService<Component> = {
 	render: async (component, props, options) => {
-		// TODO: Can "cache" the imported component? Maybe only in production?
-		const islandImport = createIslandImport<Component>(component)
-		const island = await islandImport
+		if (component.framework !== framework.name) {
+			throw new Error(`${framework.name} cannot render the ${component.framework} component named "${component.name}".`)
+		}
 
-		const html =
-			(options?.preferStream ?? true) ? await renderToStream(island, props) : await renderToString(island, props)
+		// TODO: Can "cache" the imported component? Maybe only in production?
+		const island = await importComponent<Component>(component)
+
+		const renderComponent = options?.renderComponent ?? renderComponentToStream
+
+		const html = await renderComponent(island, props)
 
 		return {
 			framework: framework.name,
@@ -38,4 +43,6 @@ const service: PhoriaIslandComponentSsrService = {
 	}
 }
 
-export { service }
+export { service, renderComponentToStream, renderComponentToString }
+
+export type { RenderVuePhoriaIslandComponent }

@@ -1,11 +1,11 @@
 import type { PhoriaIsland } from "./phoria-island"
 
-type PhoriaIslandDirective = (
+type PhoriaIslandClientDirective = (
 	mount: () => Promise<void>,
 	options: { element: PhoriaIsland; component: string; value: string | null }
 ) => Promise<void>
 
-const idle: PhoriaIslandDirective = async (mount, { value }) => {
+const idle: PhoriaIslandClientDirective = async (mount, { value }) => {
 	const cb = async () => {
 		await mount()
 	}
@@ -19,7 +19,7 @@ const idle: PhoriaIslandDirective = async (mount, { value }) => {
 	}
 }
 
-const visible: PhoriaIslandDirective = async (mount, { element, value }) => {
+const visible: PhoriaIslandClientDirective = async (mount, { element, value }) => {
 	const rootMargin = value ?? "0px"
 
 	const observer = new IntersectionObserver(
@@ -38,7 +38,7 @@ const visible: PhoriaIslandDirective = async (mount, { element, value }) => {
 	observer.observe(element)
 }
 
-const media: PhoriaIslandDirective = async (mount, { value: query }) => {
+const media: PhoriaIslandClientDirective = async (mount, { value: query }) => {
 	if (!query) {
 		throw new Error(`No "query" specified for "client:media" directive.`)
 	}
@@ -56,4 +56,4 @@ const media: PhoriaIslandDirective = async (mount, { value: query }) => {
 
 export { idle, visible, media }
 
-export type { PhoriaIslandDirective }
+export type { PhoriaIslandClientDirective }

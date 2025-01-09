@@ -1,23 +1,24 @@
-import {
-	type PhoriaIsland,
-	type PhoriaIslandComponentSsrService,
-	type PhoriaIslandProps,
-	createIslandImport
-} from "@phoria/phoria"
+import { type PhoriaIslandProps, importComponent } from "@phoria/phoria"
+import type { PhoriaIslandComponentSsrService, RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import { type FunctionComponent, StrictMode } from "react"
-import { renderToString as reactRenderToString } from "react-dom/server"
+import { renderToString } from "react-dom/server"
 import { renderToReadableStream } from "react-dom/server.edge"
 import { framework } from "~/main"
 
-async function renderToString<P extends PhoriaIslandProps>(island: PhoriaIsland<FunctionComponent>, props?: P) {
-	return reactRenderToString(
+type RenderReactPhoriaIslandComponent<P extends PhoriaIslandProps = PhoriaIslandProps> = RenderPhoriaIslandComponent<
+	FunctionComponent,
+	P
+>
+
+const renderComponentToString: RenderReactPhoriaIslandComponent = (island, props) => {
+	return renderToString(
 		<StrictMode>
 			<island.component {...props} />
 		</StrictMode>
 	)
 }
 
-async function renderToStream<P extends PhoriaIslandProps>(island: PhoriaIsland<FunctionComponent>, props?: P) {
+const renderComponentToStream: RenderReactPhoriaIslandComponent = async (island, props) => {
 	// `react-dom/server.edge` is used because of https://github.com/facebook/react/issues/26906
 	// Implemented workaround as per https://github.com/redwoodjs/redwood/pull/10284
 	return await renderToReadableStream(
@@ -27,14 +28,18 @@ async function renderToStream<P extends PhoriaIslandProps>(island: PhoriaIsland<
 	)
 }
 
-const service: PhoriaIslandComponentSsrService = {
+const service: PhoriaIslandComponentSsrService<FunctionComponent> = {
 	render: async (component, props, options) => {
-		// TODO: Can "cache" the imported component? Maybe only in production?
-		const islandImport = createIslandImport<FunctionComponent>(component)
-		const island = await islandImport
+		if (component.framework !== framework.name) {
+			throw new Error(`${framework.name} cannot render the ${component.framework} component named "${component.name}".`)
+		}
 
-		const html =
-			(options?.preferStream ?? true) ? await renderToStream(island, props) : await renderToString(island, props)
+		// TODO: Can "cache" the imported component? Maybe only in production?
+		const island = await importComponent<FunctionComponent>(component)
+
+		const renderComponent = options?.renderComponent ?? renderComponentToStream
+
+		const html = await renderComponent(island, props)
 
 		return {
 			framework: framework.name,
@@ -44,4 +49,6 @@ const service: PhoriaIslandComponentSsrService = {
 	}
 }
 
-export { service }
+export { service, renderComponentToStream, renderComponentToString }
+
+export type { RenderReactPhoriaIslandComponent }

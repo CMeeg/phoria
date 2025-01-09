@@ -1,14 +1,15 @@
-import {
-	type PhoriaIsland,
-	type PhoriaIslandComponentSsrService,
-	type PhoriaIslandProps,
-	createIslandImport
-} from "@phoria/phoria"
+import { type PhoriaIslandProps, importComponent } from "@phoria/phoria"
+import type { PhoriaIslandComponentSsrService, RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import type { Component, ComponentProps } from "svelte"
 import { render } from "svelte/server"
 import { framework } from "~/main"
 
-async function renderToString<P extends PhoriaIslandProps>(island: PhoriaIsland<Component>, props?: P) {
+type RenderSveltePhoriaIslandComponent<P extends PhoriaIslandProps = PhoriaIslandProps> = RenderPhoriaIslandComponent<
+	Component,
+	P
+>
+
+const renderComponentToString: RenderSveltePhoriaIslandComponent = (island, props) => {
 	const ctx = new Map()
 	const html = render(island.component, {
 		props: props as ComponentProps<typeof island.component>,
@@ -18,14 +19,18 @@ async function renderToString<P extends PhoriaIslandProps>(island: PhoriaIsland<
 	return html.body
 }
 
-const service: PhoriaIslandComponentSsrService = {
-	render: async (component, props) => {
-		// TODO: Can "cache" the imported component? Maybe only in production?
-		const islandImport = createIslandImport<Component>(component)
-		const island = await islandImport
+const service: PhoriaIslandComponentSsrService<Component> = {
+	render: async (component, props, options) => {
+		if (component.framework !== framework.name) {
+			throw new Error(`${framework.name} cannot render the ${component.framework} component named "${component.name}".`)
+		}
 
-		// TODO: Svelte doesn't support streaming - should I acknowledge that somehow?
-		const html = await renderToString(island, props)
+		// TODO: Can "cache" the imported component? Maybe only in production?
+		const island = await importComponent<Component>(component)
+
+		const renderComponent = options?.renderComponent ?? renderComponentToString
+
+		const html = await renderComponent(island, props)
 
 		return {
 			framework: framework.name,
@@ -35,4 +40,6 @@ const service: PhoriaIslandComponentSsrService = {
 	}
 }
 
-export { service }
+export { service, renderComponentToString }
+
+export type { RenderSveltePhoriaIslandComponent }
