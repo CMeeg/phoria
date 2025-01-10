@@ -11,10 +11,10 @@ interface PhoriaIslandCsrOptions {
 	mode: PhoriaIslandCsrMountMode
 }
 
-interface PhoriaIslandComponentCsrService<T> {
+interface PhoriaIslandComponentCsrService<F extends string, T> {
 	mount: (
 		island: HTMLElement,
-		component: PhoriaIslandComponentEntry<PhoriaIslandComponentModule, T>,
+		component: PhoriaIslandComponentEntry<F, PhoriaIslandComponentModule, T>,
 		props: PhoriaIslandProps,
 		options?: Partial<PhoriaIslandCsrOptions>
 	) => Promise<void>

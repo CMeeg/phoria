@@ -3,7 +3,7 @@ import { type PhoriaIslandComponentCsrService, csrMountMode } from "@phoria/phor
 import type { Component } from "svelte"
 import { framework } from "~/main"
 
-const service: PhoriaIslandComponentCsrService<Component> = {
+const service: PhoriaIslandComponentCsrService<typeof framework.name, Component> = {
 	mount: async (island, component, props, options) => {
 		if (component.framework !== framework.name) {
 			throw new Error(`${framework.name} cannot render the ${component.framework} component named "${component.name}".`)
@@ -11,17 +11,19 @@ const service: PhoriaIslandComponentCsrService<Component> = {
 
 		const mode = options?.mode ?? csrMountMode.hydrate
 
-		Promise.all([import("svelte"), importComponent<Component>(component)]).then(([Svelte, Island]) => {
-			// biome-ignore lint/complexity/noBannedTypes: Must match expected props type
-			const svelteProps = typeof props === "object" ? (props as {}) : undefined
+		Promise.all([import("svelte"), importComponent<typeof framework.name, Component>(component)]).then(
+			([Svelte, Island]) => {
+				// biome-ignore lint/complexity/noBannedTypes: Must match expected props type
+				const svelteProps = typeof props === "object" ? (props as {}) : undefined
 
-			if (mode === csrMountMode.hydrate) {
-				Svelte.hydrate(Island.component, { target: island, props: svelteProps })
-				return
+				if (mode === csrMountMode.hydrate) {
+					Svelte.hydrate(Island.component, { target: island, props: svelteProps })
+					return
+				}
+
+				Svelte.mount(Island.component, { target: island, props: svelteProps })
 			}
-
-			Svelte.mount(Island.component, { target: island, props: svelteProps })
-		})
+		)
 	}
 }
 
