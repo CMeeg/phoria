@@ -1,5 +1,11 @@
 # @phoria/phoria-vue
 
+## 0.3.1
+
+### Patch Changes
+
+- edff1eb: Improve type narrowing of Phoria Islands
+
 ## 0.3.0
 
 ### Minor Changes
