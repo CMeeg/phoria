@@ -1,5 +1,11 @@
 # @phoria/phoria
 
+## 0.4.1
+
+### Patch Changes
+
+- edff1eb: Improve type narrowing of Phoria Islands
+
 ## 0.4.0
 
 ### Minor Changes
