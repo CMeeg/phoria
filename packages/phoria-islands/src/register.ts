@@ -33,9 +33,9 @@ function getFrameworks() {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: The registry must be able to store any type of service
-const ssrServiceRegistry = new Map<string, PhoriaIslandComponentSsrService<any>>()
+const ssrServiceRegistry = new Map<string, PhoriaIslandComponentSsrService<any, any>>()
 
-function registerSsrService<T>(framework: string, service: PhoriaIslandComponentSsrService<T>) {
+function registerSsrService<F extends string, T>(framework: string, service: PhoriaIslandComponentSsrService<F, T>) {
 	const frameworkName = registerFramework(framework)
 
 	ssrServiceRegistry.set(frameworkName, service)
@@ -52,9 +52,9 @@ function getSsrService(framework: string) {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: The registry must be able to store any type of service
-const csrServiceRegistry = new Map<string, PhoriaIslandComponentCsrService<any>>()
+const csrServiceRegistry = new Map<string, PhoriaIslandComponentCsrService<any, any>>()
 
-function registerCsrService<T>(framework: string, service: PhoriaIslandComponentCsrService<T>) {
+function registerCsrService<F extends string, T>(framework: string, service: PhoriaIslandComponentCsrService<F, T>) {
 	const frameworkName = registerFramework(framework)
 
 	csrServiceRegistry.set(frameworkName, service)
@@ -71,7 +71,7 @@ function getCsrService(framework: string) {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: The registry must be able to store any type of component
-const componentRegistry = new Map<string, PhoriaIslandComponentEntry<PhoriaIslandComponentModule, any>>()
+const componentRegistry = new Map<string, PhoriaIslandComponentEntry<any, PhoriaIslandComponentModule, any>>()
 
 interface PhoriaIslandComponentOptions<M extends PhoriaIslandComponentModule, T> {
 	loader: PhoriaIslandComponentLoader<M, T>

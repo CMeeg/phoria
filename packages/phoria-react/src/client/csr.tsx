@@ -3,7 +3,7 @@ import { type PhoriaIslandComponentCsrService, csrMountMode } from "@phoria/phor
 import type { FunctionComponent } from "react"
 import { framework } from "~/main"
 
-const service: PhoriaIslandComponentCsrService<FunctionComponent> = {
+const service: PhoriaIslandComponentCsrService<typeof framework.name, FunctionComponent> = {
 	mount: async (island, component, props, options) => {
 		if (component.framework !== framework.name) {
 			throw new Error(`${framework.name} cannot render the ${component.framework} component named "${component.name}".`)
@@ -14,7 +14,7 @@ const service: PhoriaIslandComponentCsrService<FunctionComponent> = {
 		Promise.all([
 			import("react").then((m) => m.default),
 			import("react-dom/client").then((m) => m.default),
-			importComponent<FunctionComponent>(component)
+			importComponent<typeof framework.name, FunctionComponent>(component)
 		]).then(([React, ReactDOM, Island]) => {
 			if (mode === csrMountMode.hydrate) {
 				ReactDOM.hydrateRoot(

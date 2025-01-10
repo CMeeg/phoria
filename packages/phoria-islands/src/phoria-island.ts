@@ -20,22 +20,22 @@ type PhoriaIslandComponentLoader<M extends PhoriaIslandComponentModule, T> =
 	| PhoriaIslandComponentModuleLoader<M, T>
 	| PhoriaIslandComponentDefaultModuleLoader<T>
 
-interface PhoriaIslandComponentEntry<M extends PhoriaIslandComponentModule, T> {
+interface PhoriaIslandComponentEntry<F extends string, M extends PhoriaIslandComponentModule, T> {
 	name: string
-	framework: string
+	framework: F
 	loader: PhoriaIslandComponentLoader<M, T>
 }
 
-interface PhoriaIslandComponent<T> {
+interface PhoriaIslandComponent<F extends string, T> {
 	component: T
 	componentName: string
-	framework: string
+	framework: F
 	componentPath?: string
 }
 
-async function importComponent<T>(
-	componentEntry: PhoriaIslandComponentEntry<PhoriaIslandComponentModule, T>
-): Promise<PhoriaIslandComponent<T>> {
+async function importComponent<F extends string, T>(
+	componentEntry: PhoriaIslandComponentEntry<F, PhoriaIslandComponentModule, T>
+): Promise<PhoriaIslandComponent<F, T>> {
 	if (typeof componentEntry.loader === "function") {
 		const defaultExportModule = await componentEntry.loader()
 

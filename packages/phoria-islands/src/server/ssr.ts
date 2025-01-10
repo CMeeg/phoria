@@ -12,25 +12,25 @@ interface PhoriaIslandSsrResult {
 	html: string | ReadableStream
 }
 
-interface PhoriaIslandComponentSsrService<T> {
+interface PhoriaIslandComponentSsrService<F extends string, T> {
 	render: (
-		component: PhoriaIslandComponentEntry<PhoriaIslandComponentModule, T>,
+		component: PhoriaIslandComponentEntry<F, PhoriaIslandComponentModule, T>,
 		props: PhoriaIslandProps,
-		options?: Partial<RenderPhoriaIslandComponentOptions<T>>
+		options?: Partial<RenderPhoriaIslandComponentOptions<F, T>>
 	) => Promise<PhoriaIslandSsrResult>
 }
 
-type RenderPhoriaIslandComponent<C, P extends PhoriaIslandProps = PhoriaIslandProps> = (
-	island: PhoriaIslandComponent<C>,
+type RenderPhoriaIslandComponent<F extends string, C, P extends PhoriaIslandProps = PhoriaIslandProps> = (
+	island: PhoriaIslandComponent<F, C>,
 	props?: P
 ) => string | Promise<string | ReadableStream>
 
-interface RenderPhoriaIslandComponentOptions<C> {
-	renderComponent: RenderPhoriaIslandComponent<C>
+interface RenderPhoriaIslandComponentOptions<F extends string, C> {
+	renderComponent: RenderPhoriaIslandComponent<F, C>
 }
 
 interface PhoriaServerEntry {
-	renderPhoriaIsland: (island: PhoriaIsland<unknown>) => Promise<PhoriaIslandSsrResult>
+	renderPhoriaIsland: (island: PhoriaIsland) => Promise<PhoriaIslandSsrResult>
 }
 
 export type {

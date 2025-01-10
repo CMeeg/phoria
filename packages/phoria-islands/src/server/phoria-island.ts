@@ -3,19 +3,18 @@ import type { PhoriaIslandComponentEntry, PhoriaIslandComponentModule, PhoriaIsl
 import { getComponent, getSsrService } from "~/register"
 import type { PhoriaIslandComponentSsrService, RenderPhoriaIslandComponentOptions } from "./ssr"
 
-// biome-ignore lint/suspicious/noExplicitAny: The island can be any type of component
-class PhoriaIsland<C = any, P extends PhoriaIslandProps = PhoriaIslandProps> {
-	private component: PhoriaIslandComponentEntry<PhoriaIslandComponentModule, C>
-	private ssr: PhoriaIslandComponentSsrService<C>
+class PhoriaIsland<F extends string = string, C = unknown, P extends PhoriaIslandProps = PhoriaIslandProps> {
+	private component: PhoriaIslandComponentEntry<F, PhoriaIslandComponentModule, C>
+	private ssr: PhoriaIslandComponentSsrService<F, C>
 
 	componentName: string
 	props: P
-	framework: string
+	framework: F
 
 	constructor(
-		component: PhoriaIslandComponentEntry<PhoriaIslandComponentModule, C>,
+		component: PhoriaIslandComponentEntry<F, PhoriaIslandComponentModule, C>,
 		props: P,
-		ssr: PhoriaIslandComponentSsrService<C>
+		ssr: PhoriaIslandComponentSsrService<F, C>
 	) {
 		this.component = component
 		this.ssr = ssr
@@ -25,7 +24,7 @@ class PhoriaIsland<C = any, P extends PhoriaIslandProps = PhoriaIslandProps> {
 		this.framework = component.framework
 	}
 
-	async render(options?: Partial<RenderPhoriaIslandComponentOptions<C>>) {
+	async render(options?: Partial<RenderPhoriaIslandComponentOptions<F, C>>) {
 		return await this.ssr.render(this.component, this.props, options)
 	}
 
