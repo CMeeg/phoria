@@ -1,5 +1,5 @@
 packages:
-  - "e2e/**"
+  - "e2e/with-workspace/*"
   - "packages/*"
 
 catalog:

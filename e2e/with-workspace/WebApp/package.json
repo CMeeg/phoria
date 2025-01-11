@@ -1,5 +1,5 @@
 {
-	"name": "test-app",
+	"name": "with-workspace",
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",

@@ -16,7 +16,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 ENV NODE_ENV=production
 ENV DOTNET_ENVIRONMENT=Production
 RUN pnpm lerna run build \
-	&& pnpm --filter=test-app deploy --prod /app
+	&& pnpm --filter=with-workspace deploy --prod /app
 
 # dotnet build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS appbuild
@@ -26,10 +26,10 @@ WORKDIR /src
 COPY . .
 
 # Restore all projects
-RUN dotnet restore ./e2e/test-app/WebApp/WebApp.csproj
+RUN dotnet restore ./e2e/with-workspace/WebApp/WebApp.csproj
 
 # Publish web app
-RUN dotnet publish ./e2e/test-app/WebApp/WebApp.csproj -c Release --no-restore -o /app
+RUN dotnet publish ./e2e/with-workspace/WebApp/WebApp.csproj -c Release --no-restore -o /app
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
