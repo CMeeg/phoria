@@ -1,4 +1,5 @@
 packages:
+  - "e2e/framework-multiple"
   - "e2e/with-workspace/*"
   - "packages/*"
 

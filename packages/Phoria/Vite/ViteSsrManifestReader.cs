@@ -97,7 +97,8 @@ public sealed class ViteSsrManifestReader(
 		// Read the name of the SSR manifest file from the configuration
 
 		// TODO: Can this be injected? ViteManifestReader and ViteSsrManifestReader can use the same fileprovider
-		fileProvider ??= new PhysicalFileProvider(Path.Combine(environment.ContentRootPath, options.Root, options.Build.OutDir, "phoria", "client", ".vite"));
+		string viteRoot = options.Root.Substring(options.Root.LastIndexOf('/') + 1);
+		fileProvider ??= new PhysicalFileProvider(Path.Combine(environment.ContentRootPath, viteRoot, options.Build.OutDir, "phoria", "client", ".vite"));
 
 		IFileInfo ssrManifestFile = fileProvider.GetFileInfo(ManifestName);
 

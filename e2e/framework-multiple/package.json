@@ -1,5 +1,5 @@
 {
-	"name": "with-workspace",
+	"name": "framework-multiple",
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
@@ -9,11 +9,11 @@
 		"build:dotnet": "dotnet build --configuration Release",
 		"build:server": "vite build --config vite.server.config.ts",
 		"check": "tsc",
-		"dev": "tsx ./ui/src/server.ts",
+		"dev": "tsx ./WebApp/ui/src/server.ts",
 		"lint": "biome check",
 		"preview": "run-p preview:* -c",
-		"preview:dotnet": "cross-env DOTNET_ENVIRONMENT=Preview dotnet run --project ./WebApp.csproj -c Release --launch-profile Preview",
-		"preview:phoria": "cross-env NODE_ENV=production DOTNET_ENVIRONMENT=Preview node ./ui/dist/server/server.js"
+		"preview:dotnet": "cross-env DOTNET_ENVIRONMENT=Preview dotnet run --project ./WebApp/WebApp.csproj -c Release --launch-profile Preview",
+		"preview:phoria": "cross-env NODE_ENV=production DOTNET_ENVIRONMENT=Preview node ./WebApp/ui/dist/server/server.js"
 	},
 	"dependencies": {
 		"@phoria/phoria": "workspace:*",

@@ -1,3 +1,4 @@
+import { join } from "node:path"
 import type { BuildEnvironmentOptions, EnvironmentOptions, PluginOption, UserConfig } from "vite"
 import { type PhoriaAppSettings, parsePhoriaAppSettings } from "~/server/appsettings"
 
@@ -90,10 +91,12 @@ function setSsrEnvironment(options: EnvironmentOptions, appsettings: Partial<Pho
 }
 
 interface PhoriaPluginOptions {
+	webAppPath: string
 	appsettings: Partial<PhoriaAppSettings>
 }
 
 function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
+	const webAppPath = options?.webAppPath ?? ""
 	let appsettings: Partial<PhoriaAppSettings> = {}
 
 	return {
@@ -103,6 +106,7 @@ function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 
 			appsettings = await parsePhoriaAppSettings({
 				environment: dotnetEnv,
+				cwd: join(process.cwd(), webAppPath),
 				inlineSettings: options?.appsettings
 			})
 
