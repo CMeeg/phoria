@@ -146,4 +146,3 @@ function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 export { phoriaPlugin as phoria }
 
 export type { PhoriaPluginOptions }
-
