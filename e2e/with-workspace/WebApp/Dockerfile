@@ -15,8 +15,11 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # Build the app
 ENV NODE_ENV=production
 ENV DOTNET_ENVIRONMENT=Production
-RUN pnpm lerna run build \
-	&& pnpm --filter=with-workspace deploy --prod /app
+
+RUN pnpm lerna run --ignore phoria-dotnet --ignore framework-multiple --ignore with-workspace build
+RUN pnpm lerna run --ignore phoria-dotnet --ignore framework-multiple build:islands
+RUN pnpm lerna run --ignore phoria-dotnet --ignore framework-multiple build:server
+RUN pnpm --filter=with-workspace deploy --prod /app
 
 # dotnet build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS appbuild
@@ -40,8 +43,7 @@ WORKDIR /app
 # Copy built assets
 
 COPY --from=appbuild /app .
-COPY --from=uibuild /app/ui/dist ./ui/dist
-COPY --from=uibuild /app/node_modules ./node_modules
+COPY --from=uibuild /app .
 
 # Install node
 

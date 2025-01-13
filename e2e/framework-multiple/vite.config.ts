@@ -16,7 +16,7 @@ export default defineConfig({
 			root: "../../"
 		}),
 		dotnetDevCerts(),
-		phoria({ webAppPath: "WebApp" }),
+		phoria({ cwd: "WebApp" }),
 		phoriaReact(),
 		phoriaSvelte(),
 		phoriaVue(),

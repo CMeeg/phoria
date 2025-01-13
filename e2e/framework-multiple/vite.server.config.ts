@@ -4,10 +4,9 @@ import { type UserConfig, defineConfig } from "vite"
 
 export default defineConfig(async () => {
 	const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "development"
-	const webAppPath = "WebApp"
 	const appsettings = await parsePhoriaAppSettings({
 		environment: dotnetEnv,
-		cwd: path.join(process.cwd(), webAppPath)
+		cwd: path.join(process.cwd(), "WebApp")
 	})
 
 	// https://vite.dev/config/
