@@ -1,5 +1,11 @@
 # @phoria/phoria-vue
 
+## 0.3.2
+
+### Patch Changes
+
+- 2881b78: Fix build warning due to exports order
+
 ## 0.3.1
 
 ### Patch Changes

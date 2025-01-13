@@ -1,5 +1,12 @@
 # @phoria/phoria
 
+## 0.4.2
+
+### Patch Changes
+
+- 2881b78: Fix build warning due to exports order
+- 2881b78: Fix build and runtime errors when running Vite outside of the web app directory
+
 ## 0.4.1
 
 ### Patch Changes

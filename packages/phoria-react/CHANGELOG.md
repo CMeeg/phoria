@@ -1,5 +1,11 @@
 # @phoria/phoria-react
 
+## 0.4.2
+
+### Patch Changes
+
+- 2881b78: Fix build warning due to exports order
+
 ## 0.4.1
 
 ### Patch Changes

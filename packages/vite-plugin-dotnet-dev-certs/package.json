@@ -1,6 +1,6 @@
 {
 	"name": "@phoria/vite-plugin-dotnet-dev-certs",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Use dotnet dev-certs with your Vite development server.",
 	"keywords": [
 		"dotnet",
