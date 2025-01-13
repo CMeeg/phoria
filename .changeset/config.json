@@ -5,7 +5,7 @@
 	"changelog": "@changesets/cli/changelog",
 	"commit": false,
 	"fixed": [],
-	"ignore": ["test-app"],
+	"ignore": ["framework-multiple", "with-workspace"],
 	"linked": [],
 	"privatePackages": { "version": true, "tag": true },
 	"updateInternalDependencies": "minor",

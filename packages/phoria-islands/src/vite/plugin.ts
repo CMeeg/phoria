@@ -1,3 +1,4 @@
+import { isAbsolute, join } from "node:path"
 import type { BuildEnvironmentOptions, EnvironmentOptions, PluginOption, UserConfig } from "vite"
 import { type PhoriaAppSettings, parsePhoriaAppSettings } from "~/server/appsettings"
 
@@ -89,11 +90,25 @@ function setSsrEnvironment(options: EnvironmentOptions, appsettings: Partial<Pho
 	setEntry(options.build, appsettings.root, appsettings.ssrEntry)
 }
 
+function parseWorkingDirectory(cwd: string | undefined) {
+	if (typeof cwd === "undefined") {
+		return process.cwd()
+	}
+
+	if (isAbsolute(cwd)) {
+		return cwd
+	}
+
+	return join(process.cwd(), cwd)
+}
+
 interface PhoriaPluginOptions {
+	cwd: string
 	appsettings: Partial<PhoriaAppSettings>
 }
 
 function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
+	const cwd = parseWorkingDirectory(options?.cwd)
 	let appsettings: Partial<PhoriaAppSettings> = {}
 
 	return {
@@ -103,6 +118,7 @@ function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 
 			appsettings = await parsePhoriaAppSettings({
 				environment: dotnetEnv,
+				cwd,
 				inlineSettings: options?.appsettings
 			})
 

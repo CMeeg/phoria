@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<AnalysisLevel>9.0-recommended</AnalysisLevel>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\packages\Phoria\Phoria.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<!-- These files are included in the project and are copied to the output directory on publish - we want them in the project but not in the output directory so we need to exclude them before including them again below -->
+		<DefaultItemExcludes>$(DefaultItemExcludes);package.json;tsconfig.json;tsconfig.*.json</DefaultItemExcludes>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- These files are excluded via `DefaultItemExcludes` above and are included here so they are in the project but not copied to the output directory on publish -->
+		<Content Include="package.json" CopyToOutputDirectory="Never" />
+		<Content Include="tsconfig.json" CopyToOutputDirectory="Never" />
+		<Content Include="tsconfig.*.json" CopyToOutputDirectory="Never" />
+	</ItemGroup>
+
+</Project>

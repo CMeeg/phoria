@@ -99,7 +99,86 @@ importers:
         specifier: ^8.1.9
         version: 8.1.9(encoding@0.1.13)
 
-  e2e/test-app/WebApp:
+  e2e/framework-multiple:
+    dependencies:
+      '@phoria/phoria':
+        specifier: workspace:*
+        version: link:../../packages/phoria-islands
+      '@phoria/phoria-react':
+        specifier: workspace:*
+        version: link:../../packages/phoria-react
+      '@phoria/phoria-svelte':
+        specifier: workspace:*
+        version: link:../../packages/phoria-svelte
+      '@phoria/phoria-vue':
+        specifier: workspace:*
+        version: link:../../packages/phoria-vue
+      h3:
+        specifier: 'catalog:'
+        version: 1.13.0
+      listhen:
+        specifier: 'catalog:'
+        version: 1.9.0
+      react:
+        specifier: 'catalog:'
+        version: 19.0.0
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.0.0(react@19.0.0)
+      svelte:
+        specifier: 'catalog:'
+        version: 5.17.3
+      vue:
+        specifier: 'catalog:'
+        version: 3.5.13(typescript@5.7.3)
+    devDependencies:
+      '@meeg/vite-plugin-inspect-config':
+        specifier: 'catalog:'
+        version: 0.2.0(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
+      '@phoria/vite-plugin-dotnet-dev-certs':
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin-dotnet-dev-certs
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 5.0.1(svelte@5.17.3)(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.10.5
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.0.4
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.0.2(@types/react@19.0.4)
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 4.3.4(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
+      '@vitejs/plugin-vue':
+        specifier: 'catalog:'
+        version: 5.2.1(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))(vue@3.5.13(typescript@5.7.3))
+      cross-env:
+        specifier: 'catalog:'
+        version: 7.0.3
+      npm-run-all:
+        specifier: 'catalog:'
+        version: 4.1.5
+      postcss-preset-env:
+        specifier: 'catalog:'
+        version: 10.1.1(postcss@8.4.49)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.19.2
+      typescript:
+        specifier: 'catalog:'
+        version: 5.7.3
+      vite:
+        specifier: 'catalog:'
+        version: 6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2)
+      vite-tsconfig-paths:
+        specifier: 'catalog:'
+        version: 5.1.4(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
+
+  e2e/with-workspace/WebApp:
     dependencies:
       '@phoria/phoria':
         specifier: workspace:*
@@ -3212,9 +3291,6 @@ packages:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
 
-  magic-string@0.30.14:
-    resolution: {integrity: sha512-5c99P1WKTed11ZC0HMJOj6CDIue6F8ySu+bJL+85q1zBEIY8IklrJ1eiKC2NDRh3Ct3FcvmJPyQHb9erXMTJNw==}
-
   magic-string@0.30.17:
     resolution: {integrity: sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA==}
 
@@ -4620,14 +4696,6 @@ packages:
       yaml:
         optional: true
 
-  vitefu@1.0.3:
-    resolution: {integrity: sha512-iKKfOMBHob2WxEJbqbJjHAkmYgvFDPhuqrO82om83S8RLk+17FtyMBfcyeH8GqD0ihShtkMW/zzJgiA51hCNCQ==}
-    peerDependencies:
-      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0-beta.0
-    peerDependenciesMeta:
-      vite:
-        optional: true
-
   vitefu@1.0.5:
     resolution: {integrity: sha512-h4Vflt9gxODPFNGPwp4zAMZRpZR7eslzwH2c5hn5kNZ5rhnKyRJ50U+yGCdc2IRaBs8O4haIgLNGrV5CrpMsCA==}
     peerDependencies:
@@ -4786,7 +4854,7 @@ snapshots:
       '@babel/traverse': 7.25.9
       '@babel/types': 7.26.0
       convert-source-map: 2.0.0
-      debug: 4.3.7
+      debug: 4.4.0
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -4869,7 +4937,7 @@ snapshots:
       '@babel/parser': 7.26.1
       '@babel/template': 7.25.9
       '@babel/types': 7.26.0
-      debug: 4.3.7
+      debug: 4.4.0
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -6148,13 +6216,13 @@ snapshots:
   '@sveltejs/vite-plugin-svelte@5.0.1(svelte@5.17.3)(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))':
     dependencies:
       '@sveltejs/vite-plugin-svelte-inspector': 4.0.1(@sveltejs/vite-plugin-svelte@5.0.1(svelte@5.17.3)(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2)))(svelte@5.17.3)(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
-      debug: 4.3.7
+      debug: 4.4.0
       deepmerge: 4.3.1
       kleur: 4.1.5
-      magic-string: 0.30.14
+      magic-string: 0.30.17
       svelte: 5.17.3
       vite: 6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2)
-      vitefu: 1.0.3(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
+      vitefu: 1.0.5(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
     transitivePeerDependencies:
       - supports-color
 
@@ -6282,7 +6350,7 @@ snapshots:
       '@vue/compiler-ssr': 3.5.13
       '@vue/shared': 3.5.13
       estree-walker: 2.0.2
-      magic-string: 0.30.14
+      magic-string: 0.30.17
       postcss: 8.4.49
       source-map-js: 1.2.1
 
@@ -6361,7 +6429,7 @@ snapshots:
 
   agent-base@7.1.1:
     dependencies:
-      debug: 4.3.7
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -7407,7 +7475,7 @@ snapshots:
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.7
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -7416,7 +7484,7 @@ snapshots:
   https-proxy-agent@7.0.5:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.7
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -7888,7 +7956,7 @@ snapshots:
       h3: 1.13.0
       http-shutdown: 1.2.2
       jiti: 2.4.1
-      mlly: 1.7.2
+      mlly: 1.7.3
       node-forge: 1.3.1
       pathe: 1.1.2
       std-env: 3.8.0
@@ -7946,10 +8014,6 @@ snapshots:
   lru-cache@6.0.0:
     dependencies:
       yallist: 4.0.0
-
-  magic-string@0.30.14:
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.0
 
   magic-string@0.30.17:
     dependencies:
@@ -9079,7 +9143,7 @@ snapshots:
   socks-proxy-agent@8.0.4:
     dependencies:
       agent-base: 7.1.1
-      debug: 4.3.7
+      debug: 4.4.0
       socks: 2.8.3
     transitivePeerDependencies:
       - supports-color
@@ -9239,7 +9303,7 @@ snapshots:
       esrap: 1.4.0
       is-reference: 3.0.3
       locate-character: 3.0.0
-      magic-string: 0.30.14
+      magic-string: 0.30.17
       zimmerframe: 1.1.2
 
   system-architecture@0.1.0: {}
@@ -9314,7 +9378,7 @@ snapshots:
   tuf-js@2.2.1:
     dependencies:
       '@tufjs/models': 2.0.1
-      debug: 4.3.7
+      debug: 4.4.0
       make-fetch-happen: 13.0.1
     transitivePeerDependencies:
       - supports-color
@@ -9464,7 +9528,7 @@ snapshots:
 
   vite-tsconfig-paths@5.1.4(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2)):
     dependencies:
-      debug: 4.3.7
+      debug: 4.4.0
       globrex: 0.1.2
       tsconfck: 3.1.4(typescript@5.7.3)
     optionalDependencies:
@@ -9483,10 +9547,6 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.4.1
       tsx: 4.19.2
-
-  vitefu@1.0.3(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2)):
-    optionalDependencies:
-      vite: 6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2)
 
   vitefu@1.0.5(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2)):
     optionalDependencies:

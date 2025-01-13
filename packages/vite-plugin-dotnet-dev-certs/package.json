@@ -33,9 +33,9 @@
 	"types": "./dist/plugin.d.ts",
 	"exports": {
 		".": {
+			"types": "./dist/plugin.d.ts",
 			"import": "./dist/plugin.js",
-			"require": "./dist/plugin.cjs",
-			"types": "./dist/plugin.d.ts"
+			"require": "./dist/plugin.cjs"
 		}
 	},
 	"scripts": {

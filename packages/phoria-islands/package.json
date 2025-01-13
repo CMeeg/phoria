@@ -35,24 +35,24 @@
 	"types": "./dist/main.d.ts",
 	"exports": {
 		".": {
+			"types": "./dist/main.d.ts",
 			"import": "./dist/main.js",
-			"require": "./dist/main.cjs",
-			"types": "./dist/main.d.ts"
+			"require": "./dist/main.cjs"
 		},
 		"./client": {
+			"types": "./dist/client/main.d.ts",
 			"import": "./dist/client.js",
-			"require": "./dist/client.cjs",
-			"types": "./dist/client/main.d.ts"
+			"require": "./dist/client.cjs"
 		},
 		"./server": {
+			"types": "./dist/server/main.d.ts",
 			"import": "./dist/server.js",
-			"require": "./dist/server.cjs",
-			"types": "./dist/server/main.d.ts"
+			"require": "./dist/server.cjs"
 		},
 		"./vite": {
+			"types": "./dist/vite/plugin.d.ts",
 			"import": "./dist/vite.js",
-			"require": "./dist/vite.cjs",
-			"types": "./dist/vite/plugin.d.ts"
+			"require": "./dist/vite.cjs"
 		}
 	},
 	"scripts": {
