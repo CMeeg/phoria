@@ -1,5 +1,11 @@
 # phoria-dotnet
 
+## 0.4.1
+
+### Patch Changes
+
+- 2881b78: Fix build and runtime errors when running Vite outside of the web app directory
+
 ## 0.4.0
 
 ### Minor Changes

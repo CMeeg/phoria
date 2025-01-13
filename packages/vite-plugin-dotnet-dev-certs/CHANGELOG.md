@@ -1,5 +1,11 @@
 # @phoria/vite-plugin-dotnet-dev-certs
 
+## 0.2.1
+
+### Patch Changes
+
+- 2881b78: Fix build warning due to exports order
+
 ## 0.2.0
 
 ### Minor Changes

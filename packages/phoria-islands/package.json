@@ -1,6 +1,6 @@
 {
 	"name": "@phoria/phoria",
-	"version": "0.4.1",
+	"version": "0.4.2",
 	"description": "Islands architecture for dotnet powered by Vite.",
 	"keywords": [
 		"phoria",
