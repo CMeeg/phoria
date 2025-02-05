@@ -16,8 +16,8 @@ These are the `scripts` we will add to build our Phoria solution:
 {
   "scripts": {
     "build": "run-p build:* -c",
-    "build:app": "vite build --app",
-    "build:dotnet": "dotnet build --configuration Release",
+    "build:islands": "vite build --app",
+    "build:webapp": "dotnet build --configuration Release",
     "build:server": "vite build --config vite.server.config.ts"
   }
 }
@@ -32,7 +32,7 @@ We are using the [`npm-run-all`](https://github.com/mysticatea/npm-run-all) pack
 > [!NOTE]
 > `npm-run-all` is not required and you can use some other package or tool or shell feature (e.g. `&`) to do the same thing. The reason we are using it is because `&` doesn't work consistently on Windows.
 
-### `build:app`
+### `build:islands`
 
 This script uses Vite to build the optimised CSR and SSR bundles that will be used in production and produces a [manifest](https://main.vite.dev/config/build-options.html#build-manifest):
 
@@ -42,7 +42,7 @@ This script uses Vite to build the optimised CSR and SSR bundles that will be us
 
 The build configuration for Vite is provided via your Vite config file (e.g. `vite.config.ts`), and the configuration for Phoria specifically is provided via the `phoria*` plugins.
 
-### `build:dotnet`
+### `build:webapp`
 
 This script uses the [dotnet CLI](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build) to build the Phoria Web App in its `Release` configuration.
 
@@ -94,8 +94,8 @@ These are the scripts we will add to preview the production build of our Phoria 
 {
   "scripts": {
     "preview": "run-p preview:* -c",
-    "preview:dotnet": "cross-env DOTNET_ENVIRONMENT=Preview dotnet run ./WebApp/bin/Release/net9.0/WebApp.dll --launch-profile Preview",
-    "preview:phoria": "cross-env NODE_ENV=production DOTNET_ENVIRONMENT=Preview node ./ui/dist/server/server.js"
+    "preview:webapp": "cross-env DOTNET_ENVIRONMENT=Preview dotnet --project ./WebApp.csproj -c Release --launch-profile Preview",
+    "preview:server": "cross-env NODE_ENV=production DOTNET_ENVIRONMENT=Preview node ./ui/dist/server/server.js"
   }
 }
 ```
@@ -106,17 +106,18 @@ Read on if you would like more info about each of the scripts.
 
 We are using `npm-run-all` again here, but the same applies as with the `build` script if you want to use something else.
 
+We are also using the [`cross-env` package](https://www.npmjs.com/package/cross-env) to set environment variables in a platform-agnostic way, but feel free to skip that if you don't need it.
 
-### `preview:dotnet`
+### `preview:webapp`
 
-We are using the [dotnet CLI](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-run) to run the Phoria Web App produced by the `build:dotnet` script.
+We are using the [dotnet CLI](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-run) to run the Phoria Web App produced by the `build:webapp` script.
 
 The [`cross-env`](https://github.com/kentcdodds/cross-env) package is used to set the `DOTNET_ENVIRONMENT` so you can use specific configuration or conditional branching in your code etc that targets the `Preview` environment. This script also assumes that you have a launch profile named `Preview`.
 
 > [!WARNING]
-> You may need to adjust this command depending on the structure of your project to point to the actual `.dll` of your Phoria Web App produced by the `build:dotnet` script.
+> You may need to adjust this command depending on the structure of your project to point to the actual `.dll` of your Phoria Web App produced by the `build:webapp` script.
 
-### `preview:phoria`
+### `preview:server`
 
 This script uses `node` to run the Phoria Server produced by the `build:server` script.
 

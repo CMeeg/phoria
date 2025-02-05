@@ -1,8 +1,34 @@
 # Getting started with Phoria
 
-Adding Phoria to a project is currently a [manual process](#manual-process), but there are [examples](https://github.com/CMeeg/phoria-examples) (including a completed version of this [getting started example](https://github.com/CMeeg/phoria-examples/tree/main/examples/getting-started) if you just want to skip to the end!) available if you would prefer to just copy some code to use as a starting point.
+There are two ways you can get started:
 
-## Prerequisites
+1. [Clone an example project](#clone-an-example-project)
+2. [Manually add Phoria to an existing dotnet project](#manually-add-phoria-to-an-existing-dotnet-project)
+
+## Clone an example project
+
+You can use [giget](https://unjs.io/packages/giget) to quickly clone an example project:
+
+`npx giget@latest gh:cmeeg/phoria-examples/examples/{example-name} {dir}`
+
+> [!NOTE]
+> You will need to replace:
+> 
+> * `{example-name}` with the folder name of the [example project you want to clone](https://github.com/CMeeg/phoria-examples/tree/main/examples)
+> * `{dir}` with the name of the local directory you want to clone the example project to
+
+## Manually add Phoria to an existing dotnet project
+
+Phoria can be added to any dotnet (>= v8) MVC or Razor Pages web app. We assume that you already have an existing dotnet web app that you want to add Phoria to, but for the purpose of this guide we will create a new web app and solution (imaginatively) called "Getting Started". You can substitute "Getting Started" for your own project / solution name wherever you see that referenced in the guide.
+
+> [!NOTE]
+> This guide will not cover some aspects of setting up a new project such as configuring git or VS Code or linting or testing tools as it is assumed that you will add and configure these things as you go or when you're ready based on your own preferences.
+>
+> You can use the [getting-started](https://github.com/CMeeg/phoria-examples/tree/main/examples/getting-started) example project as a reference if you wish, which is a complete example of a project created using this guide.
+
+### Prerequisites
+
+There is some prerequisite software you will need to have installed before we go any further:
 
 * **dotnet** - `v8` or higher
 * **Node.js** - `v18.17.1` or `v20.3.0`, `v22.0.0` or higher
@@ -11,115 +37,218 @@ Adding Phoria to a project is currently a [manual process](#manual-process), but
 * **Code editor** - We recommend [VS Code](https://code.visualstudio.com/)
 * **Terminal** - You will need to be able to run CLI tools through a terminal of your choice
 
-## Manual process
+You will also need an existing dotnet web app. If you do not already have an existing dotnet web app then we recommend [cloning an example project](#clone-an-example-project) rather than following this manual process, but if you still want to proceed you can create a new web app using the dotnet CLI:
 
-You can follow along with this process to create a new Phoria project or to add Phoria to an existing dotnet web app. If you are adding to an existing web app then you will need to adapt the instructions as you go.
-
-Please make sure you have met the [prerequisites](#prerequisites) and then we can continue with:
-
-* [Adding and configuring the Phoria Server](#phoria-server)
-* [Adding and configuring the Phoria Web App](#phoria-web-app)
-* [Adding Phoria Islands](#adding-phoria-islands)
-* [Running the Phoria Web App](#running-the-phoria-web-app)
-
-### Phoria Server
-
-The [Phoria Server](./phoria-server.md) is responsible for rendering your UI components inside [Phoria Islands](./phoria-islands.md).
-
-It is built around [Vite](https://vite.dev/), which means you can enjoy a first class development experience, lightning fast HMR and access to its expansive plugin catalogue and ecosystem.
-
-#### Install Vite
-
-We will scaffold a new Vite Project as our starting point.
-
-> [!NOTE]
-> In this getting started guide we will choose React as our UI framework, but you can choose any [supported UI framework](./supported-ui-frameworks.md). We will also be using pnpm, fnm and VS Code on Windows, but feel free to substitute the commands based on your preferences and choice of OS.
-
-Run the following commands in your terminal:
 
 ```shell
-# Switch to a supported version of Node and pnpm
+# Create a dotnet web app
+# Phoria supports dotnet 8 and 9
+dotnet new webapp --name WebApp --no-restore --framework net9.0 --output ./WebApp
 
-fnm use 22
-corepack install
+# Create a solution file
+dotnet new sln --name GettingStarted --output .
 
-# Install Vite's React Project Scaffold
-# Phoria only supports Vite 6
-pnpm create vite
-#> Project name: getting-started
-#> Select a framework: React
-#> Select a variant: TypeScript
-
-# Change into the directory that has been generated - substitute `getting-started` with whatever project name you chose
-cd getting-started
-
-# Install dependencies
-pnpm install
-
-# Phoria only supports React 19
-pnpm add react@^19.0.0 react-dom@^19.0.0
-pnpm add -D @types/react@^19.0.0 @types/react-dom@^19.0.0
-```
-
-> [!TIP]
-> This is optional and won't affect you working with Phoria, but you may want to take a look at the `README.md` that has been generated by Vite and apply any recommendations.
-
-Next we will make some minor amends to the Scaffold output:
-
-```shell
-# Delete the following files
-src
-├── index.css
-├── main.tsx
-index.html
-
-# Move the `public` and `src` folders under a `ui` folder
-ui
-├── public
-└── src
-
+# Add the web app project to the solution
+dotnet sln add ./WebApp/WebApp.csproj
 ```
 
 > [!NOTE]
-> The `ui` folder naming convention is a default used by Phoria that [can be changed](./configuration.md).
+> You will need to substitute the solution and project names used in the rest of this guide with the names of your own solution and web app project.
 
-Then we need to make some small amendments to the following files:
+### Add Vite
 
-* Update `tsconfig.app.json`
-  * Replace `"include": ["src"]` with `"include": ["ui/src"]`
-* Edit `.gitignore`
-  * Delete the following lines
-    * `.vscode/*`
-    * `!.vscode/extensions.json`
-    * `*.sln`
-  * Add
-    * `bin/`
-    * `obj/`
-
-#### Add Phoria Server
-
-The Phoria Server is a Node script that starts a [h3](https://h3.unjs.io/) server and listens for CSR (Client Side Rendering) and SSR (Server Side Rendering) requests that are proxied through to it from the Phoria web app.
+The first thing we are going to do is add [Vite](https://vite.dev/) to the repo and configure Phoria via Vite plugins. The plugins configure Vite's `client` and `ssr` [environments](https://vite.dev/guide/api-environment.html) and register specific Vite plugins for the UI framework(s) that you want to use.
 
 > [!NOTE]
-> The Phoria libraries that you are about to install expose request handlers that are consumed by the server, but you own the server so feel free to extend it and use it for other things should you wish.
-
-Let's start by running the following commands in your terminal:
+> In this guide we will choose React as our UI framework, but you can choose any [supported UI framework](./supported-ui-frameworks.md).
+> 
+> We will also be using pnpm, fnm and VS Code, but feel free to substitute the tools (and therefore commands used) based on your preferences.
+> 
+> The guide was written against code samples developed on a Windows machine with PowerShell so some shell commands may need adapting to your OS or shell of choice also, but an attempt has been made to make the guide as platform-agnostic as possible.
 
 ```shell
-# Add required dependencies
+# Create an `.nvmrc` file and use the Node version specified
+"v22.x" > .nvmrc
 
-pnpm add @phoria/phoria @phoria/phoria-react h3 listhen
-pnpm add -D @phoria/vite-plugin-dotnet-dev-certs @types/node tsx
+fnm use
+
+# Create a `package.json` file
+npm init
+
+# Set pnpm as the package manager
+corepack enable pnpm
+
+corepack use pnpm
+
+# Add dependencies
+pnpm add @phoria/phoria @phoria/phoria-react react react-dom
+
+pnpm add -D @phoria/vite-plugin-dotnet-dev-certs @types/react @types/react-dom @vitejs/plugin-react typescript vite vite-tsconfig-paths
 ```
 
-Now add the Phoria Server script:
+Then we will need to make some manual adjustments to the generated `package.json` file:
 
-* Create `ui/src/server.ts`
-* Update `tsconfig.node.json`
-  * Add `ui/src/server.ts` to the `include` array
-* Copy the following code into `ui/src/server.ts` and save
+* Add `"private": true`
+* Add `"type": "module"`
+* Remove `"main": "index.js"`
+
+Next add a `vite.config.ts` file to the root of your repo:
 
 ```ts
+import { phoriaReact } from "@phoria/phoria-react/vite"
+import { phoria } from "@phoria/phoria/vite"
+import { dotnetDevCerts } from "@phoria/vite-plugin-dotnet-dev-certs"
+import { defineConfig } from "vite"
+import tsconfigPaths from "vite-tsconfig-paths"
+
+export default defineConfig({
+  publicDir: "public",
+  plugins: [
+    tsconfigPaths({ root: "../../" }),
+    dotnetDevCerts(),
+    phoria({ cwd: "WebApp" }),
+    phoriaReact()
+  ]
+})
+```
+
+And a [Vite env type declaration](https://vite.dev/guide/env-and-mode#intellisense-for-typescript) file at `WebApp/ui/src/vite-env.d.ts`:
+
+```ts
+/// <reference types="vite/client" />
+```
+
+And finally a `tsconfig.json` file to the root of your repo:
+
+```json
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "paths": {
+      "~/*": ["WebApp/ui/src/*"]
+    },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": [
+    "WebApp/ui/src/**/*.ts",
+    "WebApp/ui/src/**/*.d.ts",
+    "WebApp/ui/src/**/*.tsx"
+  ]
+}
+```
+
+### Add a UI component
+
+We need to add a UI component to our repo that we will render in a Phoria Island. For the purpose of this guide we will use a simple React "Counter" component, but you can substitute that for something else if you want.
+
+We will create the component in the file `WebApp/ui/src/components/Counter/Counter.tsx`:
+
+```tsx
+import { useState } from "react"
+
+interface CounterProps {
+  startAt?: number
+}
+
+function Counter({ startAt }: CounterProps) {
+  const [count, setCount] = useState(startAt ?? 0)
+
+  return (
+    <div>
+      <button type="button" onClick={() => setCount((value) => value + 1)}>
+        count is {count}
+      </button>
+    </div>
+  )
+}
+
+export { Counter }
+```
+
+We also need to [register the component](./component-register.md) so that Phoria knows where to find it and how to render it. We will do this in the file `WebApp/ui/src/components/register.ts`:
+
+```ts
+import { registerComponents } from "@phoria/phoria"
+
+registerComponents({
+  Counter: {
+    loader: {
+      module: () => import("./Counter/Counter.tsx"),
+      component: (module) => module.Counter
+    },
+    framework: "react"
+  }
+})
+```
+
+> [!NOTE]
+> You may have noticed/guessed that the `ui` folder is the [root](https://vite.dev/config/shared-options.html#root) folder for Vite - this is where we will be placing all of our code related to our UI components. The name and location of the folder is a default used by Phoria that [can be changed](./configuration.md) and you can optionally use workspaces should you wish to do so.
+
+### Add Phoria Server
+
+The Phoria Server is a [h3](https://h3.unjs.io/) server that effectively runs as a "sidecar" to your web app by running inside its own `node` process. It delegates requests to CSR, SSR or static file handlers as required, which use Vite's Dev Server in development and the build output from Vite when in production.
+
+First we need to add some more dependencies to our repo:
+
+```shell
+pnpm add h3 listhen
+
+pnpm add -D @types/node tsx
+```
+
+And add a separate TypeScript config file for the Phoria Server at the root of the repo `tsconfig.server.json`:
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "sourceMap": true,
+    "target": "ES2022"
+  },
+  "include": [
+    "WebApp/ui/src/server.ts",
+    "vite.config.ts"
+  ]
+}
+```
+
+Then we will create the Phoria Server script at `WebApp/ui/src/server.ts`:
+
+```ts
+import { dirname } from "node:path"
+import { fileURLToPath } from "node:url"
 import {
   createPhoriaCsrRequestHandler,
   createPhoriaDevCsrRequestHandler,
@@ -132,11 +261,14 @@ import { type ListenOptions, listen } from "listhen"
 
 // Get environment and appsettings
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
 const nodeEnv = process.env.NODE_ENV ?? "development"
 const isProduction = nodeEnv === "production"
 
 const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
-const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv })
+const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv, cwd: __dirname })
 
 // Create Vite dev server if not in production environment
 
@@ -251,55 +383,24 @@ export { app, listener }
 > [!TIP]
 > Please feel free to read through the comments in the server script to get a feel for what it does.
 
-#### Add and register a component
+Finally we will add an entry to our `scripts` in `package.json` to run the Phoria Server in our development environment:
 
-Phoria uses a [Component Register](./component-register.md) to find and resolve the components that we want to use in our Islands i.e. where to import them from, if it's a default or named export, and which UI framework to use when rendering.
-
-> [!NOTE]
-> For the purpose of this getting started guide we will reuse a component provided by the Vite Project Scaffold, but you can create your own component if you wish.
-
-First we will "create" the component:
-
-* Create a `components/Counter` folder inside `ui/src`
-* Move
-  * `ui/src/assets/**` -> `ui/src/components/Counter/assets/**`
-* Rename and move
-  * `ui/src/App.css` -> `ui/src/components/Counter/Counter.css`
-  * `ui/src/App.tsx` -> `ui/src/components/Counter/Counter.tsx`
-* Edit `ui/src/components/Counter/Counter.tsx`
-  * Update `import './App.css'` -> `import './Counter.css'`
-  * Rename the `App` function and default export to `Counter`
-
-Then we will register the component:
-
-* Create `ui/src/components/register.ts`
-* Copy the following code into `ui/src/components/register.ts` and save
-
-```ts
-import { registerComponents } from "@phoria/phoria"
-
-registerComponents({
-  Counter: {
-    loader: () => import("./Counter/Counter.tsx"),
-    framework: "react"
-  }
-})
+```json
+"scripts": {
+  "dev": "tsx ./WebApp/ui/src/server.ts"
+}
 ```
 
-> [!NOTE]
-> The `loader` function used in the registration of the `Counter` component above will use the module's default export, but if a named export is needed an object with `module` and `component` keys can be used as the `loader` instead of a function.
+### Add Client Entry
 
-#### Add Client Entry
-
-The [Client Entry](./client-entry.md) script is the entrypoint for the browser and is responsible for hydrating your registered Phoria Island components using the appropriate CSR strategy provided by your chosen UI framework (or frameworks).
+The [Client Entry](./client-entry.md) is the entrypoint for the browser and is responsible for hydrating your registered Phoria Island components using the appropriate CSR strategy provided by your chosen UI framework(s).
 
 You can also choose to initialise other client-side code here, or import "global" CSS, if you wish.
 
 > [!NOTE]
-> Phoria supports SSR-only Islands (in fact this is the default strategy for Phoria Islands) that do not hydrate on the client and therefore do not request any JavaScript.
+> Phoria supports client-only, server-only and "isomorphic" rendering of components in Islands. Server-only is the default, but you can opt-in to client-side rendering on an Island-by-Island basis using one or more client directives such as "client only", "on load", "on idle", "on visible", "on match media". If an Island is server-only then it will not hydrate on the client and therefore does not request any JavaScript.
 
-* Create `ui/src/entry-client.ts`
-* Copy the following code into `ui/src/entry-client.ts` and save
+Add a Client Entry file at `WebApp/ui/src/entry-client.ts`:
 
 ```ts
 import "@phoria/phoria-react/client"
@@ -310,17 +411,13 @@ PhoriaIsland.register()
 ```
 
 > [!NOTE]
-> `PhoriaIsland` is a custom HTML element that is used to hydrate the components that you have registered.
+> `PhoriaIsland` is a custom HTML element that is used to hydrate the components that you have registered in your component registration file (i.e. `./components/register`) for Islands that you have opted-in to client-side rendering.
 
-#### Add Server Entry
+### Add Server Entry
 
-The [Server Entry](./server-entry.md) script is the entrypoint for the server and is responsible for generating the markup of your registered Phoria Island components using the appropriate SSR strategy provided by your chosen UI framework(s). The SSR response will be appended to the HTTP response stream by the Phoria Web App.
+The [Server Entry](./server-entry.md) is the entrypoint for the [Phoria Server](#add-phoria-server) and is responsible for generating the markup of your registered Phoria Island components using the appropriate SSR strategy provided by your chosen UI framework(s). The Phoria Server SSR response is proxied back to the web app to be appended to the HTTP response stream.
 
-> [!NOTE]
-> Phoria also supports CSR-only Islands.
-
-* Create `ui/src/entry-server.ts`
-* Copy the following code into `ui/src/entry-server.ts` and save
+Add a Server Entry file at `WebApp/ui/src/entry-server.ts`:
 
 ```ts
 import "@phoria/phoria-react/server"
@@ -328,7 +425,7 @@ import "./components/register"
 import type { PhoriaIsland } from "@phoria/phoria/server"
 
 async function renderPhoriaIsland(island: PhoriaIsland) {
-  return await island.render()
+	return await island.render()
 }
 
 export { renderPhoriaIsland }
@@ -337,87 +434,108 @@ export { renderPhoriaIsland }
 > [!NOTE]
 > `island.render()` will call the associated UI framework plugin's default render strategy, which in the case of React is [`renderToReadableStream`](https://react.dev/reference/react-dom/server/renderToReadableStream).
 >
-> The `render` function does accept a custom render strategy if you need further control over it, for example if you are using a library like [styled components](https://styled-components.com/docs/advanced#server-side-rendering).
+> The `island.render()` function does accept a custom render strategy if you need further control over it, for example if you are using a library like [styled components](https://styled-components.com/docs/advanced#server-side-rendering).
 
-#### Configure Vite
+### Configure the Phoria Web App
 
-In a development environment the Phoria Server will use the Vite Dev Server so that it can take advantage of the many [features](https://vite.dev/guide/features.html) that Vite provides to give you a great dev experience.
+TODO
 
-Phoria provides several plugins that aim to make it painless to add Phoria to your Vite configuration.
+### Add Phoria Islands
+
+TODO
+
+### Run the Phoria Web App
+
+TODO
+
+The Phoria Server is a Node script that starts a [h3](https://h3.unjs.io/) server and listens for CSR (Client Side Rendering) and SSR (Server Side Rendering) requests that are proxied through to it from the Phoria web app.
 
 > [!NOTE]
-> Vite is also used to build your CSR and SSR bundles (and optionally your Phoria Server) for production, but the topics of [building for production](./build-for-production.md) and [deployment](./deployment.md) are covered in separate guides.
+> The Phoria libraries that you are about to install expose request handlers that are consumed by the server, but you own the server so feel free to extend it and use it for other things should you wish.
 
-Replace the contents of `vite.config.ts` with the following code and save:
 
-```ts
-import { phoriaReact } from "@phoria/phoria-react/vite"
-import { phoria } from "@phoria/phoria/vite"
-import { dotnetDevCerts } from "@phoria/vite-plugin-dotnet-dev-certs"
-import { defineConfig } from "vite"
 
-// https://vite.dev/config/
-export default defineConfig({
-  publicDir: "public",
-  plugins: [
-    /* This plugin is not required for Phoria to work, but we will be using https
-    via `dotnet dev-certs` in our examples and this plugin makes it easy to share
-    `dotnet dev-certs` with our Vite Dev Server. */
-    dotnetDevCerts(),
-    /* The primary purpose of the core plugin is to take care of configuration.
-    Phoria configuration will come from your dotnet appsettings file(s) by default, 
-    but can also be set via the plugin. */
-    phoria(),
-    /* Each supported UI framework has its own plugin and internally registers
-    the corresponding Vite framework plugin for you e.g. the `@vitejs/plugin-react` 
-    plugin in this case. */
-    phoriaReact()
-  ]
-})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Next we will make some minor amends to the Scaffold output:
+
+```shell
+# Delete the following files
+src
+├── index.css
+├── main.tsx
+index.html
+
+# Move the `public` and `src` folders under a `ui` folder
+ui
+├── public
+└── src
+
 ```
 
-And you will need to update your `package.json` file to run the Phoria Server:
 
-* Update the `dev` script to
-  * `"dev": "tsx ./ui/src/server.ts"`
+
+
+
+
+
+
+
+
+
+
+
+
+
+```shell
+# Add the Phoria NuGet package to the web app
+dotnet add WebApp.csproj package Phoria
+```
+
+
+
+TODO: Mention that recommendation is to use workspaces, but Getting Started app will not because no assumption will be made that you are or want to use workspaces. Include an optional section to add workspaces at the end.
+
+
+
+
+
+
+
+
 
 ### Phoria Web App
 
 Now we will set up the [Phoria Web App](./phoria-web-app.md), which is just a way of saying a dotnet web app with the `Phoria` NuGet package installed and configured.
 
-#### Create a dotnet web app
 
-Run the following commands in your terminal:
-
-> [!NOTE]
-> The solution and project names used in this guide are just examples and you can of course use whatever names you like.
-
-```shell
-# Create a dotnet web app
-# Phoria supports dotnet 8 and 9
-dotnet new webapp --name WebApp --no-restore --framework net9.0 --output .
-
-# Create a solution file
-dotnet new sln --name GettingStarted --output .
-
-# Add the web app project to the solution
-dotnet sln add WebApp.csproj
-
-# Add the Phoria NuGet package to the web app
-dotnet add WebApp.csproj package Phoria
-```
-
-> [!NOTE]
-> We have created a Razor Pages web app, but you could use MVC also if you prefer.
 
 #### Configure the web app
 
 Phoria is added to your app via the `WebApplicationBuilder` and configured in `appsettings.json`.
 
 > [!TIP]
-> Phoria can be configured programatically via the `WebApplicationBuilder`, but it's recommended to use `appsettings.json` because then the `phoria` Vite plugin and the Phoria `server.ts` can read and share that configuration.
+> Phoria can be configured programmatically via the `WebApplicationBuilder`, but it's recommended to use `appsettings.json` because then the `phoria` Vite plugin and the Phoria `server.ts` can read and share that configuration.
 
-Either copy and paste the code below or edit your `Program.cs` file to add the lines that are preceeded by a comment:
+Either copy and paste the code below or edit your `Program.cs` file to add the lines that are preceded by a comment:
 
 ```csharp
 // Add a using statement
