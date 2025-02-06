@@ -11,7 +11,7 @@ You can use [giget](https://unjs.io/packages/giget) to quickly clone an example 
 
 `npx giget@latest gh:cmeeg/phoria-examples/examples/{example-name} {dir}`
 
-> [!NOTE]
+> [!IMPORTANT]
 > You will need to replace:
 > 
 > * `{example-name}` with the folder name of the [example project you want to clone](https://github.com/CMeeg/phoria-examples/tree/main/examples)
@@ -22,7 +22,7 @@ You can use [giget](https://unjs.io/packages/giget) to quickly clone an example 
 Phoria can be added to any dotnet (>= v8) MVC or Razor Pages web app. We assume that you already have an existing dotnet web app that you want to add Phoria to, but for the purpose of this guide we will create a new web app and solution (imaginatively) called "Getting Started". You can substitute "Getting Started" for your own project / solution name wherever you see that referenced in the guide.
 
 > [!NOTE]
-> This guide will not cover some aspects of setting up a new project such as configuring git or VS Code or linting or testing tools as it is assumed that you will add and configure these things as you go or when you're ready based on your own preferences.
+> This guide will not cover some aspects of setting up a new project such as configuring Git or VS Code or linting or testing tools as it is assumed that you will add and configure these things as you go or when you're ready based on your own preferences.
 >
 > You can use the [getting-started](https://github.com/CMeeg/phoria-examples/tree/main/examples/getting-started) example project as a reference if you wish, which is a complete example of a project created using this guide.
 
@@ -52,8 +52,8 @@ dotnet new sln --name GettingStarted --output .
 dotnet sln add ./WebApp/WebApp.csproj
 ```
 
-> [!NOTE]
-> You will need to substitute the solution and project names used in the rest of this guide with the names of your own solution and web app project.
+> [!IMPORTANT]
+> You will need to substitute the solution and project names used in the rest of this guide with the names of your own solution and web app project. You may also need to adjust paths depending on the file structure of your projects and solution.
 
 ### Add Vite
 
@@ -201,7 +201,7 @@ registerComponents({
 ```
 
 > [!NOTE]
-> You may have noticed/guessed that the `ui` folder is the [root](https://vite.dev/config/shared-options.html#root) folder for Vite - this is where we will be placing all of our code related to our UI components. The name and location of the folder is a default used by Phoria that [can be changed](./configuration.md) and you can optionally use workspaces should you wish to do so.
+> You may have noticed/guessed that the `WebApp/ui` folder is the [root](https://vite.dev/config/shared-options.html#root) folder for Vite - this is where we will be placing all of our code related to our UI components. The name and location of the folder is a default used by Phoria that [can be changed](./configuration.md) and you can optionally use workspaces should you wish to do so.
 
 ### Add Phoria Server
 
@@ -215,7 +215,7 @@ pnpm add h3 listhen
 pnpm add -D @types/node tsx
 ```
 
-And add a separate TypeScript config file for the Phoria Server at the root of the repo `tsconfig.server.json`:
+And add a separate TypeScript config file for the Phoria Server at the root of the repo in `tsconfig.server.json`:
 
 ```json
 {
@@ -436,169 +436,35 @@ export { renderPhoriaIsland }
 >
 > The `island.render()` function does accept a custom render strategy if you need further control over it, for example if you are using a library like [styled components](https://styled-components.com/docs/advanced#server-side-rendering).
 
-### Configure the Phoria Web App
+### Add Phoria to the dotnet web app
 
-TODO
+Now we will add Phoria to the dotnet web app. From this point on we will refer to it as the [Phoria Web App](./phoria-web-app.md), which is just a way of saying a dotnet web app with the `Phoria` NuGet package installed and configured.
 
-### Add Phoria Islands
-
-TODO
-
-### Run the Phoria Web App
-
-TODO
-
-The Phoria Server is a Node script that starts a [h3](https://h3.unjs.io/) server and listens for CSR (Client Side Rendering) and SSR (Server Side Rendering) requests that are proxied through to it from the Phoria web app.
-
-> [!NOTE]
-> The Phoria libraries that you are about to install expose request handlers that are consumed by the server, but you own the server so feel free to extend it and use it for other things should you wish.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Next we will make some minor amends to the Scaffold output:
+First we need to add the Phoria NuGet package to the web app:
 
 ```shell
-# Delete the following files
-src
-├── index.css
-├── main.tsx
-index.html
-
-# Move the `public` and `src` folders under a `ui` folder
-ui
-├── public
-└── src
-
+dotnet add WebApp/WebApp.csproj package Phoria
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```shell
-# Add the Phoria NuGet package to the web app
-dotnet add WebApp.csproj package Phoria
-```
-
-
-
-TODO: Mention that recommendation is to use workspaces, but Getting Started app will not because no assumption will be made that you are or want to use workspaces. Include an optional section to add workspaces at the end.
-
-
-
-
-
-
-
-
-
-### Phoria Web App
-
-Now we will set up the [Phoria Web App](./phoria-web-app.md), which is just a way of saying a dotnet web app with the `Phoria` NuGet package installed and configured.
-
-
-
-#### Configure the web app
-
-Phoria is added to your app via the `WebApplicationBuilder` and configured in `appsettings.json`.
-
-> [!TIP]
-> Phoria can be configured programmatically via the `WebApplicationBuilder`, but it's recommended to use `appsettings.json` because then the `phoria` Vite plugin and the Phoria `server.ts` can read and share that configuration.
-
-Either copy and paste the code below or edit your `Program.cs` file to add the lines that are preceded by a comment:
-
-```csharp
-// Add a using statement
-using Phoria;
-
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddRazorPages();
-
-// Add Phoria services
-builder.Services.AddPhoria();
-
-var app = builder.Build();
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error");
-
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.UseAuthorization();
-
-app.MapRazorPages().WithStaticAssets();
-
-// WebSockets are required for the Vite Dev Server's HMR (Hot Module Reload) feature
-if (app.Environment.IsDevelopment())
-{
-    app.UseWebSockets();
-}
-
-// The order of the Phoria middleware matters so we will place it last
-app.UsePhoria();
-
-app.Run();
-```
-
-Add the following section to your `appsettings.json` file:
+Then add the following section to `WebApp/appsettings.json`:
 
 ```json
 {
-  // ... Existing settings ...
-
-  // Add the Phoria section
   "phoria": {
+    "root": "WebApp/ui",
     "entry": "src/entry-client.ts",
     "ssrEntry": "src/entry-server.ts"
   }
 }
 ```
 
-And the following to your `appsettings.Development.json` file:
+> [!NOTE]
+> Any [configuration](./configuration.md) option that is not set explicitly will fallback to a default value except for `entry` and `ssrEntry` because there are no sensible defaults for these options.
+
+And the following to `WebApp/appsettings.Development.json`:
 
 ```json
 {
-  // ... Existing settings ...
-
-  // Add the Phoria section
   "phoria": {
     "server": {
       "https": true
@@ -608,66 +474,81 @@ And the following to your `appsettings.Development.json` file:
 ```
 
 > [!NOTE]
-> Any [configuration](./configuration.md) option that is not set explicitly will fallback to a default value except for `entry` and `ssrEntry` because there are no sensible defaults for these options. The `https` option will default to `false` so we are setting it here because we want our Phoria Server to use `https` in development.
+> The `https` option will default to `false` so we are setting it here because we want our Phoria Server to use `https` in development.
 
-#### Add the Phoria Tag Helpers
+Then we will modify `WebApp/Program.cs` to register Phoria services:
+
+```csharp
+// Add a using statement
+using Phoria;
+
+// Add Phoria services
+builder.Services.AddPhoria();
+
+// WebSockets support is required for Vite HMR (hot module reload)
+if (app.Environment.IsDevelopment())
+{
+    app.UseWebSockets();
+}
+
+// The order of the Phoria middleware matters so we will place this just before `app.Run()`
+app.UsePhoria();
+```
+
+> [!TIP]
+> Phoria can be configured programmatically via `AddPhoria`, but it's recommended to use `appsettings` because then the `phoria` Vite plugin and the Phoria Server can read that same configuration from the `appsettings.*.json` files rather than having to duplicate it in each place.
+
+### Add the Phoria Tag Helpers
 
 The `Phoria` NuGet package contains a set of [Tag Helpers](https://learn.microsoft.com/en-us/aspnet/core/mvc/views/tag-helpers/intro) for:
 
 * Rendering script and style tags from your [Client Entry](#add-client-entry) script
 * Rendering [preload directives](https://vite.dev/guide/ssr#generating-preload-directives) for your scripts and styles to avoid a "Flash Of Unstyled Content" (FOUC)
-  * This only applies to the [production](./build-for-production.md) build
 
-We will add these Tag Helpers to our Layout:
-
-* Edit `Pages/Shared/_ViewImports.cshtml`
-* Add the following lines and save:
+Add the following to `WebApp/Pages/_ViewImports.cshtml`:
 
 ```html
 @using Phoria.Islands
 @addTagHelper *, Phoria
 ```
 
-* Edit `Pages/Shared/_Layout.cshtml`
-* Add the following Tag Helpers just before the closing `</head>` tag:
+Add the following Tag Helpers to `WebApp/Pages/Shared/_Layout.cshtml` just before the closing `</head>` tag:
 
 ```html
 <phoria-island-styles />
 <phoria-island-preload />
 ```
 
-* Add the following Tag Helper just before the closing `</body>` tag:
+And the following Tag Helper to `WebApp/Pages/Shared/_Layout.cshtml` just before the closing `</body>` tag:
 
 ```html
 <phoria-island-scripts />
 ```
 
-Phoria is now setup and ready and you can start rendering Phoria Islands.
-
-### Adding Phoria Islands
+### Add a Phoria Island
 
 The `Phoria` NuGet package contains a Tag Helper for rendering Phoria Islands. The Tag Helper will take care of everything to do with rendering the component:
 
 * Serialising data passed inline or from the view model as `props` for the component
-* Requesting an SSR response from the Phoria Server, if required (Islands can be CSR only)
-* Hydrating the component on the client, if required (Islands can be SSR only)
+* Requesting an SSR response from the Phoria Server (if required, Islands can be CSR only)
+* Hydrating the component on the client (if required, Islands can be SSR only)
 
-For the purpose of this guide we will render the `Counter` component that we created from the Vite Project Scaffold.
+For the purpose of this guide we will render the `Counter` component that we [added and registered](#add-a-ui-component) earlier.
 
-Edit `Pages/Index.cshtml`:
-
-* Add the following Tag Helper at the bottom of the file:
+Add the following Tag Helper to `WebApp/Pages/Index.cshtml` at the bottom of the file:
 
 ```html
-<phoria-island component="Counter" client="Client.Load"></phoria-island>
+<phoria-island component="Counter" client="Client.Load" props="new { StartAt = 5 }"></phoria-island>
 ```
 
-> [!NOTE]
-> The `component` name must match the name of the component we added to the [Component Register](#add-and-register-a-component). The `client` directive is set to `Client.Load` because we want this component to hydrate on page load.
+> [!TIP]
+> The value of `component` must match a key in your component register. In our case we registered the `Counter` component using the key `Counter`.
 > 
-> Please see the [Phoria Islands](./phoria-islands.md) guide for a description of available client directives and other options.
+> The value of `client` is set to `Client.Load` because this component uses React state and we want this component to hydrate on page load. You can try using other client directives if you want to see how they work.
+>
+> The value of `props` is an anonymous object that will be serialised and passed to the component as `props` to demonstrate how you can pass data from your dotnet web app to your Islands. The data is hardcoded here, but can come from any source and passed through your view model.
 
-### Running the Phoria Web App
+### Run the Phoria Web App
 
 Now we can run our app and see Phoria in action.
 
@@ -681,18 +562,18 @@ dotnet dev-certs https --trust
 pnpm run dev
 
 # Start the Phoria Web App (you will need to run this in a separate terminal instance/tab to the Phoria Server)
-dotnet run --project WebApp.csproj --launch-profile https
+dotnet run --project WebApp/WebApp.csproj --launch-profile https
 ```
 
 > [!TIP]
-> The `dotnet run` command doesn't automatically launch the browser unfortunately, but you can find the URL for the web app in the terminal output or by looking in your `launchSettings.json` file.
+> The `dotnet run` command doesn't automatically launch the browser unfortunately, but you can find the URL for the web app in the terminal output or by looking in your `WebApp/Properties/launchSettings.json` file.
 
 Now you will be able to navigate to the web app in your browser and:
 
 * See the `Counter` component rendered via React
-* See the styles and assets imported by the React component
-  * Though granted it doesn't look great because it's all mixed in with the styles from the dotnet web app!
-* Click on the button that reads `count is 0` to see that the component has hydrated and is reacting to state changes
+  * View the page source to see the SSR response from the Phoria Server
+* Click on the button to see that the component has hydrated and is reacting to state changes
+  * The first time you run the app Vite may take a couple of seconds to optimise dependencies so you may see a delay before the component hydrates
 * Make a change to the `Counter.tsx` component to see HMR working
 
 ### Next steps
