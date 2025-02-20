@@ -168,8 +168,74 @@ docker rm phoriaapp
 
 ### Setup azd
 
-TODO
+Start by running the following command in the root of your repository:
+
+```shell
+azd init
+```
+
+Then you can proceed through the prompts to setup azd:
+
+* You should be asked how you want to initialise your app - choose "Use code in the current directory"
+  * This may not detect the correct services initially so pay attention before you proceed - you can add and remove services using the prompts provided - what we want is to add just the Phoria dotnet Web App
+  * For example, when running `azd init` on the "Getting started" app a "Vite" service was detected in the root, but that had to be removed and the dotnet app under `./WebApp` had to be added instead
+* `azd` should suggest hosting your app in Azure Container Apps - agree to proceed
+* You should then be prompted to enter a new environment name - enter what you would like here
+
+`azd` will then initialise your app by creating and modifying some files in your repository. The ones we care about are:
+
+* The `infra` directory - this contains the Bicep files that describe the Azure resources that will be provisioned
+* The `azure.yaml` file - this contains the deployment configuration for your app
+* The `.gitignore` file - this has been modified to exclude certain files and directories that `azd` generates and uses, but do not need to be under source control
+
+Any other files produced by the initialisation process are not relevant to this guide and you can decide if you want to keep them or not.
+
+> [!TIP]
+> Feel free to take a look through the `infra` directory if you are interested in how the Azure resources are described, but we won't be going into detail about that in this guide. The idea is that `azd` gives you everything that you need to get started quickly and easily, but if you want to dig deeper and customise things further you can absolutely do that. You can also use [Terraform instead of Bicep](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/use-terraform-for-azd) if you prefer.
+>
+> This guide also isn't aiming to be a guide to `azd` itself so please refer to the official documentation if you have more specific questions.
+
+You will need to make some changes to the `azure.yaml` file to use the Dockerfile that you created earlier. Here is an example of what the `azure.yaml` file should look like - the only part you should need to add is the `docker` section for the `web-app` service:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: getting-started
+metadata:
+  template: azd-init@1.11.1
+services:
+  web-app:
+    project: WebApp
+    host: containerapp
+    language: dotnet
+    docker:
+      path: ./Dockerfile
+      context: ../
+```
 
 ### Deploy with azd
 
-TODO
+If this is the first time you have used `azd` or you have not used it in a while you will need to sign in first:
+
+```shell
+azd auth login
+```
+
+Then you can use the following command to provision the Azure resources required and deploy your app to Azure Container Apps:
+
+```shell
+azd up
+```
+
+You will have to follow some prompts to select the Azure subscription and region that you want to provision your resources in, but then the process should be fully automated and you should see the output of the deployment in your terminal.
+
+Once the deployment is complete you should be presented with a URL that you can use to access your Phoria app running in Azure Container Apps.
+
+> [!TIP]
+> If you make a change to your app you can deploy the changes by running `azd up` again - `azd` will detect if any changes have been made to the hosting environment and skip the provisioning step if it is not necessary.
+
+If you don't want to keep the resources that were provisioned you can run the following command to tear them down:
+
+```shell
+azd down --purge
+```

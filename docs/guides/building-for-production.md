@@ -187,3 +187,7 @@ This script uses `node` to run the Phoria Server produced by the [`build:server`
 
 > [!WARNING]
 > You may need to adjust this command depending on your configuration to point to the location of the Phoria Server output produced by the `build:server` script.
+
+## Next steps
+
+If you would now like to try deploying your production build you can check out the [deployment](./deployment.md) guide.
