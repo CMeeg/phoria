@@ -564,7 +564,8 @@ dotnet dev-certs https --trust
 # Start the Phoria Server
 pnpm run dev
 
-# Start the Phoria Web App (you will need to run this in a separate terminal instance/tab to the Phoria Server)
+# Start the Phoria Web App
+# You will need to run this in a separate terminal instance/tab to the Phoria Server
 dotnet run --project WebApp/WebApp.csproj --launch-profile https
 ```
 

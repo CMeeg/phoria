@@ -1,6 +1,6 @@
 <div align="center">
   <p><img width="120" height="133" src="./docs/assets/phoria.svg" alt="Phoria logo"></p>
-  <h1>phoria<br><br></h1>
+  <h1>Phoria<br><br></h1>
   <p>🏝️ <i>Islands architecture for dotnet powered by Vite</i> ⚡</p>
   <p><hr></p>
 </div>
@@ -30,7 +30,7 @@ The quickest way to get started is to clone an example project using [giget](htt
 
 Or feel free to choose any one of the [other examples available](https://github.com/CMeeg/phoria-examples/tree/main/examples).
 
-> [!IMPORTANT]
+> [!TIP]
 > Please see the [Getting started](./docs/guides/getting-started.md) guide for a complete guide to getting up and running with Phoria including how to [add Phoria to an existing dotnet project](./docs/guides/getting-started.md#manually-add-phoria-to-an-existing-dotnet-project).
 
 ## Usage
