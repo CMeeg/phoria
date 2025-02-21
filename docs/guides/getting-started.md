@@ -9,13 +9,14 @@ There are two ways you can get started:
 
 You can use [giget](https://unjs.io/packages/giget) to quickly clone an example project:
 
-`npx giget@latest gh:cmeeg/phoria-examples/examples/{example-name} {dir}`
+```shell
+npx giget@latest gh:cmeeg/phoria-examples/examples/<example_name> <target_dir>
+```
 
 > [!IMPORTANT]
 > You will need to replace:
-> 
-> * `{example-name}` with the folder name of the [example project you want to clone](https://github.com/CMeeg/phoria-examples/tree/main/examples)
-> * `{dir}` with the name of the local directory you want to clone the example project to
+> * `<example_name>` with the directory name of the [example project you want to clone](https://github.com/CMeeg/phoria-examples/tree/main/examples)
+> * `<target_dir>` with the name of the local directory you want to clone the example project to
 
 ## Manually add Phoria to an existing dotnet project
 
