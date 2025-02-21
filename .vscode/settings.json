@@ -1,4 +1,17 @@
 {
+	"cSpell.words": [
+		"appsettings",
+		"aspnet",
+		"ASPNETCORE",
+		"Blazor",
+		"cmeeg",
+		"FOUC",
+		"giget",
+		"listhen",
+		"Phoria",
+		"Tinylibs",
+		"unjs"
+	],
 	"dotnet.defaultSolution": "Phoria.sln",
 	"editor.defaultFormatter": "biomejs.biome",
 	"html.format.enable": true,

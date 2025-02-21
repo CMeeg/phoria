@@ -20,7 +20,9 @@ npx giget@latest gh:cmeeg/phoria-examples/examples/<example_name> <target_dir>
 
 ## Manually add Phoria to an existing dotnet project
 
-Phoria can be added to any dotnet (>= v8) MVC or Razor Pages web app. We assume that you already have an existing dotnet web app that you want to add Phoria to, but for the purpose of this guide we will create a new web app and solution (imaginatively) called "Getting Started". You can substitute "Getting Started" for your own project / solution name wherever you see that referenced in the guide.
+Phoria can be added to any dotnet (>= v8) MVC or Razor Pages web app. We assume that you already have an existing dotnet web app that you want to add Phoria to, but for the purpose of this guide we will create a new web app and solution (imaginatively) called "Getting Started" and use that as our "existing project".
+
+You can substitute "Getting Started" for your own project / solution name wherever you see that referenced in the guide.
 
 > [!NOTE]
 > This guide will not cover some aspects of setting up a new project such as configuring Git or VS Code or linting or testing tools as it is assumed that you will add and configure these things as you go or when you're ready based on your own preferences.
@@ -29,16 +31,16 @@ Phoria can be added to any dotnet (>= v8) MVC or Razor Pages web app. We assume 
 
 ### Prerequisites
 
-There is some prerequisite software you will need to have installed before we go any further:
+There is some prerequisite software you will need to have installed before you go any further:
 
 * **dotnet** - `v8` or higher
 * **Node.js** - `v18.17.1` or `v20.3.0`, `v22.0.0` or higher
-  * We recommend using [fnm](https://github.com/Schniz/fnm) or [nvm](https://github.com/nvm-sh/nvm) to manage Node installations
+  * If you're not already, we recommend using [fnm](https://github.com/Schniz/fnm) or [nvm](https://github.com/nvm-sh/nvm) to manage Node installations
 * **Node package manager** - We recommend [pnpm](https://pnpm.io/), but npm will work just as well
-* **Code editor** - We recommend [VS Code](https://code.visualstudio.com/)
+* **Code editor** - We recommend [VS Code](https://code.visualstudio.com/), but you can use any code editor you like
 * **Terminal** - You will need to be able to run CLI tools through a terminal of your choice
 
-You will also need an existing dotnet web app. If you do not already have an existing dotnet web app then we recommend [cloning an example project](#clone-an-example-project) rather than following this manual process, but if you still want to proceed you can create a new web app using the dotnet CLI:
+You will also need an existing dotnet web app. If you do not already have an existing dotnet web app then we recommend [cloning an example project](#clone-an-example-project) rather than following the rest of this guide, but if you still want to proceed you can create a new web app using the dotnet CLI:
 
 
 ```shell
@@ -58,12 +60,12 @@ dotnet sln add ./WebApp/WebApp.csproj
 
 ### Add Vite
 
-The first thing we are going to do is add [Vite](https://vite.dev/) to the repo and configure Phoria via Vite plugins. The plugins configure Vite's `client` and `ssr` [environments](https://vite.dev/guide/api-environment.html) and register specific Vite plugins for the UI framework(s) that you want to use.
+The first thing you will need to do is add [Vite](https://vite.dev/) to the repo and configure Phoria via Vite plugins. The plugins configure Vite's `client` and `ssr` [environments](https://vite.dev/guide/api-environment.html) and register specific Vite plugins for the UI framework(s) that you want to use.
 
 > [!NOTE]
-> In this guide we will choose React as our UI framework, but you can choose any [supported UI framework](./supported-ui-frameworks.md).
+> In this guide we have chosen React as the UI framework, but you can choose any [supported UI framework](./supported-ui-frameworks.md).
 > 
-> We will also be using pnpm, fnm and VS Code, but feel free to substitute the tools (and therefore commands used) based on your preferences.
+> We used pnpm, fnm and VS Code, but feel free to substitute the tools (and therefore commands used) based on your preferences.
 > 
 > The guide was written against code samples developed on a Windows machine with PowerShell so some shell commands may need adapting to your OS or shell of choice also, but an attempt has been made to make the guide as platform-agnostic as possible.
 
@@ -87,13 +89,13 @@ pnpm add @phoria/phoria @phoria/phoria-react react react-dom
 pnpm add -D @phoria/vite-plugin-dotnet-dev-certs @types/react @types/react-dom @vitejs/plugin-react typescript vite vite-tsconfig-paths
 ```
 
-Then we will need to make some manual adjustments to the generated `package.json` file:
+Then you will need to make some manual adjustments to the generated `package.json` file:
 
 * Add `"private": true`
 * Add `"type": "module"`
 * Remove `"main": "index.js"`
 
-Next add a `vite.config.ts` file to the root of your repo:
+Then add a `vite.config.ts` file to the root of your repo:
 
 ```ts
 import { phoriaReact } from "@phoria/phoria-react/vite"
@@ -159,7 +161,7 @@ And finally a `tsconfig.json` file to the root of your repo:
 
 ### Add a UI component
 
-We need to add a UI component to our repo that we will render in a Phoria Island. For the purpose of this guide we will use a simple React "Counter" component, but you can substitute that for something else if you want.
+You will need to add a UI component to your repo that will eventually render inside a Phoria Island. For the purpose of this guide we are using a simple React "Counter" component, but you can substitute that for something else if you want.
 
 We will create the component in the file `WebApp/ui/src/components/Counter/Counter.tsx`:
 
@@ -185,7 +187,7 @@ function Counter({ startAt }: CounterProps) {
 export { Counter }
 ```
 
-We also need to [register the component](./component-register.md) so that Phoria knows where to find it and how to render it. We will do this in the file `WebApp/ui/src/components/register.ts`:
+You will also need to [register the component](./component-register.md) so that Phoria knows where to find it and how to render it. Create the file `WebApp/ui/src/components/register.ts`:
 
 ```ts
 import { registerComponents } from "@phoria/phoria"
@@ -202,13 +204,13 @@ registerComponents({
 ```
 
 > [!NOTE]
-> You may have noticed/guessed that the `WebApp/ui` folder is the [root](https://vite.dev/config/shared-options.html#root) folder for Vite - this is where we will be placing all of our code related to our UI components. The name and location of the folder is a default used by Phoria that [can be changed](./configuration.md) and you can optionally use workspaces should you wish to do so.
+> You may have noticed/guessed that the `WebApp/ui` folder is the [root](https://vite.dev/config/shared-options.html#root) folder for Vite - this is where we will be placing all of the code related to our UI components. The name and location of the folder is a default used by Phoria that [can be changed](./configuration.md). [Workspaces](./workspaces.md) (e.g. pnpm workspaces) are also supported by Phoria, which can help simplify configuration and may be a better fit for a typical dotnet solution/project directory structure.
 
 ### Add Phoria Server
 
 The Phoria Server is a [h3](https://h3.unjs.io/) server that effectively runs as a "sidecar" to your web app by running inside its own `node` process. It delegates requests to CSR, SSR or static file handlers as required, which use Vite's Dev Server in development and the build output from Vite when in production.
 
-First we need to add some more dependencies to our repo:
+First you will need to add some more dependencies to your repo:
 
 ```shell
 pnpm add h3 listhen
@@ -245,7 +247,7 @@ And add a separate TypeScript config file for the Phoria Server at the root of t
 }
 ```
 
-Then we will create the Phoria Server script at `WebApp/ui/src/server.ts`:
+Then you will need to create the Phoria Server script at `WebApp/ui/src/server.ts`:
 
 ```ts
 import { dirname } from "node:path"
@@ -384,7 +386,7 @@ export { app, listener }
 > [!TIP]
 > Please feel free to read through the comments in the server script to get a feel for what it does.
 
-Finally we will add an entry to our `scripts` in `package.json` to run the Phoria Server in our development environment:
+Finally you will need to add an entry to your `scripts` in `package.json` to run the Phoria Server in your development environment:
 
 ```json
 "scripts": {
@@ -399,7 +401,7 @@ The [Client Entry](./client-entry.md) is the entrypoint for the browser and is r
 You can also choose to initialise other client-side code here, or import "global" CSS, if you wish.
 
 > [!NOTE]
-> Phoria supports client-only, server-only and "isomorphic" rendering of components in Islands. Server-only is the default, but you can opt-in to client-side rendering on an Island-by-Island basis using one or more client directives such as "client only", "on load", "on idle", "on visible", "on match media". If an Island is server-only then it will not hydrate on the client and therefore does not request any JavaScript.
+> Phoria supports client-only, server-only and "isomorphic" rendering of components in Islands. Server-only is the default, but you can opt-in to client-side rendering on an Island-by-Island basis using one or more client [directives](./directives.md) such as "client only", "on load" etc. If an Island is server-only then it will not hydrate on the client and therefore does not request any additional JavaScript.
 
 Add a Client Entry file at `WebApp/ui/src/entry-client.ts`:
 
@@ -412,7 +414,7 @@ PhoriaIsland.register()
 ```
 
 > [!NOTE]
-> `PhoriaIsland` is a custom HTML element that is used to hydrate the components that you have registered in your component registration file (i.e. `./components/register`) for Islands that you have opted-in to client-side rendering.
+> `PhoriaIsland` is a custom HTML element that is used to hydrate the components that you have [registered](#add-a-ui-component) in your component registration file (i.e. `./components/register`) for Islands that you have opted-in to client-side rendering.
 
 ### Add Server Entry
 
@@ -439,9 +441,9 @@ export { renderPhoriaIsland }
 
 ### Add Phoria to the dotnet web app
 
-Now we will add Phoria to the dotnet web app. From this point on we will refer to it as the [Phoria Web App](./phoria-web-app.md), which is just a way of saying a dotnet web app with the `Phoria` NuGet package installed and configured.
+Now you can add Phoria to your dotnet web app. From this point on we will refer to it as the [Phoria Web App](./phoria-web-app.md), which is just a way of saying a dotnet web app with the `Phoria` NuGet package installed and configured.
 
-First we need to add the Phoria NuGet package to the web app:
+First you will need to add the Phoria NuGet package to the web app:
 
 ```shell
 dotnet add WebApp/WebApp.csproj package Phoria
@@ -477,7 +479,7 @@ And the following to `WebApp/appsettings.Development.json`:
 > [!NOTE]
 > The `https` option will default to `false` so we are setting it here because we want our Phoria Server to use `https` in development.
 
-Then we will modify `WebApp/Program.cs` to register Phoria services:
+Then you will need to modify `WebApp/Program.cs` to register Phoria services. Add the following code in the appropriate places (i.e. the below does not represent a complete `Program.cs` file, just the parts you need to add to configure Phoria):
 
 ```csharp
 // Add a using statement
@@ -534,7 +536,7 @@ The `Phoria` NuGet package contains a Tag Helper for rendering Phoria Islands. T
 * Requesting an SSR response from the Phoria Server (if required, Islands can be CSR only)
 * Hydrating the component on the client (if required, Islands can be SSR only)
 
-For the purpose of this guide we will render the `Counter` component that we [added and registered](#add-a-ui-component) earlier.
+For the purpose of this guide we will render the `Counter` component that we [added and registered](#add-a-ui-component) earlier. You will need to adapt the below if you registered a different component.
 
 Add the following Tag Helper to `WebApp/Pages/Index.cshtml` at the bottom of the file:
 
@@ -543,15 +545,15 @@ Add the following Tag Helper to `WebApp/Pages/Index.cshtml` at the bottom of the
 ```
 
 > [!TIP]
-> The value of `component` must match a key in your component register. In our case we registered the `Counter` component using the key `Counter`.
+> The value of `component` must match a key in your [component register](#add-a-ui-component). In our case we registered the `Counter` component using the key `Counter`.
 > 
-> The value of `client` is set to `Client.Load` because this component uses React state and we want this component to hydrate on page load. You can try using other client directives if you want to see how they work.
+> The value of `client` is set to `Client.Load` because this component uses React state and we want this component to hydrate on page load. You can try using other client [directives](./directives.md) if you want to see how they work.
 >
 > The value of `props` is an anonymous object that will be serialised and passed to the component as `props` to demonstrate how you can pass data from your dotnet web app to your Islands. The data is hardcoded here, but can come from any source and passed through your view model.
 
 ### Run the Phoria Web App
 
-Now we can run our app and see Phoria in action.
+Now you can run your app and see Phoria in action.
 
 From your terminal run:
 
@@ -572,9 +574,9 @@ dotnet run --project WebApp/WebApp.csproj --launch-profile https
 Now you will be able to navigate to the web app in your browser and:
 
 * See the `Counter` component rendered via React
-  * View the page source to see the SSR response from the Phoria Server
+* View the page source to see the SSR response from the Phoria Server
 * Click on the button to see that the component has hydrated and is reacting to state changes
-  * The first time you run the app Vite may take a couple of seconds to optimise dependencies so you may see a delay before the component hydrates
+  * The first time you run the app Vite may take a couple of seconds to optimise dependencies so you may see a delay before the component hydrates - you can see this happening in the terminal where you started the Phoria Server
 * Make a change to the `Counter.tsx` component to see HMR working
 
 ### Next steps

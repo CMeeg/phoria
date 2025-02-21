@@ -148,7 +148,7 @@ This script is a convenience script that uses the [`npm-run-all`](https://github
 
 This script uses the [dotnet CLI](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-run) to run the Phoria Web App produced by the [`build:webapp`](#buildwebapp) script.
 
-The [`cross-env`](https://github.com/kentcdodds/cross-env) package is used to set the `DOTNET_ENVIRONMENT` so you can use specific configuration or conditional branching in your code etc that targets the `Preview` environment if you wish.
+The [`cross-env`](https://github.com/kentcdodds/cross-env) package is used to set the `DOTNET_ENVIRONMENT` environment variable so you can use specific configuration or conditional branching in your code etc that targets the `Preview` environment if you wish.
 
 ```shell
 pnpm add -D cross-env
@@ -181,9 +181,6 @@ This script also uses a launch profile named `Preview`, which you can add to you
 ### `preview:server`
 
 This script uses `node` to run the Phoria Server produced by the [`build:server`](#buildserver) script. `cross-env` is used again to set environment variables used by the script.
-
-> [!NOTE]
-> This guide will assume that you are using `cross-env` in your other `preview` script so there is no need to install it again, but chose not to use it you will need to make the same adjustments here.
 
 > [!WARNING]
 > You may need to adjust this command depending on your configuration to point to the location of the Phoria Server output produced by the `build:server` script.
