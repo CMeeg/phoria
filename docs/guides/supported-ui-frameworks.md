@@ -1,24 +1,25 @@
 # Supported UI frameworks
 
-This guide discusses the UI frameworks supported by Phoria, and how to get started with them.
+Phoria supports:
+
+* [React](#react)
+* [Svelte](#svelte)
+* [Vue](#vue)
+
+> [!NOTE]
+> Support for other frameworks may be added in the future. If you have a specific request, please raise an issue.
 
 ## React
 
-TODO
-
-* Specific notes about React
-* Link to plugin docs (that also need to be written)
+> [!WARNING]
+> This guide is a work in progress. This section is a placeholder for documentation that still needs to be written. If you have any questions in the meantime, please raise an issue.
 
 ## Svelte
 
-TODO
-
-* Specific notes about Svelte
-* Link to plugin docs (that also need to be written)
+> [!WARNING]
+> This guide is a work in progress. This section is a placeholder for documentation that still needs to be written. If you have any questions in the meantime, please raise an issue.
 
 ## Vue
 
-TODO
-
-* Specific notes about Vue
-* Link to plugin docs (that also need to be written)
+> [!WARNING]
+> This guide is a work in progress. This section is a placeholder for documentation that still needs to be written. If you have any questions in the meantime, please raise an issue.
