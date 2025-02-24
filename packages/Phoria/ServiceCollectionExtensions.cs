@@ -71,6 +71,7 @@ public static class ServiceCollectionExtensions
 		services.TryAddScoped<PhoriaIslandEntryTagHelperMonitor>();
 		services.TryAddSingleton<IPhoriaIslandSsr, PhoriaIslandSsr>();
 		services.TryAddScoped<IPhoriaIslandScopedContext, PhoriaIslandScopedContext>();
+		services.TryAddScoped<IPhoriaIslandComponentFactory, PhoriaIslandComponentFactory>();
 
 		return services;
 	}
