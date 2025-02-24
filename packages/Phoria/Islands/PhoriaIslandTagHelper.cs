@@ -1,20 +1,11 @@
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using Microsoft.Extensions.Options;
-using Phoria.Server;
 
 namespace Phoria.Islands;
 
-public class PhoriaIslandTagHelper(
-	IPhoriaIslandScopedContext scopedContext,
-	IPhoriaServerMonitor serverMonitor,
-	IPhoriaIslandSsr phoriaIslandSsr,
-	IOptions<PhoriaOptions> options)
+public class PhoriaIslandTagHelper(IPhoriaIslandComponentFactory phoriaIslandComponentFactory)
 	: TagHelper
 {
-	private readonly IPhoriaIslandScopedContext scopedContext = scopedContext;
-	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
-	private readonly IPhoriaIslandSsr phoriaIslandSsr = phoriaIslandSsr;
-	private readonly PhoriaOptions options = options.Value;
+	private readonly IPhoriaIslandComponentFactory phoriaIslandComponentFactory = phoriaIslandComponentFactory;
 
 	public required string Component { get; set; }
 	public object? Props { get; set; }
@@ -22,51 +13,25 @@ public class PhoriaIslandTagHelper(
 
 	public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
 	{
-		PhoriaIslandRenderMode renderMode = PhoriaIslandRenderMode.Isomorphic;
-
-		if (Client == null)
+		try
 		{
-			renderMode = PhoriaIslandRenderMode.ServerOnly;
+			PhoriaIslandHtmlContent content = await phoriaIslandComponentFactory.CreateAsync(
+				Component,
+				Props,
+				Client);
+
+			output.TagName = null;
+			output.TagMode = TagMode.StartTagAndEndTag;
+
+			output.Content.SetHtmlContent(content);
 		}
-		else if (Client is PhoriaIslandClientOnlyDirective)
+		catch (PhoriaIslandComponentException)
 		{
-			renderMode = PhoriaIslandRenderMode.ClientOnly;
-		}
-
-		if (renderMode != PhoriaIslandRenderMode.ServerOnly
-			&& serverMonitor.ServerStatus.Health != PhoriaServerHealth.Healthy)
-		{
-			// We have to render the component on the server, but the server is not healthy
-
-			// TODO: Log this or throw an exception?
+			// TODO: Log or throw exception?
 
 			output.SuppressOutput();
 
 			return;
 		}
-
-		var island = new PhoriaIsland
-		{
-			ComponentName = Component,
-			Props = Props,
-			RenderMode = renderMode,
-			Client = Client
-		};
-
-		scopedContext.AddIsland(island);
-
-		output.TagName = null;
-		output.TagMode = TagMode.StartTagAndEndTag;
-
-		PhoriaIslandSsrResult? ssrResult = island.RenderMode != PhoriaIslandRenderMode.ClientOnly
-			? await phoriaIslandSsr.RenderIsland(island)
-			: null;
-
-		var content = new PhoriaIslandHtmlContent(
-			island,
-			ssrResult,
-			options);
-
-		output.Content.SetHtmlContent(content);
 	}
 }
