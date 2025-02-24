@@ -36,11 +36,13 @@ Or feel free to choose any one of the [other examples available](https://github.
 ## Usage
 
 * [Getting started](./docs/guides/getting-started.md)
+* [Creating Phoria Island components](./docs/guides/creating-phoria-island-components.md)
+* [Phoria Island directives](./docs/guides/directives.md)
 * [Building for production](./docs/guides/building-for-production.md)
 * [Deployment](./docs/guides/deployment.md)
 
 > [!NOTE]
-> The Usage documentation is a work in progress and will be expanded on in time. If there is something missing that needs clarification while it is being worked on, or if you have an idea or request for documentation not mentioned below, please raise an issue.
+> The Usage documentation is a work in progress and will be expanded on in time. If there is something missing that needs clarification while it is being worked on, or if you have an idea or request for documentation, please raise an issue.
 
 ## About Phoria
 

@@ -428,7 +428,7 @@ import "./components/register"
 import type { PhoriaIsland } from "@phoria/phoria/server"
 
 async function renderPhoriaIsland(island: PhoriaIsland) {
-	return await island.render()
+  return await island.render()
 }
 
 export { renderPhoriaIsland }

@@ -5,10 +5,12 @@
 		"ASPNETCORE",
 		"Blazor",
 		"cmeeg",
+		"deserialised",
 		"FOUC",
 		"giget",
 		"listhen",
 		"Phoria",
+		"POCO",
 		"Tinylibs",
 		"unjs"
 	],

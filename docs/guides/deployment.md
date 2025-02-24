@@ -94,10 +94,10 @@ COPY --from=uibuild /app .
 # Install node for Phoria Server
 ENV NODE_VERSION=22.11.0
 RUN apt-get -y update \
-	&& apt-get install -y curl \
-	&& curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} -o nodesource_setup.sh | bash \
-	&& apt-get install -y --no-install-recommends nodejs \
-	&& apt-get clean
+  && apt-get install -y curl \
+  && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} -o nodesource_setup.sh | bash \
+  && apt-get install -y --no-install-recommends nodejs \
+  && apt-get clean
 
 # Run the app
 USER $APP_UID
@@ -133,14 +133,14 @@ You can configure the Phoria Web App to start and monitor the Phoria Server `nod
 
 ```json
 {
-	"phoria": {
-		"server": {
-			"process": {
-				"command": "node",
-				"arguments": ["WebApp/ui/dist/server/server.js"]
-			}
-		}
-	}
+  "phoria": {
+    "server": {
+      "process": {
+        "command": "node",
+        "arguments": ["WebApp/ui/dist/server/server.js"]
+      }
+    }
+  }
 }
 ```
 
