@@ -1,7 +1,7 @@
 {
 	"name": "phoria-dotnet",
 	"private": true,
-	"version": "0.4.1",
+	"version": "0.4.2",
 	"scripts": {
 		"build": "dotnet build --configuration Release",
 		"publish": "node \"../../scripts/dotnet/publish.js\" --name nuget",

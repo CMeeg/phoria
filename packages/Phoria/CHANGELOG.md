@@ -1,5 +1,11 @@
 # phoria-dotnet
 
+## 0.4.2
+
+### Patch Changes
+
+- f3f0e0b: Add `PhoriaIslandComponentFactory`
+
 ## 0.4.1
 
 ### Patch Changes
