@@ -63,9 +63,23 @@ pnpm lerna run check
 
 Runs `tsc` (no emit) on each package.
 
+### Test
+
+```bash
+pnpm test            # Vitest unit tests across JS packages (via Lerna)
+pnpm test:browser    # Vitest browser-mode component tests (Playwright provider)
+dotnet test Phoria.sln  # xUnit tests for the Phoria .NET package
+```
+
+E2E smoke test (requires a preview build running):
+
+```bash
+pnpm --filter framework-multiple test:smoke
+```
+
 ### CI Order
 
-The CI pipeline runs: `build` → `lint` → `check`. Always build before linting or type-checking.
+The CI pipeline runs: `build` → `lint` → `check` → `test`. Always build before linting, type-checking, or testing.
 
 ## Code Style
 
