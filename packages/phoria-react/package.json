@@ -58,7 +58,8 @@
 		"build": "cross-env NODE_ENV=production vite build",
 		"lint": "biome check",
 		"check": "tsc",
-		"test": "vitest run"
+		"test": "vitest run",
+		"test:browser": "vitest run --config vitest.browser.config.ts"
 	},
 	"dependencies": {
 		"@rollup/pluginutils": "catalog:",
@@ -69,7 +70,9 @@
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react": "^4.3.4",
+		"@vitest/browser": "catalog:",
 		"cross-env": "catalog:",
+		"playwright": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"typescript": "catalog:",

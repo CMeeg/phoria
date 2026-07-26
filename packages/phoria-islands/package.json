@@ -59,7 +59,8 @@
 		"build": "vite build",
 		"lint": "biome check",
 		"check": "tsc",
-		"test": "vitest run"
+		"test": "vitest run",
+		"test:browser": "vitest run --config vitest.browser.config.ts"
 	},
 	"dependencies": {
 		"defu": "^6.1.4",
@@ -70,6 +71,8 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
+		"@vitest/browser": "catalog:",
+		"playwright": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",
