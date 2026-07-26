@@ -41,7 +41,8 @@
 	"scripts": {
 		"build": "vite build",
 		"lint": "biome check",
-		"check": "tsc"
+		"check": "tsc",
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"destr": "catalog:",
@@ -55,7 +56,8 @@
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",
 		"vite-plugin-externalize-deps": "catalog:",
-		"vite-tsconfig-paths": "catalog:"
+		"vite-tsconfig-paths": "catalog:",
+		"vitest": "catalog:"
 	},
 	"peerDependencies": {
 		"vite": "^6.0.0"

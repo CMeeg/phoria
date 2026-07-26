@@ -13,7 +13,8 @@
 		"lint": "biome check",
 		"preview": "run-p preview:* -c",
 		"preview:webapp": "cross-env DOTNET_ENVIRONMENT=Preview dotnet run --project ./WebApp/WebApp.csproj -c Release --launch-profile Preview",
-		"preview:server": "cross-env NODE_ENV=production DOTNET_ENVIRONMENT=Preview node ./WebApp/ui/dist/server/server.js"
+		"preview:server": "cross-env NODE_ENV=production DOTNET_ENVIRONMENT=Preview node ./WebApp/ui/dist/server/server.js",
+		"test:smoke": "vitest run --config vitest.smoke.config.ts"
 	},
 	"files": [
 		"WebApp/ui/dist"
@@ -45,6 +46,7 @@
 		"tsx": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
-		"vite-tsconfig-paths": "catalog:"
+		"vite-tsconfig-paths": "catalog:",
+		"vitest": "catalog:"
 	}
 }

@@ -58,7 +58,9 @@
 	"scripts": {
 		"build": "vite build",
 		"lint": "biome check",
-		"check": "tsc"
+		"check": "tsc",
+		"test": "vitest run",
+		"test:browser": "vitest run --config vitest.browser.config.ts"
 	},
 	"dependencies": {
 		"defu": "^6.1.4",
@@ -69,11 +71,14 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
+		"@vitest/browser": "catalog:",
+		"playwright": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",
 		"vite-plugin-externalize-deps": "catalog:",
-		"vite-tsconfig-paths": "catalog:"
+		"vite-tsconfig-paths": "catalog:",
+		"vitest": "catalog:"
 	},
 	"peerDependencies": {
 		"vite": "^6.0.0"
