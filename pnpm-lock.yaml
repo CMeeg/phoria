@@ -186,6 +186,9 @@ importers:
       vite-tsconfig-paths:
         specifier: 'catalog:'
         version: 5.1.4(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.10.5)(@vitest/browser@3.2.7)(jiti@2.4.1)(tsx@4.19.2)
 
   e2e/with-workspace/WebApp:
     dependencies:
