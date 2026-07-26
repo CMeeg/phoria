@@ -347,6 +347,9 @@ importers:
       vite-tsconfig-paths:
         specifier: 'catalog:'
         version: 5.1.4(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2)
 
   packages/phoria-svelte:
     dependencies:
@@ -381,6 +384,9 @@ importers:
       vite-tsconfig-paths:
         specifier: 'catalog:'
         version: 5.1.4(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2)
 
   packages/phoria-vue:
     dependencies:
@@ -412,6 +418,9 @@ importers:
       vite-tsconfig-paths:
         specifier: 'catalog:'
         version: 5.1.4(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2)
       vue:
         specifier: 'catalog:'
         version: 3.5.13(typescript@5.7.3)
@@ -449,6 +458,9 @@ importers:
       vite-tsconfig-paths:
         specifier: 'catalog:'
         version: 5.1.4(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2))
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.10.5)(jiti@2.4.1)(tsx@4.19.2)
 
 packages:
 
@@ -9877,7 +9889,7 @@ snapshots:
       expect-type: 1.4.0
       magic-string: 0.30.17
       pathe: 2.0.3
-      picomatch: 4.0.2
+      picomatch: 4.0.5
       std-env: 3.10.0
       tinybench: 2.9.0
       tinyexec: 0.3.2
