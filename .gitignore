@@ -12,5 +12,6 @@ obj/
 *.tmp
 *.tsbuildinfo
 lerna-debug.log
+.worktrees/
 TODO.md
 vite.config.ts.*
