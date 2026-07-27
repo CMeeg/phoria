@@ -29,7 +29,7 @@ namespace Phoria.Islands;
 [HtmlTargetElement(ScriptTag, Attributes = PhoriaSrcAttribute)]
 [HtmlTargetElement(LinkTag, Attributes = PhoriaHrefAttribute)]
 [EditorBrowsable(EditorBrowsableState.Never)]
-public class PhoriaIslandEntryTagHelper(
+public partial class PhoriaIslandEntryTagHelper(
 	ILogger<PhoriaIslandEntryTagHelper> logger,
 	IViteManifestReader manifestReader,
 	IPhoriaServerMonitor serverMonitor,
@@ -38,8 +38,8 @@ public class PhoriaIslandEntryTagHelper(
 	IUrlHelperFactory urlHelperFactory)
 	: TagHelper
 {
-	private static readonly Regex scriptRegex =
-		new(@"\.(js|ts|jsx|tsx|cjs|cts|mjs|mts)$", RegexOptions.Compiled);
+	[GeneratedRegex(@"\.(js|ts|jsx|tsx|cjs|cts|mjs|mts)$")]
+	private static partial Regex ScriptRegex();
 
 	private const string ScriptTag = "script";
 	private const string LinkTag = "link";
@@ -128,7 +128,7 @@ public class PhoriaIslandEntryTagHelper(
 		{
 			// If the tagName is a link and the file is a script, destroy the element
 
-			if (tagName == LinkTag && scriptRegex.IsMatch(value))
+			if (tagName == LinkTag && ScriptRegex().IsMatch(value))
 			{
 				output.SuppressOutput();
 				return;
@@ -205,7 +205,7 @@ public class PhoriaIslandEntryTagHelper(
 
 			if (tagName == LinkTag
 				&& (relAttr == LinkRelStylesheet || asAttr == LinkAsStyle)
-				&& scriptRegex.IsMatch(value))
+				&& ScriptRegex().IsMatch(value))
 			{
 				// Get css files from the entry chunk
 
@@ -247,14 +247,12 @@ public class PhoriaIslandEntryTagHelper(
 
 						string filePath = urlHelper.GetContentUrl(cssFile);
 
-						var linkOutput = new TagHelperOutput(
-							LinkTag,
-							[.. sharedAttributes],
-							(useCachedResult, encoder) =>
-								Task.Factory.StartNew<TagHelperContent>(
-									() => new DefaultTagHelperContent()
-								)
-						);
+					var linkOutput = new TagHelperOutput(
+						LinkTag,
+						[.. sharedAttributes],
+						(useCachedResult, encoder) =>
+							Task.FromResult<TagHelperContent>(new DefaultTagHelperContent())
+					);
 
 						linkOutput.Attributes.SetAttribute(HrefAttribute, filePath);
 

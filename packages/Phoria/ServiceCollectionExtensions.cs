@@ -1,8 +1,6 @@
 using System.Net.Http.Headers;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
 using Phoria.Islands;
 using Phoria.Server;
 using Phoria.Vite;
@@ -15,19 +13,11 @@ public static class ServiceCollectionExtensions
 		this IServiceCollection services,
 		Action<PhoriaOptions>? configure = null)
 	{
-		// Create options from appsettings first
+		services.AddOptions<PhoriaOptions>()
+			.BindConfiguration(PhoriaOptions.SectionName)
+			.Configure(configure ?? (_ => { }));
 
-		IServiceProvider serviceProvider = services.BuildServiceProvider();
-		IConfiguration configuration = serviceProvider.GetRequiredService<IConfiguration>();
-
-		var options = new PhoriaOptions();
-		configuration.GetSection(PhoriaOptions.SectionName).Bind(options);
-
-		// Then set options from the configure action
-
-		configure?.Invoke(options);
-
-		return services.AddSingleton(Options.Create(options)).ConfigureServices();
+		return services.ConfigureServices();
 	}
 
 	private static IServiceCollection ConfigureServices(this IServiceCollection services)
