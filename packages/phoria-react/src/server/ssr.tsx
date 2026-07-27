@@ -1,4 +1,4 @@
-import { type PhoriaIslandProps, importComponent } from "@phoria/phoria"
+import { importComponent, type PhoriaIslandProps } from "@phoria/phoria"
 import type { PhoriaIsland, PhoriaIslandComponentSsrService, RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import { type FunctionComponent, StrictMode } from "react"
 import { renderToString } from "react-dom/server"
@@ -56,6 +56,5 @@ const service: PhoriaIslandComponentSsrService<typeof framework.name, FunctionCo
 	}
 }
 
-export { isReactIsland, renderComponentToStream, renderComponentToString, service }
-
 export type { ReactPhoriaIsland, RenderReactPhoriaIslandComponent }
+export { isReactIsland, renderComponentToStream, renderComponentToString, service }

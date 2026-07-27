@@ -98,6 +98,5 @@ function phoriaReact(options?: Partial<PhoriaReactPluginOptions>): PluginOption 
 	return plugins
 }
 
-export { phoriaReact }
-
 export type { PhoriaReactPluginOptions }
+export { phoriaReact }

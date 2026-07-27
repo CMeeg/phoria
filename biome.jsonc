@@ -1,7 +1,7 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.5.5/schema.json",
 	"files": {
-		"ignore": ["**/*.min.css", "**/*.min.css.map"],
+		"includes": ["**", "!**/*.min.css", "!**/*.min.css.map", "!!**/dist", "!!**/node_modules"],
 		"ignoreUnknown": false
 	},
 	"vcs": {
@@ -13,31 +13,28 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"preset": "recommended"
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
 		}
 	},
 	"formatter": {
 		"enabled": true,
 		"formatWithErrors": true,
-		/* This is a bit of an annoying reason, but when changesets are applied it updates package.json
-		files and arrays get formatted as multi-line. Biome disagrees with this as it decides on single
-		vs multiline based on the `lineWidth` setting, but you can't disable that setting in isolation.
-		So formatting is disabled entirely for package.json files until there is time to find a better
-		solution. */
-		"ignore": ["**/package.json"],
 		"indentStyle": "tab",
 		"indentWidth": 2,
 		"lineEnding": "lf",
 		"lineWidth": 120,
 		"useEditorconfig": true
 	},
-	"organizeImports": {
-		"enabled": true
-	},
 	"javascript": {
-		"linter": {
-			"enabled": true
-		},
+		"linter": { "enabled": true },
 		"formatter": {
 			"enabled": true,
 			"semicolons": "asNeeded",
@@ -45,22 +42,12 @@
 		}
 	},
 	"json": {
-		"linter": {
-			"enabled": true
-		},
-		"formatter": {
-			"enabled": true
-		}
+		"linter": { "enabled": true },
+		"formatter": { "enabled": true }
 	},
 	"css": {
-		"parser": {
-			"cssModules": true
-		},
-		"linter": {
-			"enabled": true
-		},
-		"formatter": {
-			"enabled": true
-		}
+		"parser": { "cssModules": true },
+		"linter": { "enabled": true },
+		"formatter": { "enabled": true }
 	}
 }

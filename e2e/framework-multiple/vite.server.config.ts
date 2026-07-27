@@ -1,6 +1,6 @@
 import { join } from "node:path"
 import { parsePhoriaAppSettings } from "@phoria/phoria/server"
-import { type UserConfig, defineConfig } from "vite"
+import { defineConfig, type UserConfig } from "vite"
 
 export default defineConfig(async () => {
 	const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "development"

@@ -88,7 +88,6 @@ v1 is successful when:
 - Monorepo: pnpm workspaces + Lerna (publishing) + Nx (caching/task deps).
 - CI order: `build` → `lint` → `check` (tests to be added to this pipeline).
 - Independent per-package versioning; all packages must reach `1.0.0`.
-- `package.json` files are excluded from Biome formatting (do not re-enable).
 
 ## Phases (ordering)
 

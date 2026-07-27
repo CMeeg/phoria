@@ -3,7 +3,7 @@ import { ref } from "vue"
 
 const props = defineProps<{ startAt?: number }>()
 
-const count = ref(props.startAt ?? 0)
+const _count = ref(props.startAt ?? 0)
 </script>
 
 <template>

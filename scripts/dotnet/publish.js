@@ -1,7 +1,7 @@
-import { readFile, mkdir } from "node:fs/promises"
-import { join, resolve, isAbsolute, dirname } from "node:path"
-import util from "node:util"
 import child_process from "node:child_process"
+import { mkdir, readFile } from "node:fs/promises"
+import { dirname, isAbsolute, join, resolve } from "node:path"
+import util from "node:util"
 
 const exec = util.promisify(child_process.exec)
 
@@ -107,4 +107,6 @@ await run(`dotnet pack "${cwd}" --include-symbols --nologo -p:Version=${version}
 
 const packageSource = await getNugetPackageSource(resolve("../../nuget.config"), packageSourceName)
 
-await run(`dotnet nuget push \"${join(distPath, "*.nupkg")}\" --source \"${packageSource}\" --api-key ${apiKey} --skip-duplicate`)
+await run(
+	`dotnet nuget push "${join(distPath, "*.nupkg")}" --source "${packageSource}" --api-key ${apiKey} --skip-duplicate`
+)

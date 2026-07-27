@@ -96,6 +96,5 @@ function phoriaVue(options?: Partial<PhoriaVuePluginOptions>): PluginOption {
 	return plugins
 }
 
-export { phoriaVue }
-
 export type { PhoriaVuePluginOptions }
+export { phoriaVue }

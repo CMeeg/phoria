@@ -178,7 +178,7 @@ function createPhoriaCsrRequestHandler(
 
 				const stats = await stat(filePath).catch(() => {})
 
-				if (!stats || !stats.isFile()) {
+				if (!stats?.isFile()) {
 					return
 				}
 
@@ -202,11 +202,10 @@ function createPhoriaDevCsrRequestHandler(viteDevServer: ViteDevServer) {
 	return fromNodeMiddleware(viteDevServer.middlewares)
 }
 
+export type { PhoriaServerEntry, PhoriaServerEntryLoader }
 export {
 	createPhoriaCsrRequestHandler,
 	createPhoriaDevCsrRequestHandler,
 	createPhoriaDevSsrRequestHandler,
 	createPhoriaSsrRequestHandler
 }
-
-export type { PhoriaServerEntry, PhoriaServerEntryLoader }

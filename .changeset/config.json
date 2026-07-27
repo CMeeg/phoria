@@ -9,8 +9,8 @@
 	"linked": [],
 	"privatePackages": { "version": true, "tag": true },
 	"updateInternalDependencies": "minor",
-  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
-    "onlyUpdatePeerDependentsWhenOutOfRange": true,
-    "updateInternalDependents": "always"
-  }
+	"___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+		"onlyUpdatePeerDependentsWhenOutOfRange": true,
+		"updateInternalDependents": "always"
+	}
 }

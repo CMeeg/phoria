@@ -1,4 +1,4 @@
-import { type EventHandlerRequest, type H3Event, getRouterParams, readBody } from "h3"
+import { type EventHandlerRequest, getRouterParams, type H3Event, readBody } from "h3"
 import type { PhoriaIslandComponentEntry, PhoriaIslandComponentModule, PhoriaIslandProps } from "~/phoria-island"
 import { getComponent, getSsrService } from "~/register"
 import type { PhoriaIslandComponentSsrService, RenderPhoriaIslandComponentOptions } from "./ssr"

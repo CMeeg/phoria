@@ -106,7 +106,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 
 ## Gotchas
 
-- **`package.json` files are excluded from Biome formatting** — changesets reformats arrays to multi-line which conflicts with Biome's `lineWidth` setting. Do not re-enable formatting for `package.json`.
+- **Biome 2 formats `package.json` with `expand: always`**, matching Changesets output — no exclusion needed.
 - **Framework packages need `cross-env NODE_ENV=production`** in their build scripts (e.g., `phoria-react`). The core `phoria-islands` package does not.
 - **The .NET solution (`Phoria.sln`) only contains the `Phoria` NuGet package**, not the e2e apps. Build .NET projects via their individual `.csproj` or the e2e `package.json` scripts.
 - **Each JS package has 4 entry points**: `.` (main), `./client`, `./server`, `./vite`. Changes to one entry don't affect others.

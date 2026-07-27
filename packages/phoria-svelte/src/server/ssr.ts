@@ -1,4 +1,4 @@
-import { type PhoriaIslandProps, importComponent } from "@phoria/phoria"
+import { importComponent, type PhoriaIslandProps } from "@phoria/phoria"
 import type { PhoriaIsland, PhoriaIslandComponentSsrService, RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import type { Component, ComponentProps } from "svelte"
 import { render } from "svelte/server"
@@ -47,6 +47,5 @@ const service: PhoriaIslandComponentSsrService<typeof framework.name, Component>
 	}
 }
 
-export { isSvelteIsland, renderComponentToString, service }
-
 export type { RenderSveltePhoriaIslandComponent, SveltePhoriaIsland }
+export { isSvelteIsland, renderComponentToString, service }

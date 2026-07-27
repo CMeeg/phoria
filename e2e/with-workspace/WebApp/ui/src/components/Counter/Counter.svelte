@@ -1,11 +1,11 @@
 <script lang="ts">
-const base = import.meta.env.BASE_URL
+const _base = import.meta.env.BASE_URL
 
 // biome-ignore lint/style/useConst: Svelte
 let { startAt = 0 } = $props()
 
 // biome-ignore lint/style/useConst: Svelte
-let count = $state(startAt)
+let _count = $state(startAt)
 </script>
 
 <div class="svelte-counter">

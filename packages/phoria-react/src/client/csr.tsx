@@ -1,5 +1,5 @@
 import { importComponent } from "@phoria/phoria"
-import { type PhoriaIslandComponentCsrService, csrMountMode } from "@phoria/phoria/client"
+import { csrMountMode, type PhoriaIslandComponentCsrService } from "@phoria/phoria/client"
 import type { FunctionComponent } from "react"
 import { framework } from "~/main"
 

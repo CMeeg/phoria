@@ -1,16 +1,15 @@
 import { registerSsrService } from "@phoria/phoria"
 import { framework } from "~/main"
 import {
-	type RenderVuePhoriaIslandComponent,
-	type VuePhoriaIsland,
 	isVueIsland,
+	type RenderVuePhoriaIslandComponent,
 	renderComponentToStream,
 	renderComponentToString,
-	service
+	service,
+	type VuePhoriaIsland
 } from "./ssr"
 
 registerSsrService(framework.name, service)
 
-export { isVueIsland, renderComponentToStream, renderComponentToString }
-
 export type { RenderVuePhoriaIslandComponent, VuePhoriaIsland }
+export { isVueIsland, renderComponentToStream, renderComponentToString }

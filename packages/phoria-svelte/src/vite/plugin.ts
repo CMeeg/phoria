@@ -96,6 +96,5 @@ function phoriaSvelte(options?: Partial<PhoriaSveltePluginOptions>): PluginOptio
 	return plugins
 }
 
-export { phoriaSvelte }
-
 export type { PhoriaSveltePluginOptions }
+export { phoriaSvelte }
