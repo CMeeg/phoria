@@ -1,10 +1,9 @@
 # Building for production
 
-This guide will walk you through adding `scripts` to `package.json` that will [build](#build-scripts) the three parts of a Phoria solution that are required when running in production:
+This guide will walk you through adding `scripts` to `package.json` that will [build](#build-scripts) the parts of a Phoria solution that are required when running in production:
 
-* Phoria Islands
+* Phoria Islands (client, SSR and Phoria Server bundles)
 * Phoria Web App
-* Phoria Server
 
 Also included in this guide are instructions for adding [preview](#preview-scripts) `scripts` so that you can run the production build in the local environment for testing purposes.
 
@@ -20,8 +19,7 @@ These are the `scripts` that you will need to add to build your Phoria solution 
   "scripts": {
     "build": "run-p build:* -c",
     "build:islands": "vite build --app",
-    "build:webapp": "dotnet build --configuration Release",
-    "build:server": "vite build --config vite.server.config.ts"
+    "build:webapp": "dotnet build --configuration Release"
   }
 }
 ```
@@ -36,7 +34,7 @@ pnpm run build
 
 ### `build`
 
-This script is a convenience script that uses the [`npm-run-all`](https://github.com/mysticatea/npm-run-all) package to run the other three build scripts in parallel.
+This script is a convenience script that uses the [`npm-run-all`](https://github.com/mysticatea/npm-run-all) package to run the other two build scripts in parallel.
 
 ```shell
 pnpm add -D npm-run-all
@@ -47,15 +45,27 @@ pnpm add -D npm-run-all
 
 ### `build:islands`
 
-This script uses [Vite's Environment API](https://vite.dev/guide/api-environment.html) to build the optimised CSR and SSR bundles that will be used in production and it also produces a [manifest](https://main.vite.dev/config/build-options.html#build-manifest) for Phoria to use:
+This script uses [Vite's Environment API](https://vite.dev/guide/api-environment.html) and the [`builder.buildApp`](https://vite.dev/guide/api-environment.html#buildapp-hook) hook to build the client, SSR and Phoria Server bundles as three separate Vite environments, in that order:
 
-* The CSR bundles are used by Phoria Islands to load component assets on the client
-* The SSR bundles are used by the Phoria Server to load component assets on the server
-* The manifest is used by the Phoria Web App to [generate preload directives](https://main.vite.dev/guide/ssr#generating-preload-directives)
+* The client bundles are used by Phoria Islands to load component assets in the browser
+* The SSR bundles are used by the Phoria Server to render Islands to markup on the server
+* The Phoria Server bundle is the [h3](https://h3.unjs.io/) server that Phoria runs as a sidecar process
+* A [manifest](https://main.vite.dev/config/build-options.html#build-manifest) is also produced, which the Phoria Web App uses to [generate preload directives](https://main.vite.dev/guide/ssr#generating-preload-directives)
+
+The `phoria` Vite plugin builds the client environment first because it emits the `ssr-manifest.json` that the Phoria Server and Phoria Web App rely on, then the `ssr` environment, then the `server` environment — so you don't need a separate Vite config file or build script for the Phoria Server.
 
 The build configuration for Vite is provided via your Vite config file (e.g. `vite.config.ts`), and the configuration for Phoria specifically is provided via the `phoria*` Vite plugins.
 
-By default, the build output will be placed in the `<Vite root>/dist` directory.
+By default, the build output will be placed in the `<Vite root>/dist` directory, with the Phoria Server bundle at `<Vite root>/dist/server/server.js`.
+
+> [!TIP]
+> By default, the `phoria` plugin looks for the Phoria Server entry at `<Vite root>/src/server.ts`. If your entry lives elsewhere, or you don't want Phoria to build the Phoria Server at all, set the `serverEntry` plugin option:
+>
+> ```ts
+> phoria({ serverEntry: "src/my-server.ts" })
+> // or
+> phoria({ serverEntry: false })
+> ```
 
 ### `build:webapp`
 
@@ -65,51 +75,6 @@ By default, the build output will be placed in the `<WebApp root>/bin/Release/<T
 
 > [!WARNING]
 > You may need to [adjust this command](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build#arguments) depending on the structure of your project to point to a specific solution (`.sln`) or project (`.csproj`) file.
-
-### `build:server`
-
-This script uses Vite to build the Phoria Server. It uses a different Vite config file (`vite.server.config.ts`) because it does not share its configuration with Phoria Islands and needs specific configuration options.
-
-Below is an example of a `vite.server.config.ts` that you can use:
-
-```ts
-import { join } from "node:path"
-import { parsePhoriaAppSettings } from "@phoria/phoria/server"
-import { type UserConfig, defineConfig } from "vite"
-
-export default defineConfig(async () => {
-  const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
-  const appsettings = await parsePhoriaAppSettings({
-    environment: dotnetEnv,
-    cwd: join(process.cwd(), "WebApp")
-  })
-
-  return {
-    root: appsettings.root,
-    base: appsettings.base,
-    build: {
-      ssr: true,
-      target: "es2022",
-      copyPublicDir: false,
-      emptyOutDir: true,
-      outDir: `${appsettings.build.outDir}/server`,
-      rollupOptions: {
-        input: `${appsettings.root}/src/server.ts`
-      }
-    }
-  } satisfies UserConfig
-})
-```
-
-If you use the configuration above, the build output will be placed in the `<Vite root>/dist/server` directory.
-
-> [!TIP]
-> The `parsePhoriaAppSettings` function is provided by the `@phoria/phoria` package and is used to read the `appsettings` file(s) in the `WebApp` project and provide the configuration to Vite. This is useful for sharing configuration between the Phoria Server and the Phoria Web App.
-
-> [!NOTE]
-> You don't need to use Vite to build the Phoria Server. You could use something like [`tsup`](https://github.com/egoist/tsup) or any other TypeScript to JavaScript transpiler or bundler if you prefer. It is just convenient to use Vite because we are already using it to build our Phoria Islands and means that we don't need to add another dependency.
->
-> You could also decide to just use JavaScript for your Phoria Server and avoid a build step entirely if that's what you want to do.
 
 ## Preview scripts
 
@@ -180,10 +145,10 @@ This script also uses a launch profile named `Preview`, which you can add to you
 
 ### `preview:server`
 
-This script uses `node` to run the Phoria Server produced by the [`build:server`](#buildserver) script. `cross-env` is used again to set environment variables used by the script.
+This script uses `node` to run the Phoria Server produced by the [`build:islands`](#buildislands) script. `cross-env` is used again to set environment variables used by the script.
 
 > [!WARNING]
-> You may need to adjust this command depending on your configuration to point to the location of the Phoria Server output produced by the `build:server` script.
+> You may need to adjust this command depending on your configuration to point to the location of the Phoria Server output produced by the `build:islands` script.
 
 ## Next steps
 

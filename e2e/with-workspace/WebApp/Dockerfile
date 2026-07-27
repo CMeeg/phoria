@@ -18,7 +18,6 @@ ENV DOTNET_ENVIRONMENT=Production
 
 RUN pnpm lerna run --ignore phoria-dotnet --ignore framework-multiple --ignore with-workspace build
 RUN pnpm lerna run --ignore phoria-dotnet --ignore framework-multiple build:islands
-RUN pnpm lerna run --ignore phoria-dotnet --ignore framework-multiple build:server
 RUN pnpm --filter=with-workspace deploy --prod /app
 
 # dotnet build stage

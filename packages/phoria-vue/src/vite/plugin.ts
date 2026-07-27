@@ -58,6 +58,9 @@ function phoriaVuePlugin(options?: Partial<PhoriaVuePluginOptions>): PluginOptio
 				setSsrEnvironment(options)
 			}
 		},
+		applyToEnvironment(environment) {
+			return environment.name === "client" || environment.name === "ssr"
+		},
 		transform(code, id) {
 			if (!filter(id)) {
 				return

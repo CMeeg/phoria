@@ -53,9 +53,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 ENV NODE_ENV=production
 ENV DOTNET_ENVIRONMENT=Production
 
-## Build Phoria Islands and Server
+## Build Phoria Islands (client, SSR and Phoria Server bundles)
 RUN pnpm run build:islands
-RUN pnpm run build:server
 
 ## Create deployment package
 RUN mkdir -p /app/WebApp/ui \

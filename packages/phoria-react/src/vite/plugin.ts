@@ -60,6 +60,9 @@ function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): PluginO
 				setSsrEnvironment(options)
 			}
 		},
+		applyToEnvironment(environment) {
+			return environment.name === "client" || environment.name === "ssr"
+		},
 		transform(code, id) {
 			if (!filter(id)) {
 				return

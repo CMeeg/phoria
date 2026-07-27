@@ -6,6 +6,7 @@ const pluginName = "phoria"
 
 const environment = {
 	client: "client",
+	server: "server",
 	ssr: "ssr"
 } as const
 
@@ -92,6 +93,35 @@ function setSsrEnvironment(options: EnvironmentOptions, appsettings: Partial<Pho
 	setEntry(options.build, appsettings.root, appsettings.ssrEntry)
 }
 
+function setServerEnvironment(
+	options: EnvironmentOptions,
+	appsettings: Partial<PhoriaAppSettings>,
+	serverEntry: string
+) {
+	// Set resolve options
+
+	const external = ["@phoria/phoria"]
+
+	options.resolve ??= {}
+
+	if (typeof options.resolve.external === "undefined") {
+		options.resolve.external = external
+	} else if (Array.isArray(options.resolve.external)) {
+		options.resolve.external.push(...external)
+	}
+
+	// Set build options
+
+	options.build ??= {}
+	options.build.ssr = true
+	options.build.target ??= "es2022"
+	options.build.copyPublicDir ??= false
+	options.build.emptyOutDir ??= true
+	options.build.outDir = `${appsettings.build?.outDir ?? defaultOutDir}/${environment.server}`
+
+	setEntry(options.build, appsettings.root, serverEntry)
+}
+
 function parseWorkingDirectory(cwd: string | undefined) {
 	if (typeof cwd === "undefined") {
 		return process.cwd()
@@ -107,10 +137,17 @@ function parseWorkingDirectory(cwd: string | undefined) {
 interface PhoriaPluginOptions {
 	cwd: string
 	appsettings: Partial<PhoriaAppSettings>
+	/** Entry for the Phoria Server bundle. Set to `false` to skip building it. */
+	serverEntry: string | false
+}
+
+const defaultOptions: Pick<PhoriaPluginOptions, "serverEntry"> = {
+	serverEntry: "src/server.ts"
 }
 
 function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 	const cwd = parseWorkingDirectory(options?.cwd)
+	const serverEntry = options?.serverEntry ?? defaultOptions.serverEntry
 	let appsettings: Partial<PhoriaAppSettings> = {}
 
 	return {
@@ -128,6 +165,10 @@ function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 			config.environments[environment.client] ??= {}
 			config.environments[environment.ssr] ??= {}
 
+			if (serverEntry !== false) {
+				config.environments[environment.server] ??= {}
+			}
+
 			setRoot(config, appsettings)
 			setBase(config, appsettings)
 			setServer(config, appsettings)
@@ -140,6 +181,25 @@ function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 				case environment.ssr:
 					setSsrEnvironment(options, appsettings)
 					break
+				case environment.server:
+					if (serverEntry !== false) {
+						setServerEnvironment(options, appsettings, serverEntry)
+					}
+					break
+			}
+		},
+		buildApp: {
+			order: "pre",
+			async handler(builder) {
+				const order = [environment.client, environment.ssr, environment.server]
+
+				for (const name of order) {
+					const env = builder.environments[name]
+
+					if (env && !env.isBuilt) {
+						await builder.build(env)
+					}
+				}
 			}
 		}
 	}
