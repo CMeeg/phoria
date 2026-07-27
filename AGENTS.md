@@ -102,7 +102,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 
 - Nullable reference types: enabled
 - Implicit usings: enabled
-- Language version: latest
+- Language version: 13.0 (pinned — see `Directory.Build.props`; `latest` is not per-TFM and would offer C# 15 to the `net8.0` build on the .NET 10 SDK)
 - Central package management via `Directory.Packages.props`
 - The `Phoria.csproj` targets `net8.0;net10.0` (net9.0 dropped — see `docs/PROJECT.md`)
 

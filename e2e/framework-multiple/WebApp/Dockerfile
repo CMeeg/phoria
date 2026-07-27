@@ -21,7 +21,7 @@ RUN pnpm lerna run --ignore phoria-dotnet --ignore with-workspace build:islands
 RUN pnpm --filter=framework-multiple deploy --prod /app
 
 # dotnet build stage
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS appbuild
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS appbuild
 WORKDIR /src
 
 # Copy source code
@@ -34,7 +34,7 @@ RUN dotnet restore ./e2e/framework-multiple/WebApp/WebApp.csproj
 RUN dotnet publish ./e2e/framework-multiple/WebApp/WebApp.csproj -c Release --no-restore -o /app
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 ENV NODE_ENV=production
 ENV DOTNET_ENVIRONMENT=Production
 WORKDIR /app
@@ -47,7 +47,7 @@ COPY --from=uibuild /app .
 
 # Install node
 
-ENV NODE_VERSION=22.11.0
+ENV NODE_VERSION=24.18.0
 RUN apt-get -y update \
 	&& apt-get install -y curl \
 	&& curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} -o nodesource_setup.sh | bash \

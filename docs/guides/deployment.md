@@ -63,7 +63,7 @@ RUN mkdir -p /app/WebApp/ui \
   && cp /src/package.json /app/package.json
 
 # Dotnet build stage
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS dotnetbuild
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dotnetbuild
 WORKDIR /src
 
 ## Copy source code
@@ -76,7 +76,7 @@ RUN dotnet restore
 RUN dotnet publish ./WebApp/WebApp.csproj -c Release --no-restore -o /app
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 ENV NODE_ENV=production
 ENV DOTNET_ENVIRONMENT=Production
 WORKDIR /app
