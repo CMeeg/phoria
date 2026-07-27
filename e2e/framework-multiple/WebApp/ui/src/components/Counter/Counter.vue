@@ -3,7 +3,8 @@ import { ref } from "vue"
 
 const props = defineProps<{ startAt?: number }>()
 
-const _count = ref(props.startAt ?? 0)
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+const count = ref(props.startAt ?? 0)
 </script>
 
 <template>
