@@ -67,7 +67,7 @@ v1 is successful when:
   hardening (in-process start, monitor/reconnect, graceful degradation),
   health/observability, `.NET 10` memory pools (`IMemoryPoolFactory<byte>`
   adoption in `Phoria.IO` — a public-API refactor, not a dependency bump; see
-  Phase 1 in Phases below).
+  Phase 2 in Phases below).
 - Vite bundling of .NET-referenced static assets (committed feature).
 - Timeboxed exploration spikes (go/no-go): nested component composition,
   streaming/Suspense, server actions, Deno/other adapters.
