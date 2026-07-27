@@ -15,26 +15,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
+  build-and-test:
+    name: Build and test
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
+          dotnet-version: |
+            8.0.x
           global-json-file: "./global.json"
 
       - name: Install dependencies
@@ -53,7 +55,7 @@ jobs:
         run: pnpm lerna run test
 
       - name: Test dotnet
-        run: dotnet test Phoria.sln --configuration Release
+        run: dotnet test --solution Phoria.sln --configuration Release
 
   test-browser:
     name: Browser & smoke tests
@@ -61,20 +63,22 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
+          dotnet-version: |
+            8.0.x
           global-json-file: "./global.json"
 
       - name: Install dependencies

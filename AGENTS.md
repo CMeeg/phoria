@@ -27,9 +27,9 @@ e2e/
 
 ## Prerequisites
 
-- **Node.js** v22.11.0 (see `.nvmrc`)
-- **pnpm** 9.15.0 (see `packageManager` in `package.json`)
-- **.NET SDK** 9.0.100 (see `global.json`, rolls forward to latest feature)
+- **Node.js** v24.18.0 (see `.nvmrc`)
+- **pnpm** 11.17.0 (see `packageManager` in `package.json`)
+- **.NET SDK** 10.0.302 (see `global.json`, rolls forward to latest feature)
 
 ## Commands
 
@@ -68,8 +68,10 @@ Runs `tsc` (no emit) on each package.
 ```bash
 pnpm test            # Vitest unit tests across JS packages (via Lerna)
 pnpm test:browser    # Vitest browser-mode component tests (Playwright provider)
-dotnet test Phoria.sln  # xUnit tests for the Phoria .NET package
+dotnet test --solution Phoria.sln --configuration Release  # xUnit v3 tests for the Phoria .NET package
 ```
+
+`global.json` sets `test.runner: Microsoft.Testing.Platform`, so `dotnet test` runs in MTP mode — pass `--solution <path>` (not a bare path) to run every project's test executable across both target frameworks.
 
 E2E smoke test (requires a preview build running):
 
@@ -102,7 +104,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - Implicit usings: enabled
 - Language version: latest
 - Central package management via `Directory.Packages.props`
-- The `Phoria.csproj` targets `net8.0;net9.0`
+- The `Phoria.csproj` targets `net8.0;net10.0` (net9.0 dropped — see `docs/PROJECT.md`)
 
 ## Gotchas
 
@@ -111,7 +113,10 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - **The .NET solution (`Phoria.sln`) only contains the `Phoria` NuGet package**, not the e2e apps. Build .NET projects via their individual `.csproj` or the e2e `package.json` scripts.
 - **Each JS package has 4 entry points**: `.` (main), `./client`, `./server`, `./vite`. Changes to one entry don't affect others.
 - **Workspace dependencies** use `workspace:*` protocol and are resolved by pnpm.
-- **Peer dependencies matter**: framework packages peer-depend on `@phoria/phoria` at `~0.4.0` — version bumps need care.
+- **Peer dependencies matter**: framework packages peer-depend on `@phoria/phoria` at `~0.4.0` — version bumps need care. This must be reconciled when all packages reach `1.0.0` (Phase 5).
+- **Vite 8 uses Rolldown/Oxc** — `rollupOptions` is deprecated in favour of `rolldownOptions` in build config.
+- **`resolve.tsconfigPaths: true`** (built into Vite 8) replaces the separate `vite-tsconfig-paths` plugin — do not reintroduce the plugin.
+- **All pnpm settings live in `pnpm-workspace.yaml`**, not `package.json`/`.npmrc` (e.g. `packageExtensions`, `peerDependencyRules`, catalogs).
 
 ## Versioning & Publishing
 
