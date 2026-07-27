@@ -3,6 +3,12 @@ packages:
   - "e2e/with-workspace/*"
   - "packages/*"
 
+allowBuilds:
+  '@biomejs/biome': true
+  '@parcel/watcher': true
+  esbuild: true
+  nx: true
+
 catalog:
   "@meeg/vite-plugin-inspect-config": ~0.2.0
   "@rollup/pluginutils": ^5.1.4
