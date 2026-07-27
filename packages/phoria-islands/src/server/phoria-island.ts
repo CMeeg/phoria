@@ -1,7 +1,12 @@
-import { type EventHandlerRequest, getRouterParams, type H3Event, readBody } from "h3"
 import type { PhoriaIslandComponentEntry, PhoriaIslandComponentModule, PhoriaIslandProps } from "~/phoria-island"
 import { getComponent, getSsrService } from "~/register"
 import type { PhoriaIslandComponentSsrService, RenderPhoriaIslandComponentOptions } from "./ssr"
+
+/** The request data `PhoriaIsland.create` needs, independent of any HTTP library. */
+interface PhoriaIslandRequest {
+	params: Record<string, string | undefined>
+	readProps: () => Promise<unknown>
+}
 
 class PhoriaIsland<F extends string = string, C = unknown, P extends PhoriaIslandProps = PhoriaIslandProps> {
 	private component: PhoriaIslandComponentEntry<F, PhoriaIslandComponentModule, C>
@@ -28,12 +33,10 @@ class PhoriaIsland<F extends string = string, C = unknown, P extends PhoriaIslan
 		return await this.ssr.render(this.component, this.props, options)
 	}
 
-	static async create(event: H3Event<EventHandlerRequest>) {
-		const params = getRouterParams(event)
-
+	static async create(request: PhoriaIslandRequest) {
 		// Try to get the component to render
 
-		const componentName = params.component
+		const componentName = request.params.component
 
 		if (!componentName) {
 			throw new Error(`No "component" was provided in the request path.`)
@@ -57,18 +60,19 @@ class PhoriaIsland<F extends string = string, C = unknown, P extends PhoriaIslan
 
 		let props: PhoriaIslandProps = null
 
-		const body = await readBody(event)
+		const body = await request.readProps()
 
 		if (typeof body !== "undefined" && body !== null) {
 			if (typeof body !== "object" || Array.isArray(body)) {
 				throw new Error("Props sent in body must be a JSON object.")
 			}
 
-			props = body
+			props = body as Record<string, unknown>
 		}
 
 		return new PhoriaIsland(component, props, ssr)
 	}
 }
 
+export type { PhoriaIslandRequest }
 export { PhoriaIsland }
