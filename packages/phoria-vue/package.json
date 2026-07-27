@@ -67,19 +67,18 @@
 	"devDependencies": {
 		"@phoria/phoria": "workspace:*",
 		"@types/node": "catalog:",
-		"@vitejs/plugin-vue": "^5.2.1",
+		"@vitejs/plugin-vue": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",
 		"vite-plugin-externalize-deps": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:",
 		"vue": "catalog:"
 	},
 	"peerDependencies": {
 		"@phoria/phoria": "~0.4.0",
-		"@vitejs/plugin-vue": "^5.0.0",
-		"vite": "^6.0.0",
+		"@vitejs/plugin-vue": "^6.0.0",
+		"vite": "^8.0.0",
 		"vue": "^3.0.0"
 	},
 	"engines": {

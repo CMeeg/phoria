@@ -44,7 +44,6 @@
 		"postcss-preset-env": "catalog:",
 		"tsx": "catalog:",
 		"typescript": "catalog:",
-		"vite": "catalog:",
-		"vite-tsconfig-paths": "catalog:"
+		"vite": "catalog:"
 	}
 }

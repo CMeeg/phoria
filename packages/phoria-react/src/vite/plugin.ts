@@ -10,7 +10,7 @@ const environment = {
 	ssr: "ssr"
 } as const
 
-export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude" | "babel">
+export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude">
 
 type CreateFilterParams = Parameters<typeof createFilter>
 

@@ -50,7 +50,7 @@ function setEntry(options: BuildEnvironmentOptions, root?: string, entryFile?: s
 
 	const input = root ? `${root}/${entryFile}` : entryFile
 
-	options.rollupOptions = {
+	options.rolldownOptions = {
 		input
 	}
 }

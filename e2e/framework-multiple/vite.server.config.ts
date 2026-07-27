@@ -19,7 +19,7 @@ export default defineConfig(async () => {
 			copyPublicDir: false,
 			emptyOutDir: true,
 			outDir: `${appsettings.build.outDir}/server`,
-			rollupOptions: {
+			rolldownOptions: {
 				input: `${appsettings.root}/src/server.ts`
 			}
 		},
