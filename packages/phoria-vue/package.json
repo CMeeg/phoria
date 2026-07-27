@@ -66,6 +66,7 @@
 	},
 	"devDependencies": {
 		"@phoria/phoria": "workspace:*",
+		"@types/node": "catalog:",
 		"@vitejs/plugin-vue": "^5.2.1",
 		"typescript": "catalog:",
 		"vite": "catalog:",

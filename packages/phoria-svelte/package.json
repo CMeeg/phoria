@@ -67,6 +67,7 @@
 	"devDependencies": {
 		"@phoria/phoria": "workspace:*",
 		"@sveltejs/vite-plugin-svelte": "^5.0.3",
+		"@types/node": "catalog:",
 		"svelte": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",

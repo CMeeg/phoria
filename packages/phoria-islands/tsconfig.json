@@ -1,7 +1,6 @@
 {
 	"compilerOptions": {
 		"allowImportingTsExtensions": true,
-		"baseUrl": ".",
 		"esModuleInterop": true,
 		"isolatedModules": true,
 		"lib": ["ES2022", "DOM", "DOM.Iterable"],
@@ -14,12 +13,13 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"paths": {
-			"~/*": ["src/*"]
+			"~/*": ["./src/*"]
 		},
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
 		"target": "ES2022",
+		"types": ["node", "vite/client"],
 		"useDefineForClassFields": true,
 		"verbatimModuleSyntax": true
 	},
