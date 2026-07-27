@@ -35,7 +35,7 @@ catalog:
   vite-plugin-dts: ^5.0.3
   vite-plugin-externalize-deps: ^0.8.0
   vite-tsconfig-paths: ^5.1.4
-  "@vitest/browser": ^3.2.7
+  "@vitest/browser-playwright": ^4.1.10
   playwright: ^1.62.0
-  vitest: ^3.2.7
+  vitest: ^4.1.10
   vue: ^3.5.13
