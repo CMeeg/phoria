@@ -47,11 +47,11 @@
 	"dependencies": {
 		"destr": "catalog:",
 		"empathic": "catalog:",
-		"tinyexec": "^0.3.2"
+		"tinyexec": "^1.2.4"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"std-env": "^3.8.0",
+		"std-env": "^4.2.0",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",

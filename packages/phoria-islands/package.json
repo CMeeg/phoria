@@ -63,11 +63,11 @@
 		"test:browser": "vitest run --config vitest.browser.config.ts"
 	},
 	"dependencies": {
-		"defu": "^6.1.4",
+		"defu": "^6.1.7",
 		"destr": "catalog:",
 		"empathic": "catalog:",
 		"h3": "catalog:",
-		"mime": "^4.0.6"
+		"mime": "^4.1.0"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
