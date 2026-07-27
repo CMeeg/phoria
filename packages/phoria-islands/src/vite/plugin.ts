@@ -51,6 +51,7 @@ function setEntry(options: BuildEnvironmentOptions, root?: string, entryFile?: s
 	const input = root ? `${root}/${entryFile}` : entryFile
 
 	options.rolldownOptions = {
+		...options.rolldownOptions,
 		input
 	}
 }
@@ -85,6 +86,7 @@ function setSsrEnvironment(options: EnvironmentOptions, appsettings: Partial<Pho
 	options.build ??= {}
 	options.build.ssr = true
 	options.build.emptyOutDir ??= true
+	options.build.copyPublicDir ??= false
 	options.build.outDir = `${appsettings.build?.outDir ?? defaultOutDir}/${pluginName}/${environment.ssr}`
 
 	setEntry(options.build, appsettings.root, appsettings.ssrEntry)

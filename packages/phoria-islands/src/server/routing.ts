@@ -11,7 +11,7 @@ import {
 	useBase
 } from "h3"
 import mime from "mime/lite"
-import type { DevEnvironment, RunnableDevEnvironment, ViteDevServer } from "vite"
+import { isRunnableDevEnvironment, type ViteDevServer } from "vite"
 import { getFrameworks } from "~/register"
 import type { PhoriaAppSettings } from "./appsettings"
 import { PhoriaIsland } from "./phoria-island"
@@ -132,12 +132,6 @@ function createPhoriaSsrRequestHandler(
 	const ssrRouter = createPhoriaSsrRouter(() => import(ssrEntry), appsettings.ssrBase)
 
 	return ssrRouter.handler
-}
-
-function isRunnableDevEnvironment(
-	environment: DevEnvironment | RunnableDevEnvironment
-): environment is RunnableDevEnvironment {
-	return "runner" in environment
 }
 
 function createPhoriaDevSsrRequestHandler(viteDevServer: ViteDevServer, appsettings: PhoriaAppSettings) {
