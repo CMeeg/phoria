@@ -43,16 +43,16 @@ jobs:
         run: pnpm install
 
       - name: Build packages
-        run: pnpm lerna run build
+        run: pnpm build
 
       - name: Lint source code
-        run: pnpm lerna run lint
+        run: pnpm lint
 
       - name: Check source code
-        run: pnpm lerna run check
+        run: pnpm check
 
       - name: Test packages (unit)
-        run: pnpm lerna run test
+        run: pnpm test
 
       - name: Test dotnet
         run: dotnet test --solution Phoria.sln --configuration Release
@@ -85,13 +85,13 @@ jobs:
         run: pnpm install
 
       - name: Build packages
-        run: pnpm lerna run build
+        run: pnpm build
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Browser-mode component tests
-        run: pnpm lerna run test:browser
+        run: pnpm test:browser
 
       - name: Build e2e app
         run: pnpm --filter framework-multiple build
