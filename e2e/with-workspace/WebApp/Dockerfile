@@ -16,8 +16,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 ENV NODE_ENV=production
 ENV DOTNET_ENVIRONMENT=Production
 
-RUN pnpm lerna run --ignore phoria-dotnet --ignore framework-multiple --ignore with-workspace build
-RUN pnpm lerna run --ignore phoria-dotnet --ignore framework-multiple build:islands
+RUN pnpm turbo run build --filter=!phoria-dotnet --filter=!framework-multiple --filter=!with-workspace
+RUN pnpm turbo run build:islands --filter=with-workspace
 RUN pnpm --filter=with-workspace deploy --prod /app
 
 # dotnet build stage

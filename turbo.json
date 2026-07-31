@@ -6,6 +6,11 @@
 			"cache": true,
 			"outputs": ["dist/**"]
 		},
+		"build:islands": {
+			"dependsOn": ["^build"],
+			"cache": true,
+			"outputs": ["WebApp/ui/dist/**", "ui/dist/**"]
+		},
 		"check": {
 			"dependsOn": ["^build"],
 			"cache": true
