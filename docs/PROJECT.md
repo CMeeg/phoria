@@ -88,7 +88,7 @@ v1 is successful when:
 
 - Node.js v24.18.0, pnpm 11.17.0, .NET SDK 10.0.302 (rolls forward) — see repo
   config files.
-- Monorepo: pnpm workspaces + Lerna (publishing) + Nx (caching/task deps).
+- Monorepo: pnpm workspaces + Turborepo (task running/caching) + Changesets (publishing).
 - CI order: `build` → `lint` → `check` (tests to be added to this pipeline).
 - Independent per-package versioning; all packages must reach `1.0.0`.
 
@@ -96,7 +96,7 @@ v1 is successful when:
 
 Detailed tasks live in the implementation plan; this is the agreed sequence.
 
-0. **Test foundation** — Vitest, xUnit, Playwright; wire root `test` + Nx/Lerna
+0. **Test foundation** — Vitest, xUnit, Playwright; wire root `test` + Turborepo
    + CI. Written against *current* behavior as the regression net.
 1. **Dependency & platform updates** — Vite 8, React/Svelte/Vue latest, .NET 10.
    Done *after* tests so regressions are caught; new deps/APIs may also help

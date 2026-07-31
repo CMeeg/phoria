@@ -10,7 +10,7 @@ Phoria is an Islands architecture framework for .NET powered by Vite. It renders
 
 ## Repository Structure
 
-Monorepo using **pnpm workspaces** + **Lerna** (publishing) + **Nx** (caching/task deps).
+Monorepo using **pnpm workspaces** + **Turborepo** (task running/caching) + **Changesets** (publishing).
 
 ```
 packages/
@@ -42,15 +42,15 @@ pnpm install
 ### Build (all packages)
 
 ```bash
-pnpm lerna run build
+pnpm build
 ```
 
-Build order is handled by Nx: each package's `build` depends on `^build` (dependencies built first). Framework-specific packages (`phoria-react`, `phoria-svelte`, `phoria-vue`) depend on `@phoria/phoria`.
+Build order is handled by Turborepo: each package's `build` depends on `^build` (dependencies built first). Framework-specific packages (`phoria-react`, `phoria-svelte`, `phoria-vue`) depend on `@phoria/phoria`.
 
 ### Lint
 
 ```bash
-pnpm lerna run lint
+pnpm lint
 ```
 
 Runs **Biome** (`biome check`) on each package.
@@ -58,7 +58,7 @@ Runs **Biome** (`biome check`) on each package.
 ### Type Check
 
 ```bash
-pnpm lerna run check
+pnpm check
 ```
 
 Runs `tsc` (no emit) on each package.
@@ -66,7 +66,7 @@ Runs `tsc` (no emit) on each package.
 ### Test
 
 ```bash
-pnpm test            # Vitest unit tests across JS packages (via Lerna)
+pnpm test            # Vitest unit tests across JS packages (via Turborepo)
 pnpm test:browser    # Vitest browser-mode component tests (Playwright provider)
 dotnet test --solution Phoria.sln --configuration Release  # xUnit v3 tests for the Phoria .NET package
 ```
@@ -126,7 +126,7 @@ Uses **Changesets** (`pnpm changeset` to create). Release flow:
 2. Merge to `main` — CI runs `changesets/action` which opens a "Release" PR
 3. Merge the Release PR — publishes to npm (JS packages) and NuGet (Phoria .NET)
 
-NuGet publishing uses the `scripts/dotnet/publish.js` script via Lerna.
+NuGet publishing uses the `scripts/dotnet/publish.js` script via `pnpm --filter phoria-dotnet run publish`.
 
 ## E2E Apps
 
