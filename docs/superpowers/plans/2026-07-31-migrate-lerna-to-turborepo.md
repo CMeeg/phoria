@@ -35,12 +35,12 @@
 - Consumes: nothing
 - Produces: `turbo` binary available as `pnpm exec turbo`; `turbo.json` defining tasks `build`, `check`, `lint`, `preview`, `test`, `test:browser`
 
-- [ ] **Step 1: Add the turbo devDependency**
+- [x] **Step 1: Add the turbo devDependency**
 
 Run: `pnpm add -D turbo`
 Expected: installs latest 2.x; `turbo` appears under `devDependencies` in root `package.json`; `pnpm-lock.yaml` updated.
 
-- [ ] **Step 2: Create `turbo.json`**
+- [x] **Step 2: Create `turbo.json`**
 
 Create `turbo.json` at the repo root with:
 
@@ -75,12 +75,12 @@ Create `turbo.json` at the repo root with:
 }
 ```
 
-- [ ] **Step 3: Verify turbo can run tasks**
+- [x] **Step 3: Verify turbo can run tasks**
 
 Run: `pnpm exec turbo run build`
 Expected: succeeds; builds all packages (including e2e apps) in dependency order; `FULL TURBO`/cache line appears on a second run.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add package.json pnpm-lock.yaml turbo.json
@@ -98,7 +98,7 @@ git commit -m "build: add Turborepo task runner"
 - Consumes: `turbo` binary + `turbo.json` from Task 1
 - Produces: root scripts `build`, `lint`, `check`, `test`, `test:browser`, `publish` (and `version` unchanged)
 
-- [ ] **Step 1: Update the `scripts` block**
+- [x] **Step 1: Update the `scripts` block**
 
 In root `package.json`, replace the `scripts` block with:
 
@@ -116,12 +116,12 @@ In root `package.json`, replace the `scripts` block with:
 
 (Removes the `"lerna": "lerna"` alias; `version` is unchanged.)
 
-- [ ] **Step 2: Verify the root scripts**
+- [x] **Step 2: Verify the root scripts**
 
 Run: `pnpm build && pnpm lint && pnpm check`
 Expected: all three succeed. `pnpm check` should hit the turbo cache for `build` (via `^build`) or rebuild it, then run `tsc` in each package.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add package.json
@@ -141,7 +141,7 @@ git commit -m "build: adopt turbo run for root task scripts"
 - Consumes: root scripts now call `turbo` only (Task 2)
 - Produces: a toolchain with no `lerna`/`nx` packages in the lockfile; `.turbo/` gitignored
 
-- [ ] **Step 1: Remove the lerna devDependency and delete config files**
+- [x] **Step 1: Remove the lerna devDependency and delete config files**
 
 Run: `pnpm remove lerna`
 Then delete `lerna.json` and `nx.json`:
@@ -154,7 +154,7 @@ rm -rf .nx
 ```
 (`.nx/cache` and `.nx/workspace-data` are gitignored, so this is a local-only cleanup.)
 
-- [ ] **Step 2: Update `pnpm-workspace.yaml`**
+- [x] **Step 2: Update `pnpm-workspace.yaml`**
 
 In `pnpm-workspace.yaml`, remove the `nx: true` line from `allowBuilds`:
 
@@ -165,7 +165,7 @@ allowBuilds:
   esbuild: true
 ```
 
-- [ ] **Step 3: Update `.gitignore`**
+- [x] **Step 3: Update `.gitignore`**
 
 Add `.turbo/` after the `.nx` entries:
 
@@ -175,7 +175,7 @@ Add `.turbo/` after the `.nx` entries:
 .turbo/
 ```
 
-- [ ] **Step 4: Regenerate the lockfile and verify**
+- [x] **Step 4: Regenerate the lockfile and verify**
 
 Run: `pnpm install`
 Then confirm no Lerna/Nx residue:
@@ -187,7 +187,7 @@ Then verify the toolchain still works:
 Run: `pnpm build && pnpm lint && pnpm check && pnpm test`
 Expected: all green, running through turbo.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add package.json pnpm-lock.yaml pnpm-workspace.yaml .gitignore lerna.json nx.json
@@ -206,7 +206,7 @@ git commit -m "build: remove Lerna and Nx in favour of Turborepo"
 - Consumes: root scripts `build`, `lint`, `check`, `test`, `test:browser` (Task 2)
 - Produces: CI green without `lerna`
 
-- [ ] **Step 1: Update `.github/workflows/ci.yml`**
+- [x] **Step 1: Update `.github/workflows/ci.yml`**
 
 Replace these invocations:
 - `pnpm lerna run build` → `pnpm build` (two occurrences: "Build packages" step and the test-browser job)
@@ -215,17 +215,17 @@ Replace these invocations:
 - `pnpm lerna run test` → `pnpm test`
 - `pnpm lerna run test:browser` → `pnpm test:browser`
 
-- [ ] **Step 2: Update `.github/workflows/release.yml`**
+- [x] **Step 2: Update `.github/workflows/release.yml`**
 
 Replace:
 - `pnpm lerna run build` → `pnpm build`
 
-- [ ] **Step 3: Verify the YAML parses**
+- [x] **Step 3: Verify the YAML parses**
 
 Run: `npx --yes yaml-lint .github/workflows/ci.yml .github/workflows/release.yml`
 Expected: no errors (uses the `yaml-lint` CLI, fetched on demand — `js-yaml` is not resolvable from the repo root after Lerna is removed).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add .github/workflows/ci.yml .github/workflows/release.yml
@@ -243,7 +243,7 @@ git commit -m "ci: use root pnpm scripts instead of lerna"
 - Consumes: nothing
 - Produces: docs describing the Turborepo toolchain
 
-- [ ] **Step 1: Update `AGENTS.md`**
+- [x] **Step 1: Update `AGENTS.md`**
 
 1. In "Repository Structure", replace:
    `Monorepo using **pnpm workspaces** + **Lerna** (publishing) + **Nx** (caching/task deps).`
@@ -260,7 +260,7 @@ git commit -m "ci: use root pnpm scripts instead of lerna"
 
 5. In "Test", change the inline comment `# Vitest unit tests across JS packages (via Lerna)` to `# Vitest unit tests across JS packages (via Turborepo)`.
 
-- [ ] **Step 2: Update `docs/PROJECT.md`**
+- [x] **Step 2: Update `docs/PROJECT.md`**
 
 1. In "Constraints", replace:
    `- Monorepo: pnpm workspaces + Lerna (publishing) + Nx (caching/task deps).`
@@ -269,12 +269,12 @@ git commit -m "ci: use root pnpm scripts instead of lerna"
 
 2. In "Phases (ordering)", replace `wire root \`test\` + Nx/Lerna` with `wire root \`test\` + Turborepo`.
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Run: `rg -n "lerna|Nx/Lerna" AGENTS.md docs/PROJECT.md README.md || echo "clean"`
 Expected: `clean` (README.md must have no references).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add AGENTS.md docs/PROJECT.md
@@ -288,29 +288,29 @@ git commit -m "docs: document Turborepo task runner"
 **Files:**
 - Test: whole repo
 
-- [ ] **Step 1: Run the full JS suite**
+- [x] **Step 1: Run the full JS suite**
 
 Run: `pnpm build && pnpm lint && pnpm check && pnpm test && pnpm test:browser`
 Expected: all green. If `test:browser` fails with a Playwright browser-not-installed error, run `pnpm exec playwright install chromium` and retry. (Browser tests are also covered in CI, so a local skip is acceptable if browsers can't be installed.)
 
-- [ ] **Step 2: Run the .NET suite**
+- [x] **Step 2: Run the .NET suite**
 
 Run: `dotnet test --solution Phoria.sln --configuration Release`
 Expected: green.
 
-- [ ] **Step 3: Confirm cache behaviour**
+- [x] **Step 3: Confirm cache behaviour**
 
 Run: `pnpm build && pnpm build`
 Expected: second run reports tasks as cached (no rebuild), confirming turbo caching replaces Nx caching.
 
-- [ ] **Step 4: Sweep for stray references**
+- [x] **Step 4: Sweep for stray references**
 
 ```bash
 rg -n --glob '!docs/plans/**' --glob '!pnpm-lock.yaml' "lerna|\.nx|nx\.json|nx@" . || echo "clean"
 ```
 Expected: `clean` (historical `docs/plans/*` and the lockfile are the only tolerated matches).
 
-- [ ] **Step 5: Commit any stragglers**
+- [x] **Step 5: Commit any stragglers**
 
 If anything was missed, commit it:
 ```bash
