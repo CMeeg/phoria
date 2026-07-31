@@ -10,10 +10,12 @@
 	},
 	"type": "module",
 	"scripts": {
-		"lerna": "lerna",
-		"publish": "changeset publish && lerna run publish",
-		"test": "lerna run test",
-		"test:browser": "lerna run test:browser",
+		"build": "turbo run build",
+		"check": "turbo run check",
+		"lint": "turbo run lint",
+		"publish": "changeset publish && pnpm --filter phoria-dotnet run publish",
+		"test": "turbo run test",
+		"test:browser": "turbo run test:browser",
 		"version": "changeset version && pnpm install --no-frozen-lockfile"
 	},
 	"devDependencies": {
