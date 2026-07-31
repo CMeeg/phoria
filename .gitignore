@@ -2,6 +2,7 @@
 .nuget/
 .nx/cache
 .nx/workspace-data
+.turbo/
 .vite-config/
 .vite-inspect/
 bin/
