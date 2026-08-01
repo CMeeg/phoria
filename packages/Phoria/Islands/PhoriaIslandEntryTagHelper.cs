@@ -247,12 +247,12 @@ public partial class PhoriaIslandEntryTagHelper(
 
 						string filePath = urlHelper.GetContentUrl(cssFile);
 
-					var linkOutput = new TagHelperOutput(
-						LinkTag,
-						[.. sharedAttributes],
-						(useCachedResult, encoder) =>
-							Task.FromResult<TagHelperContent>(new DefaultTagHelperContent())
-					);
+						var linkOutput = new TagHelperOutput(
+							LinkTag,
+							[.. sharedAttributes],
+							(useCachedResult, encoder) =>
+								Task.FromResult<TagHelperContent>(new DefaultTagHelperContent())
+						);
 
 						linkOutput.Attributes.SetAttribute(HrefAttribute, filePath);
 

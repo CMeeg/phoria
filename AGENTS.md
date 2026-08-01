@@ -20,6 +20,7 @@ packages/
   phoria-vue/           @phoria/phoria-vue - Vue integration
   vite-plugin-dotnet-dev-certs/  @phoria/vite-plugin-dotnet-dev-certs - A Vite plugin to integrate dotnet dev-certs
   Phoria/               Phoria (.NET) - NuGet package with TagHelpers, SSR, server process
+  Phoria.Tests/         Phoria (.NET) test project
 e2e/
   framework-multiple/   Test app using React + Svelte + Vue together
   with-workspace/       Test app for workspace scenarios

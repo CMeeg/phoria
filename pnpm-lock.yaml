@@ -3,12 +3,94 @@ lockfileVersion: '9.0'
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
+  injectWorkspacePackages: true
 
 catalogs:
   default:
+    '@meeg/vite-plugin-inspect-config':
+      specifier: ~0.3.0
+      version: 0.3.0
+    '@rollup/pluginutils':
+      specifier: ^5.4.0
+      version: 5.4.0
+    '@sveltejs/vite-plugin-svelte':
+      specifier: ^7.2.0
+      version: 7.2.0
+    '@types/node':
+      specifier: ^24.13.3
+      version: 24.13.3
+    '@types/react':
+      specifier: ^19.2.17
+      version: 19.2.17
+    '@types/react-dom':
+      specifier: ^19.2.3
+      version: 19.2.3
+    '@vitejs/plugin-react':
+      specifier: ^6.0.4
+      version: 6.0.4
+    '@vitejs/plugin-vue':
+      specifier: ^6.0.8
+      version: 6.0.8
+    '@vitest/browser-playwright':
+      specifier: ^4.1.10
+      version: 4.1.10
+    cross-env:
+      specifier: ^10.1.0
+      version: 10.1.0
+    destr:
+      specifier: ^2.0.5
+      version: 2.0.5
+    empathic:
+      specifier: ^2.0.1
+      version: 2.0.1
+    h3:
+      specifier: ^1.15.11
+      version: 1.15.11
+    listhen:
+      specifier: ^1.10.1
+      version: 1.10.1
+    magic-string:
+      specifier: ^1.1.0
+      version: 1.1.0
+    npm-run-all:
+      specifier: ^4.1.5
+      version: 4.1.5
     playwright:
       specifier: ^1.62.0
       version: 1.62.0
+    postcss-preset-env:
+      specifier: ^11.3.2
+      version: 11.3.2
+    react:
+      specifier: ^19.2.8
+      version: 19.2.8
+    react-dom:
+      specifier: ^19.2.8
+      version: 19.2.8
+    svelte:
+      specifier: ^5.56.8
+      version: 5.56.8
+    tsx:
+      specifier: ^4.23.1
+      version: 4.23.1
+    typescript:
+      specifier: ~6.0.3
+      version: 6.0.3
+    vite:
+      specifier: ^8.1.5
+      version: 8.1.5
+    vite-plugin-dts:
+      specifier: ^5.0.3
+      version: 5.0.3
+    vite-plugin-externalize-deps:
+      specifier: ^0.10.0
+      version: 0.10.0
+    vitest:
+      specifier: ^4.1.10
+      version: 4.1.10
+    vue:
+      specifier: ^3.5.40
+      version: 3.5.40
 
 importers:
 
@@ -62,7 +144,7 @@ importers:
     devDependencies:
       '@meeg/vite-plugin-inspect-config':
         specifier: 'catalog:'
-        version: 0.2.0(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))
+        version: 0.3.0(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))
       '@phoria/vite-plugin-dotnet-dev-certs':
         specifier: workspace:*
         version: link:../../packages/vite-plugin-dotnet-dev-certs
@@ -141,7 +223,7 @@ importers:
     devDependencies:
       '@meeg/vite-plugin-inspect-config':
         specifier: 'catalog:'
-        version: 0.2.0(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))
+        version: 0.3.0(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))
       '@phoria/vite-plugin-dotnet-dev-certs':
         specifier: workspace:*
         version: link:../../../packages/vite-plugin-dotnet-dev-certs
@@ -1056,11 +1138,11 @@ packages:
   '@manypkg/get-packages@1.1.3':
     resolution: {integrity: sha512-fo+QhuU3qE/2TQMQmbVMqaQ6EWbMhi4ABWP+O4AM1NqPBuy0OrApV5LO6BrrgnhtAHS2NH6RrVk9OL181tTi8A==}
 
-  '@meeg/vite-plugin-inspect-config@0.2.0':
-    resolution: {integrity: sha512-zpMASIx4i+Q3d5Q12639CiNEV3OWkOu4x7pYErcwWPeQwYL4+2WMJUrWv6P7TloWfUFbAk9uTPA4wVxMRnjV4Q==}
-    engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0}
+  '@meeg/vite-plugin-inspect-config@0.3.0':
+    resolution: {integrity: sha512-QhnDSEbCmF62G+f6eYn7ztg0eqR+1PI8clIBka01x1OeVCUO1Q66pdCH72N1ffE8z/tVh+NwHn38DdVoHs+66Q==}
+    engines: {node: '>=22.12.0'}
     peerDependencies:
-      vite: ^5.0.0 || ^6.0.0
+      vite: ^6.0.0 || ^7.0.0 || ^8.0.0
 
   '@microsoft/api-extractor-model@7.30.2':
     resolution: {integrity: sha512-3/t2F+WhkJgBzSNwlkTIL0tBgUoBqDqL66pT+nh2mPbM0NIDGVGtpqbGWPgHIzn/mn7kGS/Ep8D8po58e8UUIw==}
@@ -1202,15 +1284,6 @@ packages:
 
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
-
-  '@rollup/pluginutils@5.1.4':
-    resolution: {integrity: sha512-USm05zrsFxYLPdWWq+K3STlWiT/3ELn3RcV5hJMghpeAIhxfsUIg6mt12CBJBInWMV4VneoV7SfGv8xIwo2qNQ==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
 
   '@rollup/pluginutils@5.4.0':
     resolution: {integrity: sha512-MfPp06CjRLfXQ3wY0R8vJDYBy/MvVcc9OulEfR0B8Iv9ko+GCNaRZ+EpJYFl27LhKsZK0o420sYCRHCjfCgeUg==}
@@ -1999,10 +2072,6 @@ packages:
 
   has-tostringtag@1.0.2:
     resolution: {integrity: sha512-NqADB8VjPFLM2V0VvHUewwwsw0ZWBaIdgo+ieHtK3hasLz4qeCRjYcqfB6AQrBggRKppKF8L52/VqdVsO47Dlw==}
-    engines: {node: '>= 0.4'}
-
-  hasown@2.0.2:
-    resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
 
   hasown@2.0.4:
@@ -3885,7 +3954,7 @@ snapshots:
       globby: 11.1.0
       read-yaml-file: 1.1.0
 
-  '@meeg/vite-plugin-inspect-config@0.2.0(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))':
+  '@meeg/vite-plugin-inspect-config@0.3.0(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))':
     dependencies:
       vite: 8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0)
 
@@ -4006,14 +4075,6 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.1': {}
-
-  '@rollup/pluginutils@5.1.4(rollup@4.24.2)':
-    dependencies:
-      '@types/estree': 1.0.6
-      estree-walker: 2.0.2
-      picomatch: 4.0.5
-    optionalDependencies:
-      rollup: 4.24.2
 
   '@rollup/pluginutils@5.4.0(rollup@4.24.2)':
     dependencies:
@@ -4628,7 +4689,7 @@ snapshots:
       has-property-descriptors: 1.0.2
       has-proto: 1.2.0
       has-symbols: 1.1.0
-      hasown: 2.0.2
+      hasown: 2.0.4
       internal-slot: 1.0.7
       is-array-buffer: 3.0.4
       is-callable: 1.2.7
@@ -4669,7 +4730,7 @@ snapshots:
     dependencies:
       get-intrinsic: 1.2.5
       has-tostringtag: 1.0.2
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   es-to-primitive@1.3.0:
     dependencies:
@@ -4802,7 +4863,7 @@ snapshots:
       function-bind: 1.1.2
       gopd: 1.2.0
       has-symbols: 1.1.0
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   get-port-please@3.2.0: {}
 
@@ -4867,10 +4928,6 @@ snapshots:
     dependencies:
       has-symbols: 1.1.0
 
-  hasown@2.0.2:
-    dependencies:
-      function-bind: 1.1.2
-
   hasown@2.0.4:
     dependencies:
       function-bind: 1.1.2
@@ -4893,7 +4950,7 @@ snapshots:
   internal-slot@1.0.7:
     dependencies:
       es-errors: 1.3.0
-      hasown: 2.0.2
+      hasown: 2.0.4
       side-channel: 1.1.0
 
   iron-webcrypto@1.2.1: {}
@@ -4966,7 +5023,7 @@ snapshots:
       call-bind: 1.0.8
       gopd: 1.2.0
       has-tostringtag: 1.0.2
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   is-set@2.0.3: {}
 
@@ -5938,7 +5995,7 @@ snapshots:
 
   unplugin-dts@1.0.3(@microsoft/api-extractor@7.49.1(@types/node@24.13.3))(esbuild@0.28.1)(rolldown@1.1.5)(rollup@4.24.2)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0)):
     dependencies:
-      '@rollup/pluginutils': 5.1.4(rollup@4.24.2)
+      '@rollup/pluginutils': 5.4.0(rollup@4.24.2)
       '@volar/typescript': 2.4.28
       compare-versions: 6.1.1
       debug: 4.4.3(supports-color@8.1.1)

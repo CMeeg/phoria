@@ -20,7 +20,7 @@ npx giget@latest gh:cmeeg/phoria-examples/examples/<example_name> <target_dir>
 
 ## Manually add Phoria to an existing dotnet project
 
-Phoria can be added to any dotnet (>= v8) MVC or Razor Pages web app. We assume that you already have an existing dotnet web app that you want to add Phoria to, but for the purpose of this guide we will create a new web app and solution (imaginatively) called "Getting Started" and use that as our "existing project".
+Phoria can be added to any .NET 8 or .NET 10 MVC or Razor Pages web app. We assume that you already have an existing .NET web app that you want to add Phoria to, but for the purpose of this guide we will create a new web app and solution (imaginatively) called "Getting Started" and use that as our "existing project".
 
 You can substitute "Getting Started" for your own project / solution name wherever you see that referenced in the guide.
 
@@ -33,8 +33,8 @@ You can substitute "Getting Started" for your own project / solution name wherev
 
 There is some prerequisite software you will need to have installed before you go any further:
 
-* **dotnet** - `v8` or higher
-* **Node.js** - `v18.17.1` or `v20.3.0`, `v22.0.0` or higher
+* **dotnet** - .NET SDK 10 or higher
+* **Node.js** - `v24.18.0` or higher
   * If you're not already, we recommend using [fnm](https://github.com/Schniz/fnm) or [nvm](https://github.com/nvm-sh/nvm) to manage Node installations
 * **Node package manager** - We recommend [pnpm](https://pnpm.io/), but npm will work just as well
 * **Code editor** - We recommend [VS Code](https://code.visualstudio.com/), but you can use any code editor you like
@@ -45,8 +45,8 @@ You will also need an existing dotnet web app. If you do not already have an exi
 
 ```shell
 # Create a dotnet web app
-# Phoria supports dotnet 8 and 9
-dotnet new webapp --name WebApp --no-restore --framework net9.0 --output ./WebApp
+# Use the .NET 10 target for this guide. Phoria also supports .NET 8.
+dotnet new webapp --name WebApp --no-restore --framework net10.0 --output ./WebApp
 
 # Create a solution file
 dotnet new sln --name GettingStarted --output .
@@ -71,7 +71,7 @@ The first thing you will need to do is add [Vite](https://vite.dev/) to the repo
 
 ```shell
 # Create an `.nvmrc` file and use the Node version specified
-"v22.x" > .nvmrc
+"v24.x" > .nvmrc
 
 fnm use
 
@@ -86,7 +86,7 @@ corepack use pnpm
 # Add dependencies
 pnpm add @phoria/phoria @phoria/phoria-react react react-dom
 
-pnpm add -D @phoria/vite-plugin-dotnet-dev-certs @types/react @types/react-dom @vitejs/plugin-react typescript vite vite-tsconfig-paths
+pnpm add -D @phoria/vite-plugin-dotnet-dev-certs @types/react @types/react-dom @vitejs/plugin-react typescript vite
 ```
 
 Then you will need to make some manual adjustments to the generated `package.json` file:
@@ -102,12 +102,13 @@ import { phoriaReact } from "@phoria/phoria-react/vite"
 import { phoria } from "@phoria/phoria/vite"
 import { dotnetDevCerts } from "@phoria/vite-plugin-dotnet-dev-certs"
 import { defineConfig } from "vite"
-import tsconfigPaths from "vite-tsconfig-paths"
 
 export default defineConfig({
   publicDir: "public",
+  resolve: {
+    tsconfigPaths: true
+  },
   plugins: [
-    tsconfigPaths({ root: "../../" }),
     dotnetDevCerts(),
     phoria({ cwd: "WebApp" }),
     phoriaReact()
@@ -127,7 +128,6 @@ And finally a `tsconfig.json` file to the root of your repo:
 {
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "baseUrl": ".",
     "esModuleInterop": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
@@ -141,7 +141,7 @@ And finally a `tsconfig.json` file to the root of your repo:
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "~/*": ["WebApp/ui/src/*"]
+      "~/*": ["./WebApp/ui/src/*"]
     },
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -223,7 +223,6 @@ And add a separate TypeScript config file for the Phoria Server at the root of t
 ```json
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "esModuleInterop": true,
     "isolatedModules": true,
     "lib": ["ES2022"],
