@@ -45,3 +45,6 @@ catalog:
 peerDependencyRules:
   allowedVersions:
     "vite-plugin-externalize-deps>vite": "8"
+
+minimumReleaseAgeExclude:
+  - "@meeg/vite-plugin-inspect-config@0.3.0"
