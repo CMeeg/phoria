@@ -296,9 +296,17 @@ public class PhoriaIslandPreloadTagHelperTests
 		public IViteSsrManifest ReadSsrManifest() => manifest;
 	}
 
+	[Fact]
+	public void StubUrlHelper_ActionContext_ThrowsNotSupportedException()
+	{
+		var urlHelper = new StubUrlHelper();
+
+		Assert.Throws<NotSupportedException>(() => urlHelper.ActionContext);
+	}
+
 	private sealed class StubUrlHelper : IUrlHelper
 	{
-		public ActionContext ActionContext => null!;
+		public ActionContext ActionContext => throw new NotSupportedException($"{nameof(StubUrlHelper)} does not support {nameof(ActionContext)}.");
 
 		public string? ActionName => null;
 
