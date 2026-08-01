@@ -96,3 +96,19 @@ Dated log of decisions made while shaping the project. One line each, with the w
   not pulled forward just because Phase 2 is starting next. `gh` remains
   unavailable in this environment, same as at Phase 1 close-out, so none of
   these are filed as real GitHub issues yet.
+
+## 2026-08-01 — Phase 2 Aspire orchestration
+
+- Chose Aspire AppHost, rather than only a standalone dashboard container, for
+  local e2e preview convenience: it starts the .NET WebApp, the sibling Node
+  server, and the Aspire dashboard with one command and owns Ctrl+C propagation.
+- Existing e2e apps will use Aspire for the sibling process model; the AppHost
+  reads the Node command and arguments from `Phoria:Server:Process` so preview
+  configuration has one source of truth.
+- Added a minimal `with-sidecar` e2e app to test the second ownership model:
+  Aspire starts only .NET, and `PhoriaServerProcess` starts/owns Node. This is
+  sequenced after the lifecycle fix and the shared OTel/AppHost pattern because
+  it is an end-to-end consumer of both seams.
+- Narrowed the `run-p` replacement to parallel build scripts. Aspire supersedes
+  the old `run-p preview:*` orchestration instead of adding a second preview
+  runner.
