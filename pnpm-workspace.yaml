@@ -13,7 +13,7 @@ allowBuilds:
   esbuild: true
 
 catalog:
-  "@meeg/vite-plugin-inspect-config": ~0.2.0
+  "@meeg/vite-plugin-inspect-config": ~0.3.0
   "@rollup/pluginutils": ^5.4.0
   "@sveltejs/vite-plugin-svelte": ^7.2.0
   "@types/node": ^24.13.3
@@ -45,4 +45,3 @@ catalog:
 peerDependencyRules:
   allowedVersions:
     "vite-plugin-externalize-deps>vite": "8"
-    "@meeg/vite-plugin-inspect-config>vite": "8"
