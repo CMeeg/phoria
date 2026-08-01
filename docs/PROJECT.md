@@ -96,14 +96,14 @@ v1 is successful when:
 
 Detailed tasks live in the implementation plan; this is the agreed sequence.
 
-0. **Test foundation** — Vitest, xUnit, Playwright; wire root `test` + Turborepo
+0. **Test foundation** — **complete.** Vitest, xUnit, Playwright; wire root `test` + Turborepo
    + CI. Written against *current* behavior as the regression net.
-1. **Dependency & platform updates** — Vite 8, React/Svelte/Vue latest, .NET 10.
+1. **Dependency & platform updates** — **complete.** Vite 8, React/Svelte/Vue latest, .NET 10.
    Done *after* tests so regressions are caught; new deps/APIs may also help
    later phases. `.NET 10` memory pools deliberately excluded from this phase
    (see Phase 2) — it is a public-API refactor of `Phoria.IO`, not a pure
    dependency bump.
-1.5. **Close out remaining Phase 1 deferred items** — the leftover entries in
+1.5. **Close out remaining Phase 1 deferred items** — **complete.** The leftover entries in
    `docs/deferred-issues-phase-1.md` (test-code dedup, a fail-fast test stub,
    a whitespace regression, a TypeScript narrowing-guard cleanup, a changeset
    wording fix, a test-isolation alignment, a manual HMR/dev-cert

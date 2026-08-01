@@ -9,7 +9,9 @@ the one below has since been fixed directly and migrated out of this file
 The one remaining entry is deliberately deferred to Phase 3, not blocked on
 `gh`.
 
-**Once resolved:** delete this file.
+This file remains until the deferred Phase 2 and Phase 3 items are either
+resolved or moved into their owning phase documentation. The Phase 1.5 items
+were completed directly and are documented in the Phase 1.5 close-out plan.
 
 ---
 
