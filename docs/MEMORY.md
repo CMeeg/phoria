@@ -53,3 +53,37 @@ Dated log of decisions made while shaping the project. One line each, with the w
 - **`.NET 10` memory pools stayed out of Phase 1 as planned, and `PROJECT.md`'s Phase 1 goals bullet is corrected in Task 12** to stop implying they shipped this phase — they move to Phase 2 alongside the other `Phoria.IO`/server-robustness fixes (`Process.Kill()` process-tree bug, `StartServer`/`StopServer` semaphore race, undisposed `StreamPool`s, unconditional `DangerousAcceptAnyServerCertificateValidator`).
 - **CI required more than an action-version bump.** The .NET 10 SDK ships only the .NET 10 runtime, but `Phoria.Tests` still targets `net8.0`, so every `setup-dotnet` step in `ci.yml` now also installs `8.0.x` explicitly. `global.json`'s `test.runner: Microsoft.Testing.Platform` also changed the `dotnet test` invocation shape: `dotnet test Phoria.sln` (VSTest-style) must become `dotnet test --solution Phoria.sln` in MTP mode, or the solution path is silently misinterpreted.
 - No task's verification run (`build` → `lint` → `check` → `test` → `dotnet test` → browser tests → e2e smoke) needed more than a same-task fix round to go clean — the two fix rounds that did occur (Task 3's Svelte/Vue Counter variable-name regression from a lint autofix, Task 7's overly-strict `@sveltejs/vite-plugin-svelte` peer range) were code-review findings, not CI failures. That is a stronger-than-expected result for a twelve-task, bundler-major-version phase.
+
+## 2026-08-01 — Phase 2 scope refinement
+
+- Folded the Phase 2 capture doc's concrete findings (CA1873 warning, node
+  shutdown hardening via `closeIdleConnections()`, `run-p` replacement with a
+  signal-forwarding orchestrator, a designed SIGTERM→grace-period→kill-tree
+  `StopServer()` sequence, and the debugger-stop TODO) into `PROJECT.md`'s
+  Phase 2 scope bullet, Phases list, and Riskiest unknowns — the capture doc
+  (`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`) remains
+  the task-by-task implementation plan; `PROJECT.md` now links to it.
+- Added OpenTelemetry logging as the concrete delivery mechanism for the
+  already-scoped "health/observability" Phase 2 bullet — not a new, separate
+  scope line — because it's the *how*, not new scope.
+- OTel scope covers **both** runtimes: the .NET host (`PhoriaServerProcess`/
+  `PhoriaServerProcessService`) and the Node/Vite sidecar — because the
+  sidecar model means production failures can originate in either process,
+  and a .NET-only view would miss half the picture. Confirmed starting point:
+  the .NET side has zero logging configuration today (default `ILogger<T>`
+  injection only, nothing to migrate away from); the Node side has only
+  `console.log` and framework built-ins.
+- Logging-only for v1; traces/metrics deliberately left as an *open
+  question* (not decided/excluded) rather than committed or ruled out, since
+  cross-runtime log correlation would itself need a tracing decision. Library
+  and exporter choice (`OpenTelemetry.Extensions.Logging` vs raw SDK on
+  .NET; `@opentelemetry/sdk-logs` on Node; OTLP vs console exporter) deferred
+  to a design step (Task 7) rather than decided during scoping.
+- Consolidated `docs/deferred-issues-phase-1.md`'s five Phase-2-labeled
+  entries into the capture doc's own "Known deferred issues" section and
+  trimmed them from the source file (rather than duplicating) — the
+  remaining entries there (dependency tracker, phase-1/phase-3 code-quality
+  follow-ups) are unrelated to Phase 2 and were deliberately left in place,
+  not pulled forward just because Phase 2 is starting next. `gh` remains
+  unavailable in this environment, same as at Phase 1 close-out, so none of
+  these are filed as real GitHub issues yet.

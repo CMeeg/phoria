@@ -13,79 +13,14 @@ milestone, per the plan's Task 12 step 8) be the source of truth.
 
 ---
 
-## Phase 2 — Server Robustness (explicitly scoped out of Phase 1)
+## Phase 2 — Server Robustness
 
-These five items are named in the plan itself
-([Task 6, Step 8](plans/2026-07-27-phase-1-dependency-platform-updates.md))
-as deliberately out of scope for a dependency-upgrade phase. They belong to
-Phase 2 ("Server robustness & production-readiness") per
-[`docs/PROJECT.md`](PROJECT.md).
-
-### `Process.Kill()` does not kill the entire process tree
-
-**Body:** `PhoriaServerProcess` (or wherever the Node server process is
-stopped) calls `Process.Kill()` without `entireProcessTree: true`. This is
-suspected to be the root cause of the known server-process shutdown bug
-described in `docs/PROJECT.md` (reproduces mainly when stopping the
-debugger). Fix: pass `entireProcessTree: true` (or the .NET 10 equivalent)
-so child processes spawned by the Node server are also terminated.
-
-**Labels:** `phase-2`, `server-robustness`, `bug`
-**Milestone:** v1
-
----
-
-### `StartServer`/`StopServer` has a semaphore race
-
-**Body:** The server process lifecycle's `StartServer`/`StopServer` methods
-have a race condition around the semaphore guarding concurrent
-start/stop calls. Needs a lifecycle-hardening pass as part of Phase 2's
-"in-process start, monitor/reconnect, graceful degradation" work.
-
-**Labels:** `phase-2`, `server-robustness`, `bug`
-**Milestone:** v1
-
----
-
-### Undisposed `StreamPool`s
-
-**Body:** One or more `StreamPool` instances (wrapping
-`RecyclableMemoryStream`) are created but never disposed, per the plan's
-Task 6 self-review notes. Needs an audit of `Phoria.IO.StreamPool`
-lifetimes and proper `IDisposable` cleanup wired into DI/service lifetimes.
-
-**Labels:** `phase-2`, `server-robustness`, `bug`
-**Milestone:** v1
-
----
-
-### Unconditional `DangerousAcceptAnyServerCertificateValidator`
-
-**Body:** The server process's HTTP client (or equivalent) unconditionally
-accepts any server certificate via
-`DangerousAcceptAnyServerCertificateValidator`, with no environment gating.
-This should be restricted to development/preview scenarios (e.g. paired
-with `@phoria/vite-plugin-dotnet-dev-certs`) and never active in
-production.
-
-**Labels:** `phase-2`, `server-robustness`, `security`
-**Milestone:** v1
-
----
-
-### Adopt `IMemoryPoolFactory<byte>` for `Phoria.IO.StreamPool`
-
-**Body:** .NET 10 introduces `IMemoryPoolFactory<byte>` as a more modern
-alternative to hand-rolled `RecyclableMemoryStream` pooling. `StreamPool`
-currently exposes `RecyclableMemoryStream` publicly, and consumers rely on
-`GetReadOnlySequence()`, an `IBufferWriter<byte>` cast, and `Stream`
-semantics — none of which `MemoryPool<byte>` provides directly. This is a
-**public-API refactor** of `Phoria.IO`, not a drop-in dependency bump;
-scope it as a deliberate design task in Phase 2, alongside the other
-`Phoria.IO`/server-robustness fixes above.
-
-**Labels:** `phase-2`, `server-robustness`, `enhancement`
-**Milestone:** v1
+The five items originally recorded here (process-tree kill, `StartServer`/
+`StopServer` semaphore race, undisposed `StreamPool`s, unconditional
+`DangerousAcceptAnyServerCertificateValidator`, `IMemoryPoolFactory<byte>`
+adoption) have moved to the "Known deferred issues" section of
+[`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md),
+which is now the single Phase 2 scope reference. See that document instead.
 
 ---
 

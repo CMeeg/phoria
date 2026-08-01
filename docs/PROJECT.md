@@ -49,6 +49,9 @@ v1 is successful when:
 - Unit tests (Vitest for JS, xUnit for .NET) and Playwright e2e tests exist and
   run in CI; the root `test` script is real (currently a stub).
 - The known vite-process shutdown bug is fixed and no longer reproducible.
+- Server-process lifecycle events and errors — in both the .NET host and the
+  Node/Vite sidecar — emit structured logs via OpenTelemetry, giving
+  production operators real visibility into start/stop/crash behavior.
 - Production error handling degrades gracefully when the SSR server is
   unhealthy (no raw attribute/vite-client leakage).
 - All packages are on current deps and target .NET 8/10.
@@ -63,11 +66,17 @@ v1 is successful when:
 - Test foundation: Vitest (JS packages), xUnit (.NET), Playwright (e2e apps).
 - Dependency/platform updates: Vite 8, latest React/Svelte/Vue, .NET 10;
   `net8.0;net10.0` (net9.0 dropped — see Open questions).
-- Server robustness: process shutdown bug, production error handling, lifecycle
-  hardening (in-process start, monitor/reconnect, graceful degradation),
-  health/observability, `.NET 10` memory pools (`IMemoryPoolFactory<byte>`
-  adoption in `Phoria.IO` — a public-API refactor, not a dependency bump; see
-  Phase 2 in Phases below).
+- Server robustness: process shutdown bug (`Process.Kill()` process-tree,
+  `StartServer`/`StopServer` semaphore race), production error handling,
+  lifecycle hardening (in-process start, monitor/reconnect, graceful
+  degradation, SIGTERM→grace-period→kill-tree stop sequence), hardened e2e
+  shutdown paths (Node/Vite sidecar signal handling, `run-p` replacement with
+  a signal-forwarding orchestrator), health/observability delivered via
+  **OpenTelemetry logging** (.NET host + Node/Vite sidecar — logging only;
+  traces/metrics left open, see Open questions), and `.NET 10` memory pools
+  (`IMemoryPoolFactory<byte>` adoption in `Phoria.IO` — a public-API refactor,
+  not a dependency bump). Task-by-task detail:
+  [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md).
 - Vite bundling of .NET-referenced static assets (committed feature).
 - Timeboxed exploration spikes (go/no-go): nested component composition,
   streaming/Suspense, server actions, Deno/other adapters.
@@ -107,8 +116,11 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
    `Process.Kill()` process-tree bug), the `StartServer`/`StopServer` semaphore
    race, undisposed `StreamPool`s, the unconditional
    `DangerousAcceptAnyServerCertificateValidator`, prod error handling,
-   lifecycle hardening, health/observability, and `.NET 10` memory pools
-   (`IMemoryPoolFactory<byte>` adoption).
+   lifecycle hardening, hardened e2e shutdown paths (Node/Vite sidecar signal
+   handling, `run-p` replacement), OpenTelemetry logging (.NET host + Node/Vite
+   sidecar) as the concrete delivery of health/observability, and `.NET 10`
+   memory pools (`IMemoryPoolFactory<byte>` adoption). Task-by-task detail:
+   [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md).
 3. **Vite bundling of .NET-referenced static assets** — includes a design spike
    first (riskiest unknown).
 4. **Exploration spikes** — composition, streaming/Suspense, server actions,
@@ -125,8 +137,17 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   mechanism is unproven and could force more fundamental design changes across
   the Vite plugin and .NET manifest/TagHelper layers. Gated behind a design
   spike before implementation.
-- **Server-process shutdown bug** — root cause unknown; reproduces mainly when
-  stopping the debugger. Tied to the author's top worry (server robustness).
+- **Server-process shutdown bug** — likely root cause narrowed to
+  `Process.Kill()` missing `entireProcessTree` plus a `StartServer`/
+  `StopServer` semaphore race; a debugger-stop-specific TODO in
+  `PhoriaServerProcessService` still needs confirming after the fix lands.
+  Tied to the author's top worry (server robustness).
+- **Dual-runtime OpenTelemetry logging** — the .NET host and Node/Vite sidecar
+  are separate runtimes with no existing OTel dependency in either (the .NET
+  side has zero logging configuration today — just default `ILogger<T>`
+  injection wherever appropriate; the Node side has only `console.log` and
+  framework built-ins). Correlating the two log streams, if ever wanted, needs
+  a tracing decision this milestone is explicitly deferring.
 - **.NET 10 adoption** — memory-pool and lifecycle API changes may interact
   with the server process/monitor design.
 - **Dependency upgrade breakage** — Vite 6→8 (Rolldown/Oxc) and framework
@@ -141,3 +162,9 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
 - RESOLVED (Phase 1): `net9.0` is dropped now — it is STS and reaches EOL the
   same day as `net8.0` (2026-11-10), so keeping it cost a TFM leg for zero
   extra coverage. `net8.0` is retained until its Nov 2026 EOL, then revisited.
+- TODO: Decide whether OpenTelemetry traces/metrics (beyond logging) are in
+  scope for v1, or deferred entirely to a future milestone.
+- TODO: Decide the OTel log exporter/target (OTLP collector? console/
+  dev-only?) and whether .NET↔Node log correlation across the sidecar
+  boundary is required — an architecture decision for the Phase 2 plan, not
+  this document.
