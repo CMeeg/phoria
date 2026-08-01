@@ -3,6 +3,10 @@ packages:
   - "e2e/with-workspace/*"
   - "packages/*"
 
+# Required for `pnpm deploy` (used by the e2e Dockerfiles) to produce a self-contained,
+# non-symlinked node_modules once the deploy dir is copied to an isolated Docker stage.
+injectWorkspacePackages: true
+
 allowBuilds:
   '@biomejs/biome': true
   '@parcel/watcher': true
