@@ -10,7 +10,7 @@ Phoria is an Islands architecture framework for .NET powered by Vite. It renders
 
 ## Repository Structure
 
-Monorepo using **pnpm workspaces** + **Lerna** (publishing) + **Nx** (caching/task deps).
+Monorepo using **pnpm workspaces** + **Turborepo** (task running/caching) + **Changesets** (publishing).
 
 ```
 packages/
@@ -27,9 +27,9 @@ e2e/
 
 ## Prerequisites
 
-- **Node.js** v22.11.0 (see `.nvmrc`)
-- **pnpm** 9.15.0 (see `packageManager` in `package.json`)
-- **.NET SDK** 9.0.100 (see `global.json`, rolls forward to latest feature)
+- **Node.js** v24.18.0 (see `.nvmrc`)
+- **pnpm** 11.17.0 (see `packageManager` in `package.json`)
+- **.NET SDK** 10.0.302 (see `global.json`, rolls forward to latest feature)
 
 ## Commands
 
@@ -42,15 +42,15 @@ pnpm install
 ### Build (all packages)
 
 ```bash
-pnpm lerna run build
+pnpm build
 ```
 
-Build order is handled by Nx: each package's `build` depends on `^build` (dependencies built first). Framework-specific packages (`phoria-react`, `phoria-svelte`, `phoria-vue`) depend on `@phoria/phoria`.
+Build order is handled by Turborepo: each package's `build` depends on `^build` (dependencies built first). Framework-specific packages (`phoria-react`, `phoria-svelte`, `phoria-vue`) depend on `@phoria/phoria`.
 
 ### Lint
 
 ```bash
-pnpm lerna run lint
+pnpm lint
 ```
 
 Runs **Biome** (`biome check`) on each package.
@@ -58,7 +58,7 @@ Runs **Biome** (`biome check`) on each package.
 ### Type Check
 
 ```bash
-pnpm lerna run check
+pnpm check
 ```
 
 Runs `tsc` (no emit) on each package.
@@ -66,10 +66,12 @@ Runs `tsc` (no emit) on each package.
 ### Test
 
 ```bash
-pnpm test            # Vitest unit tests across JS packages (via Lerna)
+pnpm test            # Vitest unit tests across JS packages (via Turborepo)
 pnpm test:browser    # Vitest browser-mode component tests (Playwright provider)
-dotnet test Phoria.sln  # xUnit tests for the Phoria .NET package
+dotnet test --solution Phoria.sln --configuration Release  # xUnit v3 tests for the Phoria .NET package
 ```
+
+`global.json` sets `test.runner: Microsoft.Testing.Platform`, so `dotnet test` runs in MTP mode — pass `--solution <path>` (not a bare path) to run every project's test executable across both target frameworks.
 
 E2E smoke test (requires a preview build running):
 
@@ -100,18 +102,21 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 
 - Nullable reference types: enabled
 - Implicit usings: enabled
-- Language version: latest
+- Language version: 13.0 (pinned — see `Directory.Build.props`; `latest` is not per-TFM and would offer C# 15 to the `net8.0` build on the .NET 10 SDK)
 - Central package management via `Directory.Packages.props`
-- The `Phoria.csproj` targets `net8.0;net9.0`
+- The `Phoria.csproj` targets `net8.0;net10.0` (net9.0 dropped — see `docs/PROJECT.md`)
 
 ## Gotchas
 
-- **`package.json` files are excluded from Biome formatting** — changesets reformats arrays to multi-line which conflicts with Biome's `lineWidth` setting. Do not re-enable formatting for `package.json`.
+- **Biome 2 formats `package.json` with `expand: always`**, matching Changesets output — no exclusion needed.
 - **Framework packages need `cross-env NODE_ENV=production`** in their build scripts (e.g., `phoria-react`). The core `phoria-islands` package does not.
 - **The .NET solution (`Phoria.sln`) only contains the `Phoria` NuGet package**, not the e2e apps. Build .NET projects via their individual `.csproj` or the e2e `package.json` scripts.
 - **Each JS package has 4 entry points**: `.` (main), `./client`, `./server`, `./vite`. Changes to one entry don't affect others.
 - **Workspace dependencies** use `workspace:*` protocol and are resolved by pnpm.
-- **Peer dependencies matter**: framework packages peer-depend on `@phoria/phoria` at `~0.4.0` — version bumps need care.
+- **Peer dependencies matter**: framework packages peer-depend on `@phoria/phoria` at `>=0.4.0 <1.0.0` (widened from `~0.4.0` to prevent premature `1.0.0` releases via the changesets peer cascade) — version bumps need care. This must be reconciled when all packages reach `1.0.0` (Phase 5).
+- **Vite 8 uses Rolldown/Oxc** — `rollupOptions` is deprecated in favour of `rolldownOptions` in build config.
+- **`resolve.tsconfigPaths: true`** (built into Vite 8) replaces the separate `vite-tsconfig-paths` plugin — do not reintroduce the plugin.
+- **All pnpm settings live in `pnpm-workspace.yaml`**, not `package.json`/`.npmrc` (e.g. `packageExtensions`, `peerDependencyRules`, catalogs).
 
 ## Versioning & Publishing
 
@@ -121,7 +126,7 @@ Uses **Changesets** (`pnpm changeset` to create). Release flow:
 2. Merge to `main` — CI runs `changesets/action` which opens a "Release" PR
 3. Merge the Release PR — publishes to npm (JS packages) and NuGet (Phoria .NET)
 
-NuGet publishing uses the `scripts/dotnet/publish.js` script via Lerna.
+NuGet publishing uses the `scripts/dotnet/publish.js` script via `pnpm --filter phoria-dotnet run publish`.
 
 ## E2E Apps
 

@@ -1,10 +1,10 @@
 <script lang="ts">
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 const base = import.meta.env.BASE_URL
 
-// biome-ignore lint/style/useConst: Svelte
 let { startAt = 0 } = $props()
 
-// biome-ignore lint/style/useConst: Svelte
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let count = $state(startAt)
 </script>
 

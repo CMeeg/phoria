@@ -1,15 +1,14 @@
 import { registerSsrService } from "@phoria/phoria"
 import { framework } from "~/main"
 import {
-	type RenderSveltePhoriaIslandComponent,
-	type SveltePhoriaIsland,
 	isSvelteIsland,
+	type RenderSveltePhoriaIslandComponent,
 	renderComponentToString,
+	type SveltePhoriaIsland,
 	service
 } from "./ssr"
 
 registerSsrService(framework.name, service)
 
-export { isSvelteIsland, renderComponentToString }
-
 export type { RenderSveltePhoriaIslandComponent, SveltePhoriaIsland }
+export { isSvelteIsland, renderComponentToString }

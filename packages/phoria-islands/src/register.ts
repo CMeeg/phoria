@@ -113,6 +113,7 @@ function getComponent(name: string) {
 	return componentRegistry.get(name.toLowerCase())
 }
 
+export type { PhoriaIslandComponentOptions }
 export {
 	getComponent,
 	getCsrService,
@@ -123,5 +124,3 @@ export {
 	registerCsrService,
 	registerSsrService
 }
-
-export type { PhoriaIslandComponentOptions }

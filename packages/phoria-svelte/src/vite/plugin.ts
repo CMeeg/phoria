@@ -58,6 +58,9 @@ function phoriaSveltePlugin(options?: Partial<PhoriaSveltePluginOptions>): Plugi
 				setSsrEnvironment(options)
 			}
 		},
+		applyToEnvironment(environment) {
+			return environment.name === "client" || environment.name === "ssr"
+		},
 		transform(code, id) {
 			if (!filter(id)) {
 				return
@@ -96,6 +99,5 @@ function phoriaSvelte(options?: Partial<PhoriaSveltePluginOptions>): PluginOptio
 	return plugins
 }
 
-export { phoriaSvelte }
-
 export type { PhoriaSveltePluginOptions }
+export { phoriaSvelte }

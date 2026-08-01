@@ -10,7 +10,7 @@ const idle: PhoriaIslandClientDirective = async (mount, { value }) => {
 		await mount()
 	}
 
-	const timeout = value ? Number.parseInt(value) : undefined
+	const timeout = value ? Number.parseInt(value, 10) : undefined
 
 	if ("requestIdleCallback" in window) {
 		window.requestIdleCallback(cb, { timeout })
@@ -54,6 +54,5 @@ const media: PhoriaIslandClientDirective = async (mount, { value: query }) => {
 	}).then(() => mount())
 }
 
-export { idle, visible, media }
-
 export type { PhoriaIslandClientDirective }
+export { idle, media, visible }

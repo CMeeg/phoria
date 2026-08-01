@@ -58,6 +58,9 @@ function phoriaVuePlugin(options?: Partial<PhoriaVuePluginOptions>): PluginOptio
 				setSsrEnvironment(options)
 			}
 		},
+		applyToEnvironment(environment) {
+			return environment.name === "client" || environment.name === "ssr"
+		},
 		transform(code, id) {
 			if (!filter(id)) {
 				return
@@ -96,6 +99,5 @@ function phoriaVue(options?: Partial<PhoriaVuePluginOptions>): PluginOption {
 	return plugins
 }
 
-export { phoriaVue }
-
 export type { PhoriaVuePluginOptions }
+export { phoriaVue }

@@ -10,7 +10,7 @@ const environment = {
 	ssr: "ssr"
 } as const
 
-export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude" | "babel">
+export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude">
 
 type CreateFilterParams = Parameters<typeof createFilter>
 
@@ -60,6 +60,9 @@ function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): PluginO
 				setSsrEnvironment(options)
 			}
 		},
+		applyToEnvironment(environment) {
+			return environment.name === "client" || environment.name === "ssr"
+		},
 		transform(code, id) {
 			if (!filter(id)) {
 				return
@@ -98,6 +101,5 @@ function phoriaReact(options?: Partial<PhoriaReactPluginOptions>): PluginOption 
 	return plugins
 }
 
-export { phoriaReact }
-
 export type { PhoriaReactPluginOptions }
+export { phoriaReact }

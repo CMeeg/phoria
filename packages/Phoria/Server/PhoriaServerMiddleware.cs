@@ -91,9 +91,9 @@ internal sealed class PhoriaServerMiddleware(
 		HttpClient client = phoriaServerHttpClientFactory.CreateClient();
 
 		// Pass the "Accept" header from the original request if it exists
-		if (requestHeaders.ContainsKey("Accept"))
+		if (requestHeaders.TryGetValue("Accept", out var acceptValues))
 		{
-			client.DefaultRequestHeaders.Add("Accept", requestHeaders.Accept.ToList());
+			client.DefaultRequestHeaders.Add("Accept", acceptValues.ToList());
 		}
 
 		return client;

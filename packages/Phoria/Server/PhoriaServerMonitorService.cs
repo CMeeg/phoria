@@ -2,7 +2,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Phoria.Server;
 
-public class PhoriaServerMonitorService(IPhoriaServerMonitor serverMonitor)
+public sealed class PhoriaServerMonitorService(IPhoriaServerMonitor serverMonitor)
 	: BackgroundService
 {
 	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;

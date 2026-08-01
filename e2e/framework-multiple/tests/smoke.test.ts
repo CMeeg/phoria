@@ -13,4 +13,11 @@ describe("framework-multiple smoke", () => {
 		// The index page renders islands; assert the custom element wrapper is present
 		expect(html).toContain("phoria-island")
 	})
+
+	it("emits modulepreload directives for server-rendered islands", async () => {
+		const res = await fetch(webAppUrl)
+		const html = await res.text()
+
+		expect(html).toMatch(/<link\s+rel="modulepreload"\s+crossorigin\s+href="\/ui\/assets\/[^"]+\.js">/)
+	})
 })

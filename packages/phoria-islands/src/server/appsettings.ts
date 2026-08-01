@@ -118,6 +118,5 @@ async function parsePhoriaAppSettings(options?: Partial<PhoriaAppSettingsOptions
 	return parsedAppSettings
 }
 
-export { getPhoriaAppSettings, parsePhoriaAppSettings }
-
 export type { PhoriaAppSettings }
+export { getPhoriaAppSettings, parsePhoriaAppSettings }

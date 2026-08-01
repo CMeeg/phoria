@@ -7,7 +7,6 @@
 		"build": "run-p build:* -c",
 		"build:islands": "vite build --app",
 		"build:webapp": "dotnet build --configuration Release",
-		"build:server": "vite build --config vite.server.config.ts",
 		"check": "tsc",
 		"dev": "tsx ./ui/src/server.ts",
 		"lint": "biome check",
@@ -44,7 +43,6 @@
 		"postcss-preset-env": "catalog:",
 		"tsx": "catalog:",
 		"typescript": "catalog:",
-		"vite": "catalog:",
-		"vite-tsconfig-paths": "catalog:"
+		"vite": "catalog:"
 	}
 }

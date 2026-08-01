@@ -53,9 +53,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 ENV NODE_ENV=production
 ENV DOTNET_ENVIRONMENT=Production
 
-## Build Phoria Islands and Server
+## Build Phoria Islands (client, SSR and Phoria Server bundles)
 RUN pnpm run build:islands
-RUN pnpm run build:server
 
 ## Create deployment package
 RUN mkdir -p /app/WebApp/ui \
@@ -64,7 +63,7 @@ RUN mkdir -p /app/WebApp/ui \
   && cp /src/package.json /app/package.json
 
 # Dotnet build stage
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS dotnetbuild
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dotnetbuild
 WORKDIR /src
 
 ## Copy source code
@@ -77,7 +76,7 @@ RUN dotnet restore
 RUN dotnet publish ./WebApp/WebApp.csproj -c Release --no-restore -o /app
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 ENV NODE_ENV=production
 ENV DOTNET_ENVIRONMENT=Production
 WORKDIR /app
@@ -92,7 +91,7 @@ RUN mv /app/WebApp /app/WebAppCmd
 COPY --from=uibuild /app .
 
 # Install node for Phoria Server
-ENV NODE_VERSION=22.11.0
+ENV NODE_VERSION=24.18.0
 RUN apt-get -y update \
   && apt-get install -y curl \
   && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} -o nodesource_setup.sh | bash \
