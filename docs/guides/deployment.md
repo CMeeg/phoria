@@ -37,7 +37,7 @@ First thing you will need to do is add a Dockerfile to describe how to create a 
 
 ```dockerfile
 # UI build stage
-FROM node:22-slim AS uibuild
+FROM node:24-slim AS uibuild
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 WORKDIR /src
