@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -9,24 +8,12 @@ using Phoria.Islands;
 using Phoria.Server;
 using Phoria.Vite;
 using Xunit;
+using static Phoria.Tests.TestUtilities.GoldenManifestFixture;
 
 namespace Phoria.Tests.Islands;
 
 public class PhoriaIslandPreloadTagHelperTests
 {
-	private static readonly JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
-
-	private static IViteSsrManifest LoadGoldenManifest()
-	{
-		string path = Path.Combine(AppContext.BaseDirectory, "TestData", "ssr-manifest.json");
-		using FileStream stream = File.OpenRead(path);
-
-		IReadOnlyDictionary<string, string[]> files =
-			JsonSerializer.Deserialize<IReadOnlyDictionary<string, string[]>>(stream, jsonOptions)!;
-
-		return new ViteSsrManifest(files);
-	}
-
 	[Fact]
 	public void Process_ProductionMode_EmitsModulepreloadLinks()
 	{
@@ -309,9 +296,17 @@ public class PhoriaIslandPreloadTagHelperTests
 		public IViteSsrManifest ReadSsrManifest() => manifest;
 	}
 
+	[Fact]
+	public void StubUrlHelper_ActionContext_ThrowsNotSupportedException()
+	{
+		var urlHelper = new StubUrlHelper();
+
+		Assert.Throws<NotSupportedException>(() => urlHelper.ActionContext);
+	}
+
 	private sealed class StubUrlHelper : IUrlHelper
 	{
-		public ActionContext ActionContext => null!;
+		public ActionContext ActionContext => throw new NotSupportedException($"{nameof(StubUrlHelper)} does not support {nameof(ActionContext)}.");
 
 		public string? ActionName => null;
 

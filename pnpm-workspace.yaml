@@ -3,13 +3,17 @@ packages:
   - "e2e/with-workspace/*"
   - "packages/*"
 
+# Required for `pnpm deploy` (used by the e2e Dockerfiles) to produce a self-contained,
+# non-symlinked node_modules once the deploy dir is copied to an isolated Docker stage.
+injectWorkspacePackages: true
+
 allowBuilds:
   '@biomejs/biome': true
   '@parcel/watcher': true
   esbuild: true
 
 catalog:
-  "@meeg/vite-plugin-inspect-config": ~0.2.0
+  "@meeg/vite-plugin-inspect-config": ~0.3.0
   "@rollup/pluginutils": ^5.4.0
   "@sveltejs/vite-plugin-svelte": ^7.2.0
   "@types/node": ^24.13.3
@@ -41,4 +45,6 @@ catalog:
 peerDependencyRules:
   allowedVersions:
     "vite-plugin-externalize-deps>vite": "8"
-    "@meeg/vite-plugin-inspect-config>vite": "8"
+
+minimumReleaseAgeExclude:
+  - "@meeg/vite-plugin-inspect-config@0.3.0"

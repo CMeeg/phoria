@@ -105,13 +105,22 @@ v1 is successful when:
 
 Detailed tasks live in the implementation plan; this is the agreed sequence.
 
-0. **Test foundation** — Vitest, xUnit, Playwright; wire root `test` + Turborepo
+0. **Test foundation** — **complete.** Vitest, xUnit, Playwright; wire root `test` + Turborepo
    + CI. Written against *current* behavior as the regression net.
-1. **Dependency & platform updates** — Vite 8, React/Svelte/Vue latest, .NET 10.
+1. **Dependency & platform updates** — **complete.** Vite 8, React/Svelte/Vue latest, .NET 10.
    Done *after* tests so regressions are caught; new deps/APIs may also help
    later phases. `.NET 10` memory pools deliberately excluded from this phase
    (see Phase 2) — it is a public-API refactor of `Phoria.IO`, not a pure
    dependency bump.
+1.5. **Close out remaining Phase 1 deferred items** — **complete.** The leftover entries in
+   `docs/deferred-issues-phase-1.md` (test-code dedup, a fail-fast test stub,
+   a whitespace regression, a TypeScript narrowing-guard cleanup, a changeset
+   wording fix, a test-isolation alignment, a manual HMR/dev-cert
+   verification, a Docker base-image pin, and the `@meeg/vite-plugin-inspect-config`
+   Vite-8 peer bump) fixed directly rather than filed as GitHub issues (`gh`
+   unavailable). `ViteChunk.Name` is the one item *not* included here — it
+   stays deferred to Phase 3. Task-by-task detail:
+   [`docs/superpowers/plans/2026-08-01-phase-1.5-close-out-deferred-issues.md`](superpowers/plans/2026-08-01-phase-1.5-close-out-deferred-issues.md).
 2. **Server robustness & production-readiness** — shutdown bug (including the
    `Process.Kill()` process-tree bug), the `StartServer`/`StopServer` semaphore
    race, undisposed `StreamPool`s, the unconditional

@@ -182,9 +182,10 @@ function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 					setSsrEnvironment(options, appsettings)
 					break
 				case environment.server:
-					if (serverEntry !== false) {
-						setServerEnvironment(options, appsettings, serverEntry)
-					}
+					// Safe: configEnvironment is only invoked for environments present in
+					// config.environments, and `server` is only registered there when
+					// serverEntry !== false (see the `config` hook above).
+					setServerEnvironment(options, appsettings, serverEntry as string)
 					break
 			}
 		},
