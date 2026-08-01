@@ -113,7 +113,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - **The .NET solution (`Phoria.sln`) only contains the `Phoria` NuGet package**, not the e2e apps. Build .NET projects via their individual `.csproj` or the e2e `package.json` scripts.
 - **Each JS package has 4 entry points**: `.` (main), `./client`, `./server`, `./vite`. Changes to one entry don't affect others.
 - **Workspace dependencies** use `workspace:*` protocol and are resolved by pnpm.
-- **Peer dependencies matter**: framework packages peer-depend on `@phoria/phoria` at `~0.4.0` — version bumps need care. This must be reconciled when all packages reach `1.0.0` (Phase 5).
+- **Peer dependencies matter**: framework packages peer-depend on `@phoria/phoria` at `>=0.4.0 <1.0.0` (widened from `~0.4.0` to prevent premature `1.0.0` releases via the changesets peer cascade) — version bumps need care. This must be reconciled when all packages reach `1.0.0` (Phase 5).
 - **Vite 8 uses Rolldown/Oxc** — `rollupOptions` is deprecated in favour of `rolldownOptions` in build config.
 - **`resolve.tsconfigPaths: true`** (built into Vite 8) replaces the separate `vite-tsconfig-paths` plugin — do not reintroduce the plugin.
 - **All pnpm settings live in `pnpm-workspace.yaml`**, not `package.json`/`.npmrc` (e.g. `packageExtensions`, `peerDependencyRules`, catalogs).

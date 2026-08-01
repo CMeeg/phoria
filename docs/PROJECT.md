@@ -114,7 +114,10 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
 4. **Exploration spikes** — composition, streaming/Suspense, server actions,
    Deno adapters; timeboxed with go/no-go gates.
 5. **Release prep** — version reconciliation to `1.0.0`, docs pass, changesets,
-   GitHub milestone/issues, inline-TODO cleanup.
+   GitHub milestone/issues, inline-TODO cleanup. NOTE: framework peer ranges on
+   `@phoria/phoria` are widened to `>=0.4.0 <1.0.0` during pre-1.0 (to prevent
+   premature `1.0.0` releases via the changesets peer cascade); tighten them to
+   `^1.0.0` as part of this phase.
 
 ## Riskiest unknowns
 
