@@ -1,24 +1,11 @@
-using System.Text.Json;
 using Phoria.Vite;
 using Xunit;
+using static Phoria.Tests.TestUtilities.GoldenManifestFixture;
 
 namespace Phoria.Tests.Vite;
 
 public class ViteSsrManifestTests
 {
-	private static readonly JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
-
-	private static ViteSsrManifest LoadGoldenManifest()
-	{
-		string path = Path.Combine(AppContext.BaseDirectory, "TestData", "ssr-manifest.json");
-		using FileStream stream = File.OpenRead(path);
-
-		IReadOnlyDictionary<string, string[]> files =
-			JsonSerializer.Deserialize<IReadOnlyDictionary<string, string[]>>(stream, jsonOptions)!;
-
-		return new ViteSsrManifest(files);
-	}
-
 	[Fact]
 	public void Indexer_ComponentPathKey_ReturnsChunkFiles()
 	{
