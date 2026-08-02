@@ -255,10 +255,14 @@ scope it as a deliberate design task in Phase 2, alongside the other
 the managed host shutdown path, so `BackgroundService.StopAsync`/
 `PhoriaServerProcessService.ExecuteAsync` never completes and `StopServer`
 never runs, orphaning the node process. This is host/debugger behavior the
-library cannot intercept (confirmed in Task 4's Step 3 assessment). Record
-a follow-up issue with repro steps (start with the debugger, stop it,
-verify a `node` process remains) to track once the other Phase 2 shutdown
-paths are verified live.
+library cannot intercept (confirmed in Task 4's Step 3 assessment).
+
+**Resolution (2026-08-02):** Documented as expected behavior with safe
+development guidance in `docs/guides/getting-started.md`. The independent
+Node process must be stopped manually in the two-terminal development
+workflow. The debugger must not be used with the sidecar production model
+when `Phoria:Server:Process` is configured; the sibling Aspire preview model
+is the supported integration path for graceful shutdown.
 
 **Labels:** `phase-2`, `server-robustness`, `bug`
 **Milestone:** v1

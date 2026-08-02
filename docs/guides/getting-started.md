@@ -554,22 +554,32 @@ Add the following Tag Helper to `WebApp/Pages/Index.cshtml` at the bottom of the
 
 Now you can run your app and see Phoria in action.
 
-From your terminal run:
+The recommended development workflow uses an Aspire AppHost. From the directory containing `package.json`, run:
 
 ```shell
 # Add dev certs
 dotnet dev-certs https --trust
 
-# Start the Phoria Server
-pnpm run dev
+# Start the Web App, Phoria Server with Vite HMR, and Aspire dashboard
+pnpm dev:aspire
+```
 
-# Start the Phoria Web App
-# You will need to run this in a separate terminal instance/tab to the Phoria Server
-dotnet run --project WebApp/WebApp.csproj --launch-profile https
+The Aspire dashboard URL is printed by `aspire run`; it shows structured logs and resource health for both the Web App and Phoria Server. Press `Ctrl+C` to stop the workflow.
+
+For a lighter-weight alternative without the dashboard, use two terminals:
+
+```shell
+# Terminal 1: start the Phoria Server with Vite HMR
+pnpm dev
+
+# Terminal 2: start the Phoria Web App
+dotnet run --project WebApp/WebApp.csproj
 ```
 
 > [!TIP]
 > The `dotnet run` command doesn't automatically launch the browser unfortunately, but you can find the URL for the web app in the terminal output or by looking in your `WebApp/Properties/launchSettings.json` file.
+
+When using the two-terminal development workflow with a debugger, stopping the debugger stops only the .NET process. The Node development server runs independently, so stop it manually in the terminal where `pnpm dev` is running. Do not run the debugger against the sidecar production model while `Phoria:Server:Process` is configured: the host owns that Node process, and debugger termination can orphan it. Use the sibling Aspire preview workflow to integration-test graceful shutdown of the AppHost-owned Node process.
 
 Now you will be able to navigate to the web app in your browser and:
 

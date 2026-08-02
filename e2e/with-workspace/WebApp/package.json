@@ -9,6 +9,7 @@
 		"build:webapp": "dotnet build --configuration Release",
 		"check": "tsc",
 		"dev": "tsx ./ui/src/server.ts",
+		"dev:aspire": "aspire run --apphost ./Phoria.AppHost/Phoria.AppHost.csproj -- --environment Development",
 		"lint": "biome check",
 		"preview": "aspire run --apphost ./Phoria.AppHost/Phoria.AppHost.csproj"
 	},
