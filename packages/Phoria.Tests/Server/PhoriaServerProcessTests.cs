@@ -105,13 +105,45 @@ public class PhoriaServerProcessTests
 			stopGracePeriod: TimeSpan.FromSeconds(1));
 
 		Task firstStop = serverProcess.StopServer();
-		await WaitForMarker(markerPath, "sigterm");
 		Task secondStop = serverProcess.StopServer();
+
+		Assert.Same(firstStop, secondStop);
+		await WaitForMarker(markerPath, "sigterm");
 
 		Assert.False(secondStop.IsCompleted);
 		await Task.WhenAll(firstStop, secondStop);
 
 		Assert.True(child.HasExited);
+	}
+
+	[Fact]
+	public async Task StartServer_CancellationDuringProcessStartup_StopsSpawnedProcess()
+	{
+		if (OperatingSystem.IsWindows())
+		{
+			Assert.Skip("Graceful SIGTERM-based stop is Unix-only.");
+		}
+
+		string markerPath = CreateMarkerPath(nameof(StartServer_CancellationDuringProcessStartup_StopsSpawnedProcess));
+		string pidPath = CreateMarkerPath(nameof(StartServer_CancellationDuringProcessStartup_StopsSpawnedProcess) + "-pid");
+
+		using PhoriaServerProcess serverProcess = CreateServerProcess(
+			stopGracePeriod: TimeSpan.FromSeconds(1),
+			script: StartupNodeScript(markerPath, pidPath));
+		using var cts = new CancellationTokenSource();
+
+		Task startTask = serverProcess.StartServer(cts.Token);
+		await WaitForMarker(markerPath, "starting");
+		int pid = int.Parse(await File.ReadAllTextAsync(pidPath, TestContext.Current.CancellationToken), CultureInfo.InvariantCulture);
+		using var child = Process.GetProcessById(pid);
+
+		cts.Cancel();
+
+		await Assert.ThrowsAnyAsync<OperationCanceledException>(() => startTask.WaitAsync(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken));
+		await child.WaitForExitAsync(TestContext.Current.CancellationToken);
+
+		Assert.True(child.HasExited);
+		Assert.Equal("sigterm", await File.ReadAllTextAsync(markerPath, TestContext.Current.CancellationToken));
 	}
 
 	[Fact]
@@ -277,6 +309,17 @@ public class PhoriaServerProcessTests
 		});
 		require('fs').writeFileSync("{{markerPath}}", 'ready');
 		setInterval(() => {}, 1000);
+		""";
+
+	private static string StartupNodeScript(string markerPath, string pidPath) =>
+		$$"""
+		process.on('SIGTERM', () => {
+			require('fs').writeFileSync("{{markerPath}}", 'sigterm');
+			process.exit(0);
+		});
+		require('fs').writeFileSync("{{pidPath}}", String(process.pid));
+		require('fs').writeFileSync("{{markerPath}}", 'starting');
+		setTimeout(() => {}, 10000);
 		""";
 
 	private static async Task WaitForMarker(string markerPath, string expectedContents)

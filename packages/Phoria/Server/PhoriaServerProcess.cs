@@ -31,6 +31,7 @@ public sealed class PhoriaServerProcess
 	private int? processId;
 	private TaskCompletionSource<int?>? processStartCompletion;
 	private Task? stopTask;
+	private CancellationTokenSource? stopSignal;
 	private bool stopping;
 
 	public PhoriaServerProcess(
@@ -67,44 +68,82 @@ public sealed class PhoriaServerProcess
 			return;
 		}
 
-		if (periodicTimer != null)
+		SemaphoreSlim serverSemaphore;
+		lock (sync)
 		{
-			return;
-		}
+			if (periodicTimer != null)
+			{
+				return;
+			}
 
-		semaphore = new(1, 1);
+			serverSemaphore = new(1, 1);
+			semaphore = serverSemaphore;
+		}
 
 		// Host shutdown is driven by StopServer rather than by cancelling ListenAsync: CliWrap registers
 		// process.Kill() (SIGKILL) on the forceful token passed to ListenAsync, which would pre-empt
 		// StopServer's graceful SIGTERM sequence. The callback runs StopServer (SIGTERM -> grace period ->
 		// process-tree kill) when the host requests shutdown.
+		using var serverStopSignal = new CancellationTokenSource();
+		using CancellationTokenSource linkedStopping = CancellationTokenSource.CreateLinkedTokenSource(
+			stoppingToken,
+			serverStopSignal.Token);
+		lock (sync)
+		{
+			stopSignal = serverStopSignal;
+		}
+
 		using CancellationTokenRegistration stopRegistration = stoppingToken.Register(() => _ = StopServer());
+
+		PeriodicTimer? timer = null;
 
 		try
 		{
 			// Start the process
 
-			await EnsureProcessIsRunning(options.Server.Process, stoppingToken);
+			await EnsureProcessIsRunning(options.Server.Process, linkedStopping.Token);
 
 			lock (sync)
 			{
 				if (stopping)
 				{
-					stoppingToken.ThrowIfCancellationRequested();
+					linkedStopping.Token.ThrowIfCancellationRequested();
 					return;
 				}
 
 				periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.Process.HealthCheckInterval));
+				timer = periodicTimer;
 			}
 
-			while (await periodicTimer!.WaitForNextTickAsync(stoppingToken))
+			while (await timer.WaitForNextTickAsync(linkedStopping.Token))
 			{
-				await EnsureProcessIsRunning(options.Server.Process, stoppingToken);
+				await EnsureProcessIsRunning(options.Server.Process, linkedStopping.Token);
 			}
 		}
 		finally
 		{
 			await StopServer();
+
+			lock (sync)
+			{
+				if (ReferenceEquals(stopSignal, serverStopSignal))
+				{
+					stopSignal = null;
+				}
+
+				if (ReferenceEquals(semaphore, serverSemaphore))
+				{
+					semaphore = null;
+				}
+
+				if (ReferenceEquals(periodicTimer, timer))
+				{
+					periodicTimer = null;
+				}
+			}
+
+			timer?.Dispose();
+			serverSemaphore.Dispose();
 		}
 	}
 
@@ -303,14 +342,12 @@ public sealed class PhoriaServerProcess
 		}
 
 		int? processIdToStop;
-		PeriodicTimer? periodicTimerToDispose;
 
 		lock (sync)
 		{
+			stopSignal?.Cancel();
 			processIdToStop = processId;
 			processId = null;
-			periodicTimerToDispose = periodicTimer;
-			periodicTimer = null;
 		}
 
 		if (processIdToStop.HasValue)
@@ -318,18 +355,11 @@ public sealed class PhoriaServerProcess
 			await StopProcess(processIdToStop.Value);
 		}
 
-		periodicTimerToDispose?.Dispose();
 	}
 
 	public void Dispose()
 	{
-		lock (sync)
-		{
-			semaphore?.Dispose();
-			periodicTimer?.Dispose();
-			semaphore = null;
-			periodicTimer = null;
-		}
+		// StartServer owns the semaphore and timer for the duration of its lifecycle.
 	}
 }
 
