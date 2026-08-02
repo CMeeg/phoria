@@ -197,8 +197,15 @@ internal sealed class ViteDevServerHmrProxy(
 
 internal static partial class ViteDevHmrProxyLogMessages
 {
+	private static class ServerEvent
+	{
+		public const int EstablishingWebSocketProxy = 4;
+		public const int FailedToEstablishWebSocketProxy = 5;
+		public const int FailedToCloseWebSocket = 6;
+	}
+
 	[LoggerMessage(
-		EventId = EventFeature.Server + 4,
+		EventId = EventFeature.Server + ServerEvent.EstablishingWebSocketProxy,
 		Message = "Establishing HMR WebSocket proxy: {ClientWebSocketUri} -> {TargetWebSocketUri}",
 		Level = LogLevel.Information)]
 	internal static partial void LogEstablishingWebSocketProxy(
@@ -207,7 +214,7 @@ internal static partial class ViteDevHmrProxyLogMessages
 		Uri targetWebSocketUri);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + 5,
+		EventId = EventFeature.Server + ServerEvent.FailedToEstablishWebSocketProxy,
 		Message = "Failed to establish WebSocket proxy: {Message}",
 		Level = LogLevel.Error)]
 	internal static partial void LogFailedToEstablishWebSocketProxy(
@@ -215,7 +222,7 @@ internal static partial class ViteDevHmrProxyLogMessages
 		string message);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + 6,
+		EventId = EventFeature.Server + ServerEvent.FailedToCloseWebSocket,
 		Message = "Failed to close WebSocket {WebSocketUri}. {Message}",
 		Level = LogLevel.Warning)]
 	internal static partial void LogFailedToCloseWebSocket(

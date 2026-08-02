@@ -195,8 +195,14 @@ internal sealed record PhoriaHealthCheckResult
 
 internal static partial class PhoriaServerMonitorLogMessages
 {
+	private static class ServerEvent
+	{
+		public const int ServerIsHealthy = 2;
+		public const int ServerIsUnhealthy = 3;
+	}
+
 	[LoggerMessage(
-		EventId = EventFeature.Server + 2,
+		EventId = EventFeature.Server + ServerEvent.ServerIsHealthy,
 		Message = "Phoria server at {Url} is healthy.",
 		Level = LogLevel.Debug)]
 	internal static partial void LogServerIsHealthy(
@@ -205,7 +211,7 @@ internal static partial class PhoriaServerMonitorLogMessages
 
 	private static readonly Action<ILogger, string, Exception?> logServerIsUnhealthy = LoggerMessage.Define<string>(
 		LogLevel.Error,
-		EventFeature.Server + 3,
+		EventFeature.Server + ServerEvent.ServerIsUnhealthy,
 		"Phoria server at {Url} is unhealthy.");
 	internal static void LogServerIsUnhealthy(
 		this ILogger logger,

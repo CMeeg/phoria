@@ -180,20 +180,27 @@ public sealed class ViteManifestReader(
 
 internal static partial class ViteManifestReaderLogMessages
 {
+	private static class ViteEvent
+	{
+		public const int ManifestFileWontBeRead = 1;
+		public const int DetectedChangeInManifest = 2;
+		public const int ManifestFileNotFound = 3;
+	}
+
 	[LoggerMessage(
-		EventId = EventFeature.Vite + 1,
+		EventId = EventFeature.Vite + ViteEvent.ManifestFileWontBeRead,
 		Message = "The manifest file won't be read because the vite development service is enabled. The service will always return null chunks",
 		Level = LogLevel.Information)]
 	internal static partial void LogManifestFileWontBeRead(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = EventFeature.Vite + 2,
+		EventId = EventFeature.Vite + ViteEvent.DetectedChangeInManifest,
 		Message = "Detected change in Vite manifest - refreshing",
 		Level = LogLevel.Information)]
 	internal static partial void LogDetectedChangeInManifest(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = EventFeature.Vite + 3,
+		EventId = EventFeature.Vite + ViteEvent.ManifestFileNotFound,
 		Message = "The manifest file was not found. Has the build process been executed?",
 		Level = LogLevel.Error)]
 	internal static partial void LogManifestFileNotFound(this ILogger logger);
