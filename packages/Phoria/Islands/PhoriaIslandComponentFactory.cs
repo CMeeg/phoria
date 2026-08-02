@@ -16,12 +16,13 @@ public class PhoriaIslandComponentFactory(
 	IPhoriaIslandScopedContext scopedContext,
 	IPhoriaIslandSsr phoriaIslandSsr,
 	IOptions<PhoriaOptions> options)
-	: IPhoriaIslandComponentFactory
+	: IPhoriaIslandComponentFactory, IDisposable
 {
 	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
 	private readonly IPhoriaIslandScopedContext scopedContext = scopedContext;
 	private readonly IPhoriaIslandSsr phoriaIslandSsr = phoriaIslandSsr;
 	private readonly PhoriaOptions options = options.Value;
+	private readonly List<PhoriaIslandHtmlContent> contents = [];
 
 	public async Task<PhoriaIslandHtmlContent> CreateAsync(
 		string component,
@@ -57,13 +58,36 @@ public class PhoriaIslandComponentFactory(
 
 		scopedContext.AddIsland(island);
 
-		PhoriaIslandSsrResult? ssrResult = island.RenderMode != PhoriaIslandRenderMode.ClientOnly
-			? await phoriaIslandSsr.RenderIsland(island)
-			: null;
+		PhoriaIslandSsrResult? ssrResult = null;
+		try
+		{
+			ssrResult = island.RenderMode != PhoriaIslandRenderMode.ClientOnly
+				? await phoriaIslandSsr.RenderIsland(island)
+				: null;
 
-		return new PhoriaIslandHtmlContent(
-			island,
-			ssrResult,
-			options);
+			var content = new PhoriaIslandHtmlContent(
+				island,
+				ssrResult,
+				options);
+
+			contents.Add(content);
+			return content;
+		}
+		catch
+		{
+			ssrResult?.Dispose();
+			throw;
+		}
+	}
+
+	public void Dispose()
+	{
+		foreach (PhoriaIslandHtmlContent content in contents)
+		{
+			content.Dispose();
+		}
+
+		contents.Clear();
+		GC.SuppressFinalize(this);
 	}
 }
