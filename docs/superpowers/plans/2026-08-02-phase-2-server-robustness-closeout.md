@@ -347,10 +347,15 @@ Add a resolution to that entry:
 
 > **Resolution (2026-08-02):** Assessed and deferred post-1.0. `MemoryPool<byte>` provides fixed-size rented blocks via `Rent()/IMemoryOwner<byte>`, not an expanding stream with `IBufferWriter<byte>`, `GetReadOnlySequence()`, and `Stream` semantics. Phoria's consumers (`PhoriaIslandHtmlContent`, `PhoriaIslandPropsSerializer`, `PhoriaIslandSsr`) depend on all three. Adopting `IMemoryPoolFactory<byte>` would require either rewriting consumers against `Memory<byte>`/`ReadOnlySequence<byte>` (breaking `StreamContent`, `CopyToAsync`, the HTML writer path) or building a new stream wrapper around `MemoryPool<byte>` that reimplements the `RecyclableMemoryStream` API — effectively reinventing `Microsoft.IO.RecyclableMemoryStream`. The existing `RecyclableMemoryStreamManager` with configurable block/buffer sizes and aggressive buffer return is appropriate for this use case. Revisit if a future `Microsoft.IO` release accepts `MemoryPool<byte>` as a backing allocator.
 
-- [ ] **Step 3: Record environmental limitations**
+- [x] **Step 3: Record environmental limitations**
 
 Add a note to the plan documenting the two items that are environmental rather than code defects:
-- Aspire CLI 13.4.6 non-interactive SIGINT semantics (DCP resource cleanup) — requires an Aspire library upgrade; not a Phoria code fix. `aspire stop` provides reliable teardown in scripts.
+- Aspire CLI 13.4.6 non-interactive SIGINT semantics (DCP resource cleanup) — requires an Aspire library upgrade; not a Phoria code fix. `aspire stop` provides reliable teardown in scripts. Verified 2026-08-02 from this worktree with the exact Task 7 commands, each launched under `setsid` and terminated once with `kill -INT -- -<process-group>` after both resources reported `Running`/`ready`:
+  - `pnpm --dir e2e/framework-multiple run dev:aspire`: `tsx .../WebApp/ui/src/server.ts`; wrapper exit `130`; detached `tsx` and WebApp processes remained after SIGINT.
+  - `pnpm --dir e2e/framework-multiple run preview`: `node dist/server/server.js`; wrapper exit `130`; detached WebApp processes remained after SIGINT.
+  - `pnpm --dir e2e/with-workspace/WebApp run dev:aspire`: `tsx .../ui/src/server.ts`; wrapper exit `130`; detached WebApp processes remained after SIGINT.
+  - `pnpm --dir e2e/with-workspace/WebApp run preview`: `node dist/server/server.js`; wrapper exit `130`; detached WebApp processes remained after SIGINT.
+  The Aspire CLI printed `Stopping Aspire` in all four runs, but DCP launched resource processes in separate process groups. The surviving resource processes required explicit SIGTERM cleanup; no worktree processes remained after that cleanup. CLI evidence is in `/home/meeg/.aspire/logs/cli_20260802T225111_cc534154.log`, `/home/meeg/.aspire/logs/cli_20260802T224946_681b2cd3.log`, `/home/meeg/.aspire/logs/cli_20260802T225006_de54a3ad.log`, and `/home/meeg/.aspire/logs/cli_20260802T225027_3bd1c692.log`. This is the known non-interactive DCP limitation, not an application shutdown defect.
 - Node shutdown OTel events not observed before parent exit — observability gap. The explicit OTel flush/shutdown path in `server.ts` is present; this needs a collector-backed integration test.
 
 ---
