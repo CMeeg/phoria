@@ -11,11 +11,11 @@ detailed task breakdown belong in the spec/plan that follows.
 ## Problem
 
 Phoria has been dormant for a while and sits at `0.4.x` (with package version
-drift). It works, but it can't be confidently described as production-ready:
-there are **no automated tests**, a **known server-process shutdown bug**, rough
-edges in production error handling, and dependencies/platform targets that have
-fallen behind (Vite 6, .NET 8/9). Without a safety net, dependency updates and
-refactors are risky, and the public API can't be committed to.
+drift). The v1 work began with no automated tests, a known server-process
+shutdown bug, rough edges in production error handling, and dependencies/platform
+targets that had fallen behind. The test foundation, dependency updates, and
+Phase 2 server-robustness close-out have now addressed those baseline risks;
+remaining milestone work is tracked below.
 
 The goal is to bring the project up to date, harden it, and reach a
 **`1.0.0` release the author is happy to talk about publicly**.
@@ -47,7 +47,7 @@ The goal is to bring the project up to date, harden it, and reach a
 v1 is successful when:
 
 - Unit tests (Vitest for JS, xUnit for .NET) and Playwright e2e tests exist and
-  run in CI; the root `test` script is real (currently a stub).
+  run in CI; the root `test` script is real.
 - The known vite-process shutdown bug is fixed and no longer reproducible.
 - Server-process lifecycle events and errors — in both the .NET host and the
   Node/Vite sidecar — emit structured logs via OpenTelemetry, giving
@@ -73,10 +73,13 @@ v1 is successful when:
   shutdown paths (Node/Vite sidecar signal handling, `run-p` replacement with
   a signal-forwarding orchestrator), health/observability delivered via
   **OpenTelemetry logging** (.NET host + Node/Vite sidecar — logging only;
-  traces/metrics left open, see Open questions), and `.NET 10` memory pools
-  (`IMemoryPoolFactory<byte>` adoption in `Phoria.IO` — a public-API refactor,
-  not a dependency bump). Task-by-task detail:
-  [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md).
+  traces/metrics left open, see Open questions), and an assessment of `.NET 10`
+  memory pools. `IMemoryPoolFactory<byte>` adoption is explicitly deferred
+  post-1.0 because it does not provide the stream and buffer-writer semantics
+  used by `Phoria.IO`. Task-by-task detail is split between the main plan and
+  its close-out:
+  [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md)
+  and [`docs/superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md`](superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md).
 - Vite bundling of .NET-referenced static assets (committed feature).
 - Timeboxed exploration spikes (go/no-go): nested component composition,
   streaming/Suspense, server actions, Deno/other adapters.
@@ -121,15 +124,17 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
    unavailable). `ViteChunk.Name` is the one item *not* included here — it
    stays deferred to Phase 3. Task-by-task detail:
    [`docs/superpowers/plans/2026-08-01-phase-1.5-close-out-deferred-issues.md`](superpowers/plans/2026-08-01-phase-1.5-close-out-deferred-issues.md).
-2. **Server robustness & production-readiness** — shutdown bug (including the
+2. **Server robustness & production-readiness** — **complete.** The shutdown bug (including the
    `Process.Kill()` process-tree bug), the `StartServer`/`StopServer` semaphore
    race, undisposed `StreamPool`s, the unconditional
    `DangerousAcceptAnyServerCertificateValidator`, prod error handling,
    lifecycle hardening, hardened e2e shutdown paths (Node/Vite sidecar signal
    handling, `run-p` replacement), OpenTelemetry logging (.NET host + Node/Vite
    sidecar) as the concrete delivery of health/observability, and `.NET 10`
-   memory pools (`IMemoryPoolFactory<byte>` adoption). Task-by-task detail:
-   [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md).
+   memory-pool assessment and deferred-issue close-out are complete. The
+   memory-pool replacement remains deferred post-1.0. Task-by-task detail:
+   [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md)
+   and [`docs/superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md`](superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md).
 3. **Vite bundling of .NET-referenced static assets** — includes a design spike
    first (riskiest unknown).
 4. **Exploration spikes** — composition, streaming/Suspense, server actions,
@@ -173,7 +178,6 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   extra coverage. `net8.0` is retained until its Nov 2026 EOL, then revisited.
 - TODO: Decide whether OpenTelemetry traces/metrics (beyond logging) are in
   scope for v1, or deferred entirely to a future milestone.
-- TODO: Decide the OTel log exporter/target (OTLP collector? console/
-  dev-only?) and whether .NET↔Node log correlation across the sidecar
-  boundary is required — an architecture decision for the Phase 2 plan, not
-  this document.
+- E2E AppHosts currently use an OTLP HTTP exporter for dashboard visibility;
+  decide later whether a production exporter/target and .NET↔Node log
+  correlation across the sidecar boundary are required for v1.

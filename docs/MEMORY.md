@@ -112,3 +112,25 @@ Dated log of decisions made while shaping the project. One line each, with the w
 - Narrowed the `run-p` replacement to parallel build scripts. Aspire supersedes
   the old `run-p preview:*` orchestration instead of adding a second preview
   runner.
+
+## 2026-08-03 — Phase 2 server-robustness close-out
+
+- Hardened `PhoriaServerProcess` around timer capture, spawn-window shutdown,
+  shared stop tasks, process-tree termination, and semaphore ownership.
+- Made SSR stream-pool disposal deterministic across successful, failed, and
+  abandoned renders; production certificate validation uses the system trust
+  store while development retains dangerous local-cert acceptance.
+- Isomorphic islands degrade to client-only when the server is unhealthy and
+  return to SSR after monitor recovery. The monitor waits for its first healthy
+  check before startup proceeds.
+- Added the optional OTel-independent `PhoriaLogger` seam to Node handlers;
+  e2e servers adapt their OTel loggers without adding OTel to the published
+  package.
+- Centralized full numeric logger event IDs in nested `EventId` feature groups,
+  preserving emitted IDs while removing composite `EventFeature` expressions.
+- Sibling Aspire AppHosts now support `dev:aspire` and Preview orchestration;
+  the with-sidecar app remains the explicit .NET-owned Node-process model.
+- Deferred `IMemoryPoolFactory<byte>` post-1.0 because it lacks the stream and
+  buffer-writer semantics required by current consumers. Aspire 13.4.6 SIGINT
+  cleanup remains an environmental limitation, and Node shutdown OTel delivery
+  remains an observability gap requiring collector-backed testing.

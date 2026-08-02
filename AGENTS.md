@@ -23,6 +23,7 @@ packages/
   Phoria.Tests/         Phoria (.NET) test project
 e2e/
   framework-multiple/   Test app using React + Svelte + Vue together
+  with-sidecar/         Test app where .NET owns the Node process
   with-workspace/       Test app for workspace scenarios
 ```
 
@@ -131,9 +132,12 @@ NuGet publishing uses the `scripts/dotnet/publish.js` script via `pnpm --filter 
 
 ## E2E Apps
 
-The `e2e/` apps are full .NET + Vite applications used for integration testing. They are **not** part of the .NET solution. Each has its own `package.json` with:
+The `e2e/` apps are full .NET + Vite applications used for integration testing. They are **not** part of the .NET solution. `framework-multiple` and `with-workspace` use Aspire AppHosts to own the Node process; `with-sidecar` exercises the alternative where `PhoriaServerProcess` owns Node from the .NET WebApp. Each has its own `package.json` with:
 
 - `build` — builds both Vite (islands + server) and .NET
 - `dev` — runs the Vite dev server via tsx
-- `preview` — runs production builds of both Vite server and .NET app
+- `dev:aspire` — starts the sibling WebApp, Vite dev server, and Aspire dashboard in Development mode (`framework-multiple` and `with-workspace`)
+- `preview` — starts the Aspire AppHost with the compiled Vite server and .NET app
 - `lint` / `check` — Biome and TypeScript checking
+
+Aspire CLI 13.4.6 may leave DCP-managed resources running after non-interactive SIGINT; use `aspire stop` when scripted teardown is required.
