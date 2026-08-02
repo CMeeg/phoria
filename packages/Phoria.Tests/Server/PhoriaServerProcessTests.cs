@@ -125,25 +125,61 @@ public class PhoriaServerProcessTests
 		}
 
 		string markerPath = CreateMarkerPath(nameof(StartServer_CancellationDuringProcessStartup_StopsSpawnedProcess));
-		string pidPath = CreateMarkerPath(nameof(StartServer_CancellationDuringProcessStartup_StopsSpawnedProcess) + "-pid");
+		int spawnedPid = 0;
 
+		using var cts = new CancellationTokenSource();
 		using PhoriaServerProcess serverProcess = CreateServerProcess(
 			stopGracePeriod: TimeSpan.FromSeconds(1),
-			script: StartupNodeScript(markerPath, pidPath));
-		using var cts = new CancellationTokenSource();
+			script: StartupNodeScript(markerPath),
+			beforeProcessIdAssignment: pid =>
+			{
+				spawnedPid = pid;
+				cts.Cancel();
+			});
 
 		Task startTask = serverProcess.StartServer(cts.Token);
-		await WaitForMarker(markerPath, "starting");
-		int pid = int.Parse(await File.ReadAllTextAsync(pidPath, TestContext.Current.CancellationToken), CultureInfo.InvariantCulture);
-		using var child = Process.GetProcessById(pid);
-
-		cts.Cancel();
 
 		await Assert.ThrowsAnyAsync<OperationCanceledException>(() => startTask.WaitAsync(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken));
-		await child.WaitForExitAsync(TestContext.Current.CancellationToken);
 
-		Assert.True(child.HasExited);
-		Assert.Equal("sigterm", await File.ReadAllTextAsync(markerPath, TestContext.Current.CancellationToken));
+		Assert.NotEqual(0, spawnedPid);
+		Assert.False(IsProcessRunning(spawnedPid));
+	}
+
+	[Fact]
+	public async Task StartServer_ConcurrentStartup_UsesOneSemaphoreOwner()
+	{
+		if (OperatingSystem.IsWindows())
+		{
+			Assert.Skip("Graceful SIGTERM-based stop is Unix-only.");
+		}
+
+		var startedEvent = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+		int hookCalls = 0;
+		Task? secondStart = null;
+		using var firstCts = new CancellationTokenSource();
+		using var secondCts = new CancellationTokenSource();
+		PhoriaServerProcess? serverProcess = null;
+		using PhoriaServerProcess ownedServerProcess = CreateServerProcess(
+			script: "setInterval(() => {}, 1000);",
+			beforeProcessIdAssignment: _ =>
+			{
+				if (Interlocked.Increment(ref hookCalls) == 1)
+				{
+					secondStart = serverProcess!.StartServer(secondCts.Token);
+					startedEvent.SetResult();
+				}
+			});
+		serverProcess = ownedServerProcess;
+
+		Task firstStart = ownedServerProcess.StartServer(firstCts.Token);
+		await startedEvent.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+		Assert.NotNull(secondStart);
+		Assert.True(secondStart.IsCompleted);
+
+		firstCts.Cancel();
+		secondCts.Cancel();
+		await Assert.ThrowsAnyAsync<OperationCanceledException>(() => firstStart.WaitAsync(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken));
 	}
 
 	[Fact]
@@ -221,7 +257,11 @@ public class PhoriaServerProcessTests
 		Assert.True(child.HasExited);
 	}
 
-	private static PhoriaServerProcess CreateServerProcess(int? processId = null, TimeSpan? stopGracePeriod = null, string? script = null)
+	private static PhoriaServerProcess CreateServerProcess(
+		int? processId = null,
+		TimeSpan? stopGracePeriod = null,
+		string? script = null,
+		Action<int>? beforeProcessIdAssignment = null)
 	{
 		return new PhoriaServerProcess(
 			NullLogger<PhoriaServerProcess>.Instance,
@@ -229,7 +269,8 @@ public class PhoriaServerProcessTests
 			new StubHostEnvironment(),
 			Options.Create(CreateProcessOptions(script ?? "setInterval(() => {}, 1000);")),
 			processId,
-			stopGracePeriod ?? PhoriaServerProcess.StopGracePeriod);
+			stopGracePeriod ?? PhoriaServerProcess.StopGracePeriod,
+			beforeProcessIdAssignment);
 	}
 
 	private static PhoriaServerProcess CreateServerProcessViaPublicConstructor(string script)
@@ -311,13 +352,12 @@ public class PhoriaServerProcessTests
 		setInterval(() => {}, 1000);
 		""";
 
-	private static string StartupNodeScript(string markerPath, string pidPath) =>
+	private static string StartupNodeScript(string markerPath) =>
 		$$"""
 		process.on('SIGTERM', () => {
 			require('fs').writeFileSync("{{markerPath}}", 'sigterm');
 			process.exit(0);
 		});
-		require('fs').writeFileSync("{{pidPath}}", String(process.pid));
 		require('fs').writeFileSync("{{markerPath}}", 'starting');
 		setTimeout(() => {}, 10000);
 		""";
@@ -339,6 +379,19 @@ public class PhoriaServerProcessTests
 
 		throw new InvalidOperationException(
 			$"Timed out waiting for node process to write '{expectedContents}' to {markerPath}.");
+	}
+
+	private static bool IsProcessRunning(int processId)
+	{
+		try
+		{
+			using Process process = Process.GetProcessById(processId);
+			return !process.HasExited;
+		}
+		catch (ArgumentException)
+		{
+			return false;
+		}
 	}
 
 	private sealed class StubServerMonitor : IPhoriaServerMonitor

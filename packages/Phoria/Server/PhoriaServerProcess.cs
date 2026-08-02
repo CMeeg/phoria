@@ -24,6 +24,7 @@ public sealed class PhoriaServerProcess
 	private readonly IPhoriaServerMonitor serverMonitor;
 	private readonly IHostEnvironment environment;
 	private readonly PhoriaOptions options;
+	private readonly Action<int>? beforeProcessIdAssignment;
 	private readonly TimeSpan stopGracePeriod;
 	private readonly object sync = new();
 	private SemaphoreSlim? semaphore;
@@ -49,7 +50,8 @@ public sealed class PhoriaServerProcess
 		IHostEnvironment environment,
 		IOptions<PhoriaOptions> options,
 		int? processId,
-		TimeSpan stopGracePeriod)
+		TimeSpan stopGracePeriod,
+		Action<int>? beforeProcessIdAssignment = null)
 	{
 		this.logger = logger;
 		this.serverMonitor = serverMonitor;
@@ -57,6 +59,7 @@ public sealed class PhoriaServerProcess
 		this.options = options.Value;
 		this.processId = processId;
 		this.stopGracePeriod = stopGracePeriod;
+		this.beforeProcessIdAssignment = beforeProcessIdAssignment;
 	}
 
 	public async Task StartServer(CancellationToken stoppingToken)
@@ -71,7 +74,7 @@ public sealed class PhoriaServerProcess
 		SemaphoreSlim serverSemaphore;
 		lock (sync)
 		{
-			if (periodicTimer != null)
+			if (semaphore != null || periodicTimer != null)
 			{
 				return;
 			}
@@ -101,7 +104,7 @@ public sealed class PhoriaServerProcess
 		{
 			// Start the process
 
-			await EnsureProcessIsRunning(options.Server.Process, linkedStopping.Token);
+			await EnsureProcessIsRunning(options.Server.Process, serverSemaphore, linkedStopping.Token);
 
 			lock (sync)
 			{
@@ -117,7 +120,7 @@ public sealed class PhoriaServerProcess
 
 			while (await timer.WaitForNextTickAsync(linkedStopping.Token))
 			{
-				await EnsureProcessIsRunning(options.Server.Process, linkedStopping.Token);
+				await EnsureProcessIsRunning(options.Server.Process, serverSemaphore, linkedStopping.Token);
 			}
 		}
 		finally
@@ -149,6 +152,7 @@ public sealed class PhoriaServerProcess
 
 	private async Task EnsureProcessIsRunning(
 		PhoriaServerOptions.ProcessOptions processOptions,
+		SemaphoreSlim serverSemaphore,
 		CancellationToken cancellationToken)
 	{
 		if (serverMonitor.ServerStatus.Health == PhoriaServerHealth.Healthy)
@@ -183,7 +187,7 @@ public sealed class PhoriaServerProcess
 			}
 		}
 
-		if (await semaphore!.WaitAsync(0, cancellationToken))
+		if (await serverSemaphore.WaitAsync(0, cancellationToken))
 		{
 			TaskCompletionSource<int?>? startCompletion = null;
 
@@ -220,6 +224,7 @@ public sealed class PhoriaServerProcess
 					switch (cmdEvent)
 					{
 						case StartedCommandEvent started:
+							beforeProcessIdAssignment?.Invoke(started.ProcessId);
 							lock (sync)
 							{
 								processId = started.ProcessId;
@@ -260,7 +265,7 @@ public sealed class PhoriaServerProcess
 						processStartCompletion = null;
 					}
 
-					semaphore?.Release();
+					serverSemaphore.Release();
 				}
 			}
 		}
