@@ -25,6 +25,7 @@ public sealed class PhoriaServerProcess
 	private readonly IHostEnvironment environment;
 	private readonly PhoriaOptions options;
 	private readonly TimeSpan stopGracePeriod;
+	private readonly object sync = new();
 	private SemaphoreSlim? semaphore;
 	private PeriodicTimer? periodicTimer;
 	private int? processId;
@@ -69,6 +70,12 @@ public sealed class PhoriaServerProcess
 		}
 
 		semaphore = new(1, 1);
+
+		// Host shutdown is driven by StopServer rather than by cancelling ListenAsync: CliWrap registers
+		// process.Kill() (SIGKILL) on the forceful token passed to ListenAsync, which would pre-empt
+		// StopServer's graceful SIGTERM sequence. The callback runs StopServer (SIGTERM -> grace period ->
+		// process-tree kill) when the host requests shutdown.
+		using CancellationTokenRegistration stopRegistration = stoppingToken.Register(() => _ = StopServer());
 
 		// Start the process
 
@@ -125,7 +132,12 @@ public sealed class PhoriaServerProcess
 					.WithWorkingDirectory(environment.ContentRootPath)
 					.WithValidation(CommandResultValidation.None);
 
-				await foreach (CommandEvent cmdEvent in cmd.ListenAsync(cancellationToken))
+				// Deliberately no cancellation tokens: the host stopping token must not reach ListenAsync,
+				// where CliWrap would register process.Kill() (SIGKILL, forceful token) or process.Interrupt()
+				// (SIGINT, graceful token) on it and pre-empt StopServer's SIGTERM sequence. Termination is
+				// owned by StopServer (see the stop registration in StartServer); ListenAsync unwinds when
+				// the process exits.
+				await foreach (CommandEvent cmdEvent in cmd.ListenAsync(CancellationToken.None))
 				{
 					switch (cmdEvent)
 					{
@@ -156,7 +168,10 @@ public sealed class PhoriaServerProcess
 			}
 			finally
 			{
-				semaphore.Release();
+				lock (sync)
+				{
+					semaphore?.Release();
+				}
 
 				await StopServer();
 			}
@@ -165,7 +180,7 @@ public sealed class PhoriaServerProcess
 
 	private const int TermSignal = 15;
 
-	[DllImport("libc", SetLastError = true, EntryPoint = "kill")]
+	[DllImport("libc", EntryPoint = "kill")]
 	private static extern int SendSignal(int pid, int signal);
 
 	private async Task StopProcess(int pid)
@@ -218,22 +233,41 @@ public sealed class PhoriaServerProcess
 
 	public async Task StopServer()
 	{
-		if (processId.HasValue)
+		int? processIdToStop;
+		SemaphoreSlim? semaphoreToDispose;
+		PeriodicTimer? periodicTimerToDispose;
+
+		// Capture and clear the state under the lock so concurrent callers (the shutdown registration in
+		// StartServer, the EnsureProcessIsRunning finally block, and PhoriaServerProcessService) only stop
+		// the process once.
+		lock (sync)
 		{
-			await StopProcess(processId.Value);
+			processIdToStop = processId;
+			processId = null;
+			semaphoreToDispose = semaphore;
+			semaphore = null;
+			periodicTimerToDispose = periodicTimer;
+			periodicTimer = null;
 		}
 
-		Dispose();
+		if (processIdToStop.HasValue)
+		{
+			await StopProcess(processIdToStop.Value);
+		}
 
-		semaphore = null;
-		periodicTimer = null;
-		processId = null;
+		semaphoreToDispose?.Dispose();
+		periodicTimerToDispose?.Dispose();
 	}
 
 	public void Dispose()
 	{
-		semaphore?.Dispose();
-		periodicTimer?.Dispose();
+		lock (sync)
+		{
+			semaphore?.Dispose();
+			periodicTimer?.Dispose();
+			semaphore = null;
+			periodicTimer = null;
+		}
 	}
 }
 

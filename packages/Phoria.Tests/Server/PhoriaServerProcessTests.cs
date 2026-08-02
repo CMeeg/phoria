@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -10,6 +11,8 @@ namespace Phoria.Tests.Server;
 
 public class PhoriaServerProcessTests
 {
+	// These tests spawn real node processes, so node must be on PATH.
+
 	[Fact]
 	public async Task StopServer_NoProcessStarted_CompletesWithoutThrowing()
 	{
@@ -43,9 +46,15 @@ public class PhoriaServerProcessTests
 
 		using PhoriaServerProcess serverProcess = CreateServerProcess(
 			processId: child.Id,
-			stopGracePeriod: TimeSpan.FromSeconds(30));
+			stopGracePeriod: TimeSpan.FromSeconds(10));
 
+		var stopwatch = Stopwatch.StartNew();
 		await serverProcess.StopServer();
+		stopwatch.Stop();
+
+		// The stop completes quickly on the graceful path; if the grace period were waited out (signal not
+		// delivered) the elapsed time would be much larger.
+		Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(5), $"Stop took {stopwatch.Elapsed}.");
 
 		string markerContents = await File.ReadAllTextAsync(markerPath, TestContext.Current.CancellationToken);
 		Assert.Equal("sigterm", markerContents);
@@ -79,27 +88,114 @@ public class PhoriaServerProcessTests
 		Assert.InRange(stopwatch.Elapsed, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(15));
 	}
 
-	private static PhoriaServerProcess CreateServerProcess(int? processId = null, TimeSpan? stopGracePeriod = null)
+	[Fact]
+	public async Task StartServer_HostStopping_SendsSIGTERMAndRunsGracefulHandlerToCompletion()
 	{
-		var options = new PhoriaOptions
+		if (OperatingSystem.IsWindows())
+		{
+			Assert.Skip("Graceful SIGTERM-based stop is Unix-only.");
+		}
+
+		// The SIGTERM handler takes 2s to complete, so the graceful stop is only preserved if the child
+		// is not SIGKILLed by CliWrap's ListenAsync cancellation (the pre-fix wiring) in the meantime.
+		string markerPath = CreateMarkerPath(nameof(StartServer_HostStopping_SendsSIGTERMAndRunsGracefulHandlerToCompletion));
+		string completionMarkerPath = CreateMarkerPath(nameof(StartServer_HostStopping_SendsSIGTERMAndRunsGracefulHandlerToCompletion) + "-done");
+		string pidPath = CreateMarkerPath(nameof(StartServer_HostStopping_SendsSIGTERMAndRunsGracefulHandlerToCompletion) + "-pid");
+
+		using PhoriaServerProcess serverProcess = CreateServerProcessViaPublicConstructor(SlowGracefulNodeScript(markerPath, completionMarkerPath, pidPath));
+		using var cts = new CancellationTokenSource();
+
+		var startTask = serverProcess.StartServer(cts.Token);
+
+		await WaitForMarker(markerPath, "ready");
+		int pid = int.Parse(await File.ReadAllTextAsync(pidPath, TestContext.Current.CancellationToken), CultureInfo.InvariantCulture);
+		using var child = Process.GetProcessById(pid);
+
+		cts.Cancel();
+
+		await Assert.ThrowsAnyAsync<OperationCanceledException>(() => startTask.WaitAsync(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken));
+
+		Assert.Equal("sigterm", await File.ReadAllTextAsync(markerPath, TestContext.Current.CancellationToken));
+
+		// The handler ran to completion rather than being interrupted by a SIGKILL: this is the
+		// regression test for the pre-fix wiring, where CliWrap SIGKILLed the child before StopServer's
+		// graceful SIGTERM sequence could run.
+		Assert.True(File.Exists(completionMarkerPath), "The node SIGTERM handler was interrupted before completing (likely SIGKILLed).");
+		Assert.Equal("sigterm-done", await File.ReadAllTextAsync(completionMarkerPath, TestContext.Current.CancellationToken));
+
+		await child.WaitForExitAsync(TestContext.Current.CancellationToken);
+		Assert.True(child.HasExited);
+	}
+
+	[Fact]
+	public async Task StartServer_HostStopping_ForceKillsAfterGracePeriodWhenTerminationSignalIgnored()
+	{
+		if (OperatingSystem.IsWindows())
+		{
+			Assert.Skip("Graceful SIGTERM-based stop is Unix-only.");
+		}
+
+		string markerPath = CreateMarkerPath(nameof(StartServer_HostStopping_ForceKillsAfterGracePeriodWhenTerminationSignalIgnored));
+		string pidPath = CreateMarkerPath(nameof(StartServer_HostStopping_ForceKillsAfterGracePeriodWhenTerminationSignalIgnored) + "-pid");
+
+		// Inject a short grace period via the internal test seam; StartServer is otherwise exercised
+		// through the same path as the public constructor.
+		using PhoriaServerProcess serverProcess = CreateServerProcess(
+			stopGracePeriod: TimeSpan.FromSeconds(1),
+			script: StartServerIgnoringNodeScript(markerPath, pidPath));
+		using var cts = new CancellationTokenSource();
+
+		var startTask = serverProcess.StartServer(cts.Token);
+
+		await WaitForMarker(markerPath, "ready");
+		int pid = int.Parse(await File.ReadAllTextAsync(pidPath, TestContext.Current.CancellationToken), CultureInfo.InvariantCulture);
+		using var child = Process.GetProcessById(pid);
+
+		var stopwatch = Stopwatch.StartNew();
+		cts.Cancel();
+		await Assert.ThrowsAnyAsync<OperationCanceledException>(() => startTask.WaitAsync(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken));
+		stopwatch.Stop();
+
+		Assert.Equal("sigterm", await File.ReadAllTextAsync(markerPath, TestContext.Current.CancellationToken));
+		Assert.InRange(stopwatch.Elapsed, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(15));
+
+		await child.WaitForExitAsync(TestContext.Current.CancellationToken);
+		Assert.True(child.HasExited);
+	}
+
+	private static PhoriaServerProcess CreateServerProcess(int? processId = null, TimeSpan? stopGracePeriod = null, string? script = null)
+	{
+		return new PhoriaServerProcess(
+			NullLogger<PhoriaServerProcess>.Instance,
+			new StubServerMonitor(),
+			new StubHostEnvironment(),
+			Options.Create(CreateProcessOptions(script ?? "setInterval(() => {}, 1000);")),
+			processId,
+			stopGracePeriod ?? PhoriaServerProcess.StopGracePeriod);
+	}
+
+	private static PhoriaServerProcess CreateServerProcessViaPublicConstructor(string script)
+	{
+		return new PhoriaServerProcess(
+			NullLogger<PhoriaServerProcess>.Instance,
+			new StubServerMonitor(),
+			new StubHostEnvironment(),
+			Options.Create(CreateProcessOptions(script)));
+	}
+
+	private static PhoriaOptions CreateProcessOptions(string script)
+	{
+		return new PhoriaOptions
 		{
 			Server = new PhoriaServerOptions
 			{
 				Process = new PhoriaServerOptions.ProcessOptions
 				{
 					Command = "node",
-					Arguments = ["-e", "setInterval(() => {}, 1000);"]
+					Arguments = ["-e", script]
 				}
 			}
 		};
-
-		return new PhoriaServerProcess(
-			NullLogger<PhoriaServerProcess>.Instance,
-			new StubServerMonitor(),
-			new StubHostEnvironment(),
-			Options.Create(options),
-			processId,
-			stopGracePeriod ?? PhoriaServerProcess.StopGracePeriod);
 	}
 
 	private static Process StartNode(string script)
@@ -120,6 +216,30 @@ public class PhoriaServerProcessTests
 			require('fs').writeFileSync("{{markerPath}}", 'sigterm');
 			process.exit(0);
 		});
+		require('fs').writeFileSync("{{markerPath}}", 'ready');
+		setInterval(() => {}, 1000);
+		""";
+
+	private static string SlowGracefulNodeScript(string markerPath, string completionMarkerPath, string pidPath) =>
+		$$"""
+		process.on('SIGTERM', () => {
+			require('fs').writeFileSync("{{markerPath}}", 'sigterm');
+			setTimeout(() => {
+				require('fs').writeFileSync("{{completionMarkerPath}}", 'sigterm-done');
+				process.exit(0);
+			}, 2000);
+		});
+		require('fs').writeFileSync("{{pidPath}}", String(process.pid));
+		require('fs').writeFileSync("{{markerPath}}", 'ready');
+		setInterval(() => {}, 1000);
+		""";
+
+	private static string StartServerIgnoringNodeScript(string markerPath, string pidPath) =>
+		$$"""
+		process.on('SIGTERM', () => {
+			require('fs').writeFileSync("{{markerPath}}", 'sigterm');
+		});
+		require('fs').writeFileSync("{{pidPath}}", String(process.pid));
 		require('fs').writeFileSync("{{markerPath}}", 'ready');
 		setInterval(() => {}, 1000);
 		""";
