@@ -1,7 +1,20 @@
 using Microsoft.AspNetCore.ResponseCompression;
+using OpenTelemetry.Logs;
 using Phoria;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.AddOpenTelemetry(options =>
+{
+	options.IncludeFormattedMessage = true;
+	options.IncludeScopes = true;
+	options.ParseStateValues = true;
+
+	if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")))
+	{
+		options.AddOtlpExporter();
+	}
+});
 
 // Add services to the container
 
@@ -18,7 +31,13 @@ if (builder.Environment.IsDevelopment())
 	mvcBuilder.AddRazorRuntimeCompilation();
 }
 
-builder.Services.AddPhoria();
+builder.Services.AddPhoria(options =>
+{
+	if (builder.Environment.IsEnvironment("Preview"))
+	{
+		options.Server.Process = null;
+	}
+});
 
 WebApplication app = builder.Build();
 

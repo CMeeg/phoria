@@ -1,5 +1,8 @@
 import { dirname } from "node:path"
 import { fileURLToPath } from "node:url"
+import { logs, SeverityNumber } from "@opentelemetry/api-logs"
+import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http"
+import { ConsoleLogRecordExporter, LoggerProvider, SimpleLogRecordProcessor } from "@opentelemetry/sdk-logs"
 import {
 	createPhoriaCsrRequestHandler,
 	createPhoriaDevCsrRequestHandler,
@@ -9,6 +12,29 @@ import {
 } from "@phoria/phoria/server"
 import { createApp, toNodeListener } from "h3"
 import { type ListenOptions, listen } from "listhen"
+
+const hasOtlpEndpoint = Boolean(process.env.OTEL_EXPORTER_OTLP_ENDPOINT)
+const loggerProvider = new LoggerProvider({
+	processors: [
+		new SimpleLogRecordProcessor({
+			exporter: hasOtlpEndpoint ? new OTLPLogExporter() : new ConsoleLogRecordExporter()
+		})
+	]
+})
+logs.setGlobalLoggerProvider(loggerProvider)
+const logger = logs.getLogger("phoria-server")
+
+function log(event: string, severityNumber: SeverityNumber, attributes: Record<string, string | undefined> = {}) {
+	logger.emit({
+		severityNumber,
+		severityText: SeverityNumber[severityNumber],
+		body: event,
+		attributes: {
+			event,
+			...Object.fromEntries(Object.entries(attributes).filter(([, value]) => value !== undefined))
+		}
+	})
+}
 
 // Get environment and appsettings
 
@@ -58,12 +84,10 @@ app.options.onError = (error) => {
 	const err = error instanceof Error ? error : new Error("Unknown error", { cause: error })
 	viteDevServer?.ssrFixStacktrace(err)
 
-	console.log({
-		message: err.message,
-		stack: err.stack,
-		cause: {
-			message: err.cause
-		}
+	log("server.error", SeverityNumber.ERROR, {
+		"error.message": err.message,
+		"error.stack": err.stack,
+		"error.cause": err.cause === undefined ? undefined : String(err.cause)
 	})
 }
 
@@ -104,24 +128,27 @@ if (viteDevServer) {
 }
 
 const listener = await listen(toNodeListener(app), listenOptions)
+log("server.started", SeverityNumber.INFO)
 
 // Handle server shutdown
 
 function shutdown(signal: NodeJS.Signals) {
-	console.log(`Received signal ${signal}. Shutting down server.`)
+	log("server.shutdown.started", SeverityNumber.INFO, { signal })
 
-	void listener.close().then(() => {
-		console.log("Server listener closed.")
-
+	void listener.close().then(async () => {
+		log("server.shutdown.completed", SeverityNumber.INFO)
+		await loggerProvider.forceFlush()
+		await loggerProvider.shutdown()
 		process.exit(0)
 	})
 
+	// Drop idle keep-alive connections so close() doesn't wait for them
+	listener.server.closeIdleConnections()
+
 	// Force shutdown after 5 seconds
-
 	setTimeout(() => {
-		console.error("Could not shutdown gracefully. Forcefully shutting down server.")
-
-		process.exit(1)
+		log("server.shutdown.forced", SeverityNumber.FATAL, { signal })
+		void loggerProvider.forceFlush().finally(() => process.exit(1))
 	}, 5000)
 }
 

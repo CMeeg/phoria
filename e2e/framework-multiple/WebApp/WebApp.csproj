@@ -11,6 +11,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" />
+		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+		<PackageReference Include="OpenTelemetry.Extensions.Hosting" />
 	</ItemGroup>
 
 	<PropertyGroup>

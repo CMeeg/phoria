@@ -249,6 +249,22 @@ scope it as a deliberate design task in Phase 2, alongside the other
 
 ---
 
+### Stopping the debugger orphans the Phoria Server process
+
+**Body:** Stopping the debugger tears down the host process without running
+the managed host shutdown path, so `BackgroundService.StopAsync`/
+`PhoriaServerProcessService.ExecuteAsync` never completes and `StopServer`
+never runs, orphaning the node process. This is host/debugger behavior the
+library cannot intercept (confirmed in Task 4's Step 3 assessment). Record
+a follow-up issue with repro steps (start with the debugger, stop it,
+verify a `node` process remains) to track once the other Phase 2 shutdown
+paths are verified live.
+
+**Labels:** `phase-2`, `server-robustness`, `bug`
+**Milestone:** v1
+
+---
+
 ### Task 6: Live verification of the shutdown paths
 
 **Files:**
