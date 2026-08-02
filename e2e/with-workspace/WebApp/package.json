@@ -10,7 +10,7 @@
 		"check": "tsc",
 		"dev": "tsx ./ui/src/server.ts",
 		"lint": "biome check",
-		"preview": "aspire run"
+		"preview": "aspire run --apphost ./Phoria.AppHost/Phoria.AppHost.csproj"
 	},
 	"files": [
 		"ui/dist"
