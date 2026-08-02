@@ -80,6 +80,10 @@ public sealed class PhoriaServerMonitor
 		{
 			firstHealthy.TrySetCanceled(cancellationToken);
 		}
+		catch (Exception ex)
+		{
+			firstHealthy.TrySetException(ex);
+		}
 	}
 
 	private async Task CheckHealth(CancellationToken cancellationToken)
