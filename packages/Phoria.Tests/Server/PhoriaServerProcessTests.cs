@@ -89,6 +89,32 @@ public class PhoriaServerProcessTests
 	}
 
 	[Fact]
+	public async Task StopServer_ConcurrentCallersAwaitTheSameStopOperation()
+	{
+		if (OperatingSystem.IsWindows())
+		{
+			Assert.Skip("Graceful SIGTERM-based stop is Unix-only.");
+		}
+
+		string markerPath = CreateMarkerPath(nameof(StopServer_ConcurrentCallersAwaitTheSameStopOperation));
+		using var child = StartNode(IgnoringNodeScript(markerPath));
+		await WaitForMarker(markerPath, "ready");
+
+		using PhoriaServerProcess serverProcess = CreateServerProcess(
+			processId: child.Id,
+			stopGracePeriod: TimeSpan.FromSeconds(1));
+
+		Task firstStop = serverProcess.StopServer();
+		await WaitForMarker(markerPath, "sigterm");
+		Task secondStop = serverProcess.StopServer();
+
+		Assert.False(secondStop.IsCompleted);
+		await Task.WhenAll(firstStop, secondStop);
+
+		Assert.True(child.HasExited);
+	}
+
+	[Fact]
 	public async Task StartServer_HostStopping_SendsSIGTERMAndRunsGracefulHandlerToCompletion()
 	{
 		if (OperatingSystem.IsWindows())

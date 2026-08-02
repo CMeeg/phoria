@@ -14,7 +14,7 @@ var port = int.TryParse(previewConfiguration["Phoria:Server:Port"], out var conf
 
 builder.AddProject<Projects.WebApp>("webapp")
 	.WithHttpEndpoint(port: 5247, name: "http", isProxied: false)
-	.WithEnvironment("DOTNET_ENVIRONMENT", "AppHost")
+	.WithEnvironment("DOTNET_ENVIRONMENT", "Preview")
 	.WithOtlpExporter(Aspire.Hosting.OtlpProtocol.HttpProtobuf);
 
 builder.AddExecutable("phoria-server", command, Path.Combine(webAppDirectory, "ui"), arguments)

@@ -31,7 +31,13 @@ if (builder.Environment.IsDevelopment())
 	mvcBuilder.AddRazorRuntimeCompilation();
 }
 
-builder.Services.AddPhoria();
+builder.Services.AddPhoria(options =>
+{
+	if (builder.Environment.IsEnvironment("Preview"))
+	{
+		options.Server.Process = null;
+	}
+});
 
 WebApplication app = builder.Build();
 

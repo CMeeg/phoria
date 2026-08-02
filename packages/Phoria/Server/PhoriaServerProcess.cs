@@ -29,6 +29,9 @@ public sealed class PhoriaServerProcess
 	private SemaphoreSlim? semaphore;
 	private PeriodicTimer? periodicTimer;
 	private int? processId;
+	private TaskCompletionSource<int?>? processStartCompletion;
+	private Task? stopTask;
+	private bool stopping;
 
 	public PhoriaServerProcess(
 		ILogger<PhoriaServerProcess> logger,
@@ -77,17 +80,31 @@ public sealed class PhoriaServerProcess
 		// process-tree kill) when the host requests shutdown.
 		using CancellationTokenRegistration stopRegistration = stoppingToken.Register(() => _ = StopServer());
 
-		// Start the process
-
-		await EnsureProcessIsRunning(options.Server.Process, stoppingToken);
-
-		// Start a periodic timer to keep the process running
-
-		periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.Process.HealthCheckInterval));
-
-		while (await periodicTimer.WaitForNextTickAsync(stoppingToken))
+		try
 		{
+			// Start the process
+
 			await EnsureProcessIsRunning(options.Server.Process, stoppingToken);
+
+			lock (sync)
+			{
+				if (stopping)
+				{
+					stoppingToken.ThrowIfCancellationRequested();
+					return;
+				}
+
+				periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.Process.HealthCheckInterval));
+			}
+
+			while (await periodicTimer!.WaitForNextTickAsync(stoppingToken))
+			{
+				await EnsureProcessIsRunning(options.Server.Process, stoppingToken);
+			}
+		}
+		finally
+		{
+			await StopServer();
 		}
 	}
 
@@ -102,17 +119,26 @@ public sealed class PhoriaServerProcess
 			return;
 		}
 
-		if (processId.HasValue)
+		int? currentProcessId;
+		lock (sync)
 		{
-			var process = Process.GetProcessById(processId.Value);
+			currentProcessId = processId;
+		}
+
+		if (currentProcessId.HasValue)
+		{
+			var process = Process.GetProcessById(currentProcessId.Value);
 
 			if (process.HasExited)
 			{
-				processId = null;
+				lock (sync)
+				{
+					processId = null;
+				}
 			}
 			else
 			{
-				logger.LogServerProcessIsRunning(processId.Value);
+				logger.LogServerProcessIsRunning(currentProcessId.Value);
 
 				return;
 			}
@@ -120,6 +146,8 @@ public sealed class PhoriaServerProcess
 
 		if (await semaphore!.WaitAsync(0, cancellationToken))
 		{
+			TaskCompletionSource<int?>? startCompletion = null;
+
 			if (logger.IsEnabled(LogLevel.Information))
 			{
 				logger.LogServerProcessIsStarting(processOptions.Command, string.Join(" ", processOptions.Arguments ?? []));
@@ -127,6 +155,17 @@ public sealed class PhoriaServerProcess
 
 			try
 			{
+				lock (sync)
+				{
+					if (stopping)
+					{
+						return;
+					}
+
+					startCompletion = new TaskCompletionSource<int?>(TaskCreationOptions.RunContinuationsAsynchronously);
+					processStartCompletion = startCompletion;
+				}
+
 				Command cmd = Cli.Wrap(processOptions.Command)
 					.WithArguments(processOptions.Arguments ?? [])
 					.WithWorkingDirectory(environment.ContentRootPath)
@@ -142,8 +181,13 @@ public sealed class PhoriaServerProcess
 					switch (cmdEvent)
 					{
 						case StartedCommandEvent started:
-							processId = started.ProcessId;
-							logger.LogServerProcessIsRunning(processId.Value);
+							lock (sync)
+							{
+								processId = started.ProcessId;
+								startCompletion.TrySetResult(processId);
+							}
+
+							logger.LogServerProcessIsRunning(started.ProcessId);
 							break;
 						case StandardOutputCommandEvent stdOut:
 							logger.LogServerProcessStdOut(stdOut.Text);
@@ -152,15 +196,16 @@ public sealed class PhoriaServerProcess
 							logger.LogServerProcessStdErr(stdErr.Text);
 							break;
 						case ExitedCommandEvent exited:
-							processId = null;
+							lock (sync)
+							{
+								processId = null;
+								startCompletion.TrySetResult(null);
+							}
+
 							logger.LogServerProcessExited(exited.ExitCode);
 							break;
 					}
 				}
-			}
-			catch (OperationCanceledException ex)
-			{
-				logger.LogServerProcessException(ex);
 			}
 			catch (Exception ex)
 			{
@@ -170,10 +215,14 @@ public sealed class PhoriaServerProcess
 			{
 				lock (sync)
 				{
+					startCompletion?.TrySetResult(processId);
+					if (ReferenceEquals(processStartCompletion, startCompletion))
+					{
+						processStartCompletion = null;
+					}
+
 					semaphore?.Release();
 				}
-
-				await StopServer();
 			}
 		}
 	}
@@ -231,21 +280,35 @@ public sealed class PhoriaServerProcess
 		}
 	}
 
-	public async Task StopServer()
+	public Task StopServer()
 	{
+		lock (sync)
+		{
+			if (stopTask is not null)
+			{
+				return stopTask;
+			}
+
+			stopping = true;
+			stopTask = StopServerCore(processStartCompletion);
+			return stopTask;
+		}
+	}
+
+	private async Task StopServerCore(TaskCompletionSource<int?>? startCompletion)
+	{
+		if (startCompletion is not null)
+		{
+			await startCompletion.Task;
+		}
+
 		int? processIdToStop;
-		SemaphoreSlim? semaphoreToDispose;
 		PeriodicTimer? periodicTimerToDispose;
 
-		// Capture and clear the state under the lock so concurrent callers (the shutdown registration in
-		// StartServer, the EnsureProcessIsRunning finally block, and PhoriaServerProcessService) only stop
-		// the process once.
 		lock (sync)
 		{
 			processIdToStop = processId;
 			processId = null;
-			semaphoreToDispose = semaphore;
-			semaphore = null;
 			periodicTimerToDispose = periodicTimer;
 			periodicTimer = null;
 		}
@@ -255,7 +318,6 @@ public sealed class PhoriaServerProcess
 			await StopProcess(processIdToStop.Value);
 		}
 
-		semaphoreToDispose?.Dispose();
 		periodicTimerToDispose?.Dispose();
 	}
 
