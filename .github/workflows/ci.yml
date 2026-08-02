@@ -98,6 +98,11 @@ jobs:
       - name: Build e2e app
         run: pnpm --filter framework-multiple build
 
+      - name: Install Aspire CLI
+        run: |
+          curl -fsSL https://aspire.dev/install.sh | bash -s -- --version "13.4.6" --skip-path
+          echo "$HOME/.aspire/bin" >> "$GITHUB_PATH"
+
       - name: Start preview and run smoke test
         run: |
           pnpm --filter framework-multiple preview &
