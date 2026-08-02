@@ -83,9 +83,7 @@ These are the `scripts` that you will need to preview the production build of ou
 ```json
 {
   "scripts": {
-    "preview": "run-p preview:* -c",
-    "preview:webapp": "cross-env DOTNET_ENVIRONMENT=Preview dotnet run --project ./WebApp/WebApp.csproj -c Release --launch-profile Preview",
-    "preview:server": "cross-env NODE_ENV=production DOTNET_ENVIRONMENT=Preview node ./WebApp/ui/dist/server/server.js"
+    "preview": "aspire run"
   }
 }
 ```
@@ -102,53 +100,21 @@ pnpm run build
 pnpm run preview
 ```
 
-### `preview`
+### Aspire preview
 
-This script is a convenience script that uses the [`npm-run-all`](https://github.com/mysticatea/npm-run-all) package to run the other three preview scripts in parallel.
+The `preview` script starts the Aspire AppHost. The AppHost starts the Web App, the compiled Phoria Server as a sibling process, and the Aspire dashboard. It reads the Phoria Server command and arguments from `appsettings.Preview.json`, so those values remain shared with the Web App configuration.
 
-> [!NOTE]
-> This guide will assume that you are using `npm-run-all` in your `build` script so there is no need to install it again, but if you did choose to use something else for your `build` script you will need to make the same adjustments here.
-
-### `preview:webapp`
-
-This script uses the [dotnet CLI](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-run) to run the Phoria Web App produced by the [`build:webapp`](#buildwebapp) script.
-
-The [`cross-env`](https://github.com/kentcdodds/cross-env) package is used to set the `DOTNET_ENVIRONMENT` environment variable so you can use specific configuration or conditional branching in your code etc that targets the `Preview` environment if you wish.
+Install the [Aspire CLI](https://aspire.dev/get-started/install-cli/) and run the build before starting the preview:
 
 ```shell
-pnpm add -D cross-env
+# Build the Phoria solution
+pnpm run build
+
+# Start the AppHost and dashboard
+pnpm run preview
 ```
 
-> [!NOTE]
-> `cross-env` is used because we want our scripts to be platform-agnostic, but is not required if you do not need to support Windows environments.
-
-This script also uses a launch profile named `Preview`, which you can add to your `launchSettings.json` file:
-
-```json
-{
-  "profiles": {
-    "Preview": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "http://localhost:5245",
-      "environmentVariables": {
-        "DOTNET_ENVIRONMENT": "Preview"
-      }
-    }
-  }
-}
-```
-
-> [!WARNING]
-> You may need to adjust this command depending on the structure of your project to point to the actual location of your Phoria Web App's `.csproj` file.
-
-### `preview:server`
-
-This script uses `node` to run the Phoria Server produced by the [`build:islands`](#buildislands) script. `cross-env` is used again to set environment variables used by the script.
-
-> [!WARNING]
-> You may need to adjust this command depending on your configuration to point to the location of the Phoria Server output produced by the `build:islands` script.
+The AppHost sets `DOTNET_ENVIRONMENT=Preview` for the Web App and `NODE_ENV=production` for the Phoria Server. Use the dashboard URL printed by `aspire run` to inspect both resources and their OpenTelemetry logs.
 
 ## Next steps
 
