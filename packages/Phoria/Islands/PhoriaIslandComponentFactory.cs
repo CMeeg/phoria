@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Phoria.Logging;
+using EventId = Phoria.Logging.EventId;
 using Phoria.Server;
 
 namespace Phoria.Islands;
@@ -104,7 +104,7 @@ public class PhoriaIslandComponentFactory(
 internal static partial class PhoriaIslandComponentFactoryLogMessages
 {
 	[LoggerMessage(
-		EventId = EventFeature.Islands + 4,
+		EventId = EventId.Islands.ServerUnhealthyDegradingToClient,
 		Message = "Phoria server is unhealthy; degrading isomorphic component {Component} to client-only rendering.",
 		Level = LogLevel.Warning)]
 	internal static partial void LogServerUnhealthyDegradingToClient(

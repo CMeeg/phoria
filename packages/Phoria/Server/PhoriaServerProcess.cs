@@ -5,7 +5,7 @@ using CliWrap.EventStream;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Phoria.Logging;
+using EventId = Phoria.Logging.EventId;
 
 namespace Phoria.Server;
 
@@ -370,34 +370,20 @@ public sealed class PhoriaServerProcess
 
 internal static partial class PhoriaServerProcessLogMessages
 {
-	private static class ServerEvent
-	{
-		public const int ProcessNotConfigured = 7;
-		public const int ProcessIsHealthy = 8;
-		public const int ProcessIsRunning = 9;
-		public const int ProcessStdOut = 10;
-		public const int ProcessStdErr = 11;
-		public const int ProcessExited = 12;
-		public const int ProcessException = 13;
-		public const int ProcessStarting = 14;
-		public const int ProcessTerminationSignalSent = 15;
-		public const int ProcessForceStopped = 16;
-	}
-
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.ProcessNotConfigured,
+		EventId = EventId.Server.ProcessNotConfigured,
 		Message = "Phoria server process will not start. Process is not configured.",
 		Level = LogLevel.Information)]
 	internal static partial void LogServerProcessNotConfigured(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.ProcessIsHealthy,
+		EventId = EventId.Server.ProcessIsHealthy,
 		Message = "Phoria server process is healthy.",
 		Level = LogLevel.Debug)]
 	internal static partial void LogServerProcessIsHealthy(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.ProcessStarting,
+		EventId = EventId.Server.ProcessStarting,
 		Message = "Phoria server process starting {Command} {Args}.",
 		Level = LogLevel.Information)]
 	internal static partial void LogServerProcessIsStarting(
@@ -406,7 +392,7 @@ internal static partial class PhoriaServerProcessLogMessages
 		string args);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.ProcessIsRunning,
+		EventId = EventId.Server.ProcessIsRunning,
 		Message = "Phoria server process is running on pid {ProcessId}.",
 		Level = LogLevel.Debug)]
 	internal static partial void LogServerProcessIsRunning(
@@ -414,7 +400,7 @@ internal static partial class PhoriaServerProcessLogMessages
 		int processId);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.ProcessStdOut,
+		EventId = EventId.Server.ProcessStdOut,
 		Message = "Phoria server out: {StdOut}",
 		Level = LogLevel.Information)]
 	internal static partial void LogServerProcessStdOut(
@@ -422,7 +408,7 @@ internal static partial class PhoriaServerProcessLogMessages
 		string stdOut);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.ProcessStdErr,
+		EventId = EventId.Server.ProcessStdErr,
 		Message = "Phoria server err: {StdErr}",
 		Level = LogLevel.Error)]
 	internal static partial void LogServerProcessStdErr(
@@ -430,7 +416,7 @@ internal static partial class PhoriaServerProcessLogMessages
 		string stdErr);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.ProcessExited,
+		EventId = EventId.Server.ProcessExited,
 		Message = "Phoria server process exited with code {ExitCode}.",
 		Level = LogLevel.Debug)]
 	internal static partial void LogServerProcessExited(
@@ -438,7 +424,7 @@ internal static partial class PhoriaServerProcessLogMessages
 		int exitCode);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.ProcessTerminationSignalSent,
+		EventId = EventId.Server.ProcessTerminationSignalSent,
 		Message = "Phoria server process {ProcessId} was sent a termination signal.",
 		Level = LogLevel.Debug)]
 	internal static partial void LogServerProcessTerminationSignalSent(
@@ -446,7 +432,7 @@ internal static partial class PhoriaServerProcessLogMessages
 		int processId);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.ProcessForceStopped,
+		EventId = EventId.Server.ProcessForceStopped,
 		Message = "Phoria server process {ProcessId} did not exit within the grace period and was forcefully terminated.",
 		Level = LogLevel.Warning)]
 	internal static partial void LogServerProcessForceStopped(
@@ -455,7 +441,7 @@ internal static partial class PhoriaServerProcessLogMessages
 
 	private static readonly Action<ILogger, Exception?> logServerProcessException = LoggerMessage.Define(
 		LogLevel.Error,
-		EventFeature.Server + ServerEvent.ProcessException,
+		EventId.Server.ProcessException,
 		"Phoria server process caused exception.");
 	internal static void LogServerProcessException(
 		this ILogger logger,

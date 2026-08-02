@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Phoria.Logging;
+using EventId = Phoria.Logging.EventId;
 using Phoria.Server;
 using Phoria.Vite;
 
@@ -291,15 +291,8 @@ public class PhoriaIslandEntryTagHelperMonitor
 
 internal static partial class PhoriaIslandEntryTagHelperLogMessages
 {
-	private static class IslandsEvent
-	{
-		public const int EntryAttributeMissing = 1;
-		public const int ViteManifestKeyNotFound = 2;
-		public const int ManifestEntryDoesntHaveCssChunks = 3;
-	}
-
 	[LoggerMessage(
-		EventId = EventFeature.Islands + IslandsEvent.EntryAttributeMissing,
+		EventId = EventId.Islands.EntryAttributeMissing,
 		Message = "entry-{Attribute} value missing (check {View})",
 		Level = LogLevel.Warning)]
 	internal static partial void LogEntryAttributeMissing(
@@ -308,7 +301,7 @@ internal static partial class PhoriaIslandEntryTagHelperLogMessages
 		string view);
 
 	[LoggerMessage(
-		EventId = EventFeature.Islands + IslandsEvent.ViteManifestKeyNotFound,
+		EventId = EventId.Islands.ViteManifestKeyNotFound,
 		Message = "'{Key}' was not found in Vite manifest file (check {View})",
 		Level = LogLevel.Error)]
 	internal static partial void LogViteManifestKeyNotFound(
@@ -317,7 +310,7 @@ internal static partial class PhoriaIslandEntryTagHelperLogMessages
 		string view);
 
 	[LoggerMessage(
-		EventId = EventFeature.Islands + IslandsEvent.ManifestEntryDoesntHaveCssChunks,
+		EventId = EventId.Islands.ManifestEntryDoesntHaveCssChunks,
 		Message = "The entry '{Entry}' doesn't have CSS chunks",
 		Level = LogLevel.Warning)]
 	internal static partial void LogManifestEntryDoesntHaveCssChunks(this ILogger logger, string entry);

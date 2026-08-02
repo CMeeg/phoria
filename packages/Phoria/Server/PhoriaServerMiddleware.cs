@@ -4,7 +4,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
-using Phoria.Logging;
+using EventId = Phoria.Logging.EventId;
 
 namespace Phoria.Server;
 
@@ -102,14 +102,9 @@ internal sealed class PhoriaServerMiddleware(
 
 internal static partial class PhoriaServerMiddlewareLogMessages
 {
-	private static class ServerEvent
-	{
-		public const int MiddlewareProxyViaHttpError = 1;
-	}
-
 	private static readonly Action<ILogger, string, Exception?> logMiddlewareProxyViaHttpError = LoggerMessage.Define<string>(
 		LogLevel.Error,
-		EventFeature.Server + ServerEvent.MiddlewareProxyViaHttpError,
+		EventId.Server.MiddlewareProxyViaHttpError,
 		"Request to {Url} failed. Please make sure the Phoria server is running.");
 	internal static void LogMiddlewareProxyViaHttpError(
 		this ILogger logger,

@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Phoria.Logging;
+using EventId = Phoria.Logging.EventId;
 
 namespace Phoria.Server;
 
@@ -195,14 +195,8 @@ internal sealed record PhoriaHealthCheckResult
 
 internal static partial class PhoriaServerMonitorLogMessages
 {
-	private static class ServerEvent
-	{
-		public const int ServerIsHealthy = 2;
-		public const int ServerIsUnhealthy = 3;
-	}
-
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.ServerIsHealthy,
+		EventId = EventId.Server.ServerIsHealthy,
 		Message = "Phoria server at {Url} is healthy.",
 		Level = LogLevel.Debug)]
 	internal static partial void LogServerIsHealthy(
@@ -211,7 +205,7 @@ internal static partial class PhoriaServerMonitorLogMessages
 
 	private static readonly Action<ILogger, string, Exception?> logServerIsUnhealthy = LoggerMessage.Define<string>(
 		LogLevel.Error,
-		EventFeature.Server + ServerEvent.ServerIsUnhealthy,
+		EventId.Server.ServerIsUnhealthy,
 		"Phoria server at {Url} is unhealthy.");
 	internal static void LogServerIsUnhealthy(
 		this ILogger logger,

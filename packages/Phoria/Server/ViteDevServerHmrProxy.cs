@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Phoria.Logging;
+using EventId = Phoria.Logging.EventId;
 
 namespace Phoria.Server;
 
@@ -197,15 +197,8 @@ internal sealed class ViteDevServerHmrProxy(
 
 internal static partial class ViteDevHmrProxyLogMessages
 {
-	private static class ServerEvent
-	{
-		public const int EstablishingWebSocketProxy = 4;
-		public const int FailedToEstablishWebSocketProxy = 5;
-		public const int FailedToCloseWebSocket = 6;
-	}
-
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.EstablishingWebSocketProxy,
+		EventId = EventId.Server.EstablishingWebSocketProxy,
 		Message = "Establishing HMR WebSocket proxy: {ClientWebSocketUri} -> {TargetWebSocketUri}",
 		Level = LogLevel.Information)]
 	internal static partial void LogEstablishingWebSocketProxy(
@@ -214,7 +207,7 @@ internal static partial class ViteDevHmrProxyLogMessages
 		Uri targetWebSocketUri);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.FailedToEstablishWebSocketProxy,
+		EventId = EventId.Server.FailedToEstablishWebSocketProxy,
 		Message = "Failed to establish WebSocket proxy: {Message}",
 		Level = LogLevel.Error)]
 	internal static partial void LogFailedToEstablishWebSocketProxy(
@@ -222,7 +215,7 @@ internal static partial class ViteDevHmrProxyLogMessages
 		string message);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + ServerEvent.FailedToCloseWebSocket,
+		EventId = EventId.Server.FailedToCloseWebSocket,
 		Message = "Failed to close WebSocket {WebSocketUri}. {Message}",
 		Level = LogLevel.Warning)]
 	internal static partial void LogFailedToCloseWebSocket(
