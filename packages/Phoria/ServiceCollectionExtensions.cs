@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Phoria.Islands;
 using Phoria.Server;
 using Phoria.Vite;
@@ -32,9 +33,11 @@ public static class ServiceCollectionExtensions
 		// Add an HttpClient for the Phoria Server
 
 		services.AddHttpClient(PhoriaServerHttpClientFactory.HttpClientName)
-			.ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
+			.ConfigurePrimaryHttpMessageHandler(services => new HttpClientHandler
 			{
-				ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+				ServerCertificateCustomValidationCallback = services.GetRequiredService<IHostEnvironment>().IsDevelopment()
+					? HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+					: null
 			})
 			.ConfigureHttpClient((services, client) =>
 				client.DefaultRequestHeaders.Accept.Add(
