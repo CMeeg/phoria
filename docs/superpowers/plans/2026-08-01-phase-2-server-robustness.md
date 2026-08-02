@@ -190,6 +190,9 @@ debugger). Fix: pass `entireProcessTree: true` (or the .NET 10 equivalent)
 so child processes spawned by the Node server are also terminated. See
 Task 4 above, which implements this fix.
 
+**Resolution (2026-08-02, close-out Task 8):** Resolved by main plan Task 4;
+`StopProcess` now uses `entireProcessTree: true`.
+
 **Labels:** `phase-2`, `server-robustness`, `bug`
 **Milestone:** v1
 
@@ -202,6 +205,10 @@ have a race condition around the semaphore guarding concurrent
 start/stop calls. Needs a lifecycle-hardening pass as part of Phase 2's
 "in-process start, monitor/reconnect, graceful degradation" work.
 
+**Resolution (2026-08-02, close-out Task 8):** Resolved by close-out Task 1,
+Step 4; the server lifecycle semaphore ownership and concurrent start/stop
+path were hardened.
+
 **Labels:** `phase-2`, `server-robustness`, `bug`
 **Milestone:** v1
 
@@ -213,6 +220,9 @@ start/stop calls. Needs a lifecycle-hardening pass as part of Phase 2's
 `RecyclableMemoryStream`) are created but never disposed, per the plan's
 Task 6 self-review notes. Needs an audit of `Phoria.IO.StreamPool`
 lifetimes and proper `IDisposable` cleanup wired into DI/service lifetimes.
+
+**Resolution (2026-08-02, close-out Task 8):** Resolved by close-out Task 2,
+Step 1; `StreamPool` lifetimes now have explicit disposal coverage.
 
 **Labels:** `phase-2`, `server-robustness`, `bug`
 **Milestone:** v1
@@ -227,6 +237,10 @@ accepts any server certificate via
 This should be restricted to development/preview scenarios (e.g. paired
 with `@phoria/vite-plugin-dotnet-dev-certs`) and never active in
 production.
+
+**Resolution (2026-08-02, close-out Task 8):** Resolved by close-out Task 2,
+Step 2; the dangerous certificate validator is restricted to development and
+preview scenarios and is not active in production.
 
 **Labels:** `phase-2`, `server-robustness`, `security`
 **Milestone:** v1
@@ -243,6 +257,8 @@ semantics — none of which `MemoryPool<byte>` provides directly. This is a
 **public-API refactor** of `Phoria.IO`, not a drop-in dependency bump;
 scope it as a deliberate design task in Phase 2, alongside the other
 `Phoria.IO`/server-robustness fixes above.
+
+**Resolution (2026-08-02):** Assessed and deferred post-1.0. `MemoryPool<byte>` provides fixed-size rented blocks via `Rent()/IMemoryOwner<byte>`, not an expanding stream with `IBufferWriter<byte>`, `GetReadOnlySequence()`, and `Stream` semantics. Phoria's consumers (`PhoriaIslandHtmlContent`, `PhoriaIslandPropsSerializer`, `PhoriaIslandSsr`) depend on all three. Adopting `IMemoryPoolFactory<byte>` would require either rewriting consumers against `Memory<byte>`/`ReadOnlySequence<byte>` (breaking `StreamContent`, `CopyToAsync`, the HTML writer path) or building a new stream wrapper around `MemoryPool<byte>` that reimplements the `RecyclableMemoryStream` API — effectively reinventing `Microsoft.IO.RecyclableMemoryStream`. The existing `RecyclableMemoryStreamManager` with configurable block/buffer sizes and aggressive buffer return is appropriate for this use case. Revisit if a future `Microsoft.IO` release accepts `MemoryPool<byte>` as a backing allocator.
 
 **Labels:** `phase-2`, `server-robustness`, `enhancement`
 **Milestone:** v1
@@ -264,8 +280,31 @@ workflow. The debugger must not be used with the sidecar production model
 when `Phoria:Server:Process` is configured; the sibling Aspire preview model
 is the supported integration path for graceful shutdown.
 
+**Close-out status (2026-08-02, Task 8):** Documented rather than treated as
+a Phoria code defect; the host/debugger behavior remains an environmental
+limitation.
+
 **Labels:** `phase-2`, `server-robustness`, `bug`
 **Milestone:** v1
+
+---
+
+## Environmental limitations recorded during close-out
+
+The following observations are environmental or observability limitations,
+not unresolved Phoria code defects.
+
+- **Aspire CLI 13.4.6 non-interactive SIGINT semantics (DCP resource cleanup):** Requires an Aspire library upgrade, not a Phoria code fix. `aspire stop` provides reliable teardown in scripts. Verified 2026-08-02 from this worktree with the exact Task 7 commands, each launched under `setsid` and terminated once with `kill -INT -- -<process-group>` after both resources reported `Running`/`ready`:
+  - `pnpm --dir e2e/framework-multiple run dev:aspire`: `tsx .../WebApp/ui/src/server.ts`; wrapper exit `130`; detached `tsx` and WebApp processes remained after SIGINT.
+  - `pnpm --dir e2e/framework-multiple run preview`: `node dist/server/server.js`; wrapper exit `130`; detached WebApp processes remained after SIGINT.
+  - `pnpm --dir e2e/with-workspace/WebApp run dev:aspire`: `tsx .../ui/src/server.ts`; wrapper exit `130`; detached WebApp processes remained after SIGINT.
+  - `pnpm --dir e2e/with-workspace/WebApp run preview`: `node dist/server/server.js`; wrapper exit `130`; detached WebApp processes remained after SIGINT.
+  The Aspire CLI printed `Stopping Aspire` in all four runs, but DCP launched resource processes in separate process groups. The surviving resource processes required explicit SIGTERM cleanup; no worktree processes remained after that cleanup. CLI evidence is in `/home/meeg/.aspire/logs/cli_20260802T225111_cc534154.log`, `/home/meeg/.aspire/logs/cli_20260802T224946_681b2cd3.log`, `/home/meeg/.aspire/logs/cli_20260802T225006_de54a3ad.log`, and `/home/meeg/.aspire/logs/cli_20260802T225027_3bd1c692.log`. This is the known non-interactive DCP limitation, not an application shutdown defect.
+- **Node shutdown OTel events not observed before parent exit:** Observability gap, not a correctness issue. The explicit OTel flush/shutdown path in `server.ts` is present; this needs a collector-backed integration test.
+
+**Final status (2026-08-02, close-out Task 8):** All deferred items above are
+resolved, documented, or explicitly deferred with rationale. No other Phase 2
+items remain open.
 
 ---
 
