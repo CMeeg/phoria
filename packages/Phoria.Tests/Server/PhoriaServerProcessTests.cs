@@ -269,7 +269,7 @@ public class PhoriaServerProcessTests
 			new StubHostEnvironment(),
 			Options.Create(CreateProcessOptions(script ?? "setInterval(() => {}, 1000);")),
 			processId,
-			stopGracePeriod ?? PhoriaServerProcess.StopGracePeriod,
+			stopGracePeriod ?? TimeSpan.FromSeconds(6),
 			beforeProcessIdAssignment);
 	}
 

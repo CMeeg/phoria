@@ -68,7 +68,7 @@ public class PhoriaIslandHtmlContentTests
 		using ServiceProvider provider = services.BuildServiceProvider();
 		HttpMessageHandler handler = provider
 			.GetRequiredService<IHttpMessageHandlerFactory>()
-			.CreateHandler(PhoriaServerHttpClientFactory.HttpClientName);
+			.CreateHandler("PhoriaServerHttpClient");
 
 		while (handler is DelegatingHandler delegatingHandler)
 		{
