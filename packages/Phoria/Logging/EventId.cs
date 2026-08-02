@@ -2,6 +2,8 @@ namespace Phoria.Logging;
 
 public static class EventId
 {
+	// EventFeature was replaced by direct full numeric constants; emitted IDs remain compatible.
+	// This intentional pre-1.0 source/API cleanup avoids composite IDs.
 	public static class Islands
 	{
 		public const int EntryAttributeMissing = 1101;

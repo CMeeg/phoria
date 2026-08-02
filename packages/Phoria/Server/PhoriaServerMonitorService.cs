@@ -9,7 +9,7 @@ public sealed class PhoriaServerMonitorService(IPhoriaServerMonitor serverMonito
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		// TODO: If process is set to run in-process, then we should block until the server is started
+		// StartMonitoring blocks until the server passes its first health check.
 
 		try
 		{
