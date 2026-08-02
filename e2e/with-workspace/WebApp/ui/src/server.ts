@@ -107,15 +107,15 @@ function shutdown(signal: NodeJS.Signals) {
 
 	void listener.close().then(() => {
 		console.log("Server listener closed.")
-
 		process.exit(0)
 	})
 
-	// Force shutdown after 5 seconds
+	// Drop idle keep-alive connections so close() doesn't wait for them
+	listener.server.closeIdleConnections()
 
+	// Force shutdown after 5 seconds
 	setTimeout(() => {
 		console.error("Could not shutdown gracefully. Forcefully shutting down server.")
-
 		process.exit(1)
 	}, 5000)
 }
