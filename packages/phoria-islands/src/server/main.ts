@@ -5,6 +5,7 @@ import {
 	createPhoriaDevCsrRequestHandler,
 	createPhoriaDevSsrRequestHandler,
 	createPhoriaSsrRequestHandler,
+	type PhoriaLogger,
 	type PhoriaRequestHandler,
 	type PhoriaServerEntryLoader
 } from "./routing"
@@ -21,6 +22,7 @@ export type {
 	PhoriaIslandComponentSsrService,
 	PhoriaIslandRequest,
 	PhoriaIslandSsrResult,
+	PhoriaLogger,
 	PhoriaRequestHandler,
 	PhoriaServerEntry,
 	PhoriaServerEntryLoader,

@@ -8,6 +8,7 @@ import {
 	createPhoriaDevCsrRequestHandler,
 	createPhoriaDevSsrRequestHandler,
 	createPhoriaSsrRequestHandler,
+	type PhoriaLogger,
 	parsePhoriaAppSettings
 } from "@phoria/phoria/server"
 import { createApp, toNodeListener } from "h3"
@@ -23,13 +24,26 @@ const loggerProvider = new LoggerProvider({
 logs.setGlobalLoggerProvider(loggerProvider)
 const logger = logs.getLogger("phoria-server")
 
-function log(event: string, severityNumber: SeverityNumber, attributes: Record<string, string | undefined> = {}) {
+function log(event: string, severityNumber: SeverityNumber, attributes: Record<string, unknown> = {}) {
 	logger.emit({
 		severityNumber,
 		severityText: SeverityNumber[severityNumber],
 		body: event,
-		attributes: { event, ...Object.fromEntries(Object.entries(attributes).filter(([, value]) => value !== undefined)) }
+		attributes: {
+			event,
+			...Object.fromEntries(
+				Object.entries(attributes)
+					.filter(([, value]) => value !== undefined)
+					.map(([key, value]) => [key, value instanceof Error ? value.message : String(value)])
+			)
+		}
 	})
+}
+
+const phoriaLogger: PhoriaLogger = {
+	info: (message, data) => log(message, SeverityNumber.INFO, data),
+	warn: (message, data) => log(message, SeverityNumber.WARN, data),
+	error: (message, data) => log(message, SeverityNumber.ERROR, data)
 }
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -46,8 +60,8 @@ if (viteDevServer) {
 	app.use(createPhoriaDevCsrRequestHandler(viteDevServer))
 	app.use(createPhoriaDevSsrRequestHandler(viteDevServer, appsettings))
 } else {
-	app.use(createPhoriaCsrRequestHandler(appsettings))
-	app.use(createPhoriaSsrRequestHandler(appsettings))
+	app.use(createPhoriaCsrRequestHandler(appsettings, { logger: phoriaLogger }))
+	app.use(createPhoriaSsrRequestHandler(appsettings, { logger: phoriaLogger }))
 }
 
 app.options.onError = (error) => {
