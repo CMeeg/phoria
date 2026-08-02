@@ -1,0 +1,41 @@
+{
+	"name": "with-sidecar",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"build": "concurrently \"pnpm:build:*\"",
+		"build:islands": "vite --config WebApp/vite.config.ts build --app",
+		"build:webapp": "dotnet build WebApp/WebApp.csproj --configuration Release",
+		"check": "tsc",
+		"dev": "tsx ./WebApp/ui/src/server.ts",
+		"lint": "biome check",
+		"preview": "aspire run --apphost ./Phoria.AppHost/Phoria.AppHost.csproj"
+	},
+	"files": [
+		"WebApp/ui/dist"
+	],
+	"dependencies": {
+		"@opentelemetry/api-logs": "catalog:",
+		"@opentelemetry/exporter-logs-otlp-http": "catalog:",
+		"@opentelemetry/sdk-logs": "catalog:",
+		"@phoria/phoria": "workspace:*",
+		"@phoria/phoria-react": "workspace:*",
+		"h3": "catalog:",
+		"listhen": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:"
+	},
+	"devDependencies": {
+		"@meeg/vite-plugin-inspect-config": "catalog:",
+		"@phoria/vite-plugin-dotnet-dev-certs": "workspace:*",
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@vitejs/plugin-react": "catalog:",
+		"concurrently": "catalog:",
+		"tsx": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:"
+	}
+}

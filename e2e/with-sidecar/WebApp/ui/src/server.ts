@@ -1,0 +1,88 @@
+import { dirname } from "node:path"
+import { fileURLToPath } from "node:url"
+import { logs, SeverityNumber } from "@opentelemetry/api-logs"
+import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http"
+import { ConsoleLogRecordExporter, LoggerProvider, SimpleLogRecordProcessor } from "@opentelemetry/sdk-logs"
+import {
+	createPhoriaCsrRequestHandler,
+	createPhoriaDevCsrRequestHandler,
+	createPhoriaDevSsrRequestHandler,
+	createPhoriaSsrRequestHandler,
+	parsePhoriaAppSettings
+} from "@phoria/phoria/server"
+import { createApp, toNodeListener } from "h3"
+import { type ListenOptions, listen } from "listhen"
+
+const loggerProvider = new LoggerProvider({
+	processors: [
+		new SimpleLogRecordProcessor({
+			exporter: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ? new OTLPLogExporter() : new ConsoleLogRecordExporter()
+		})
+	]
+})
+logs.setGlobalLoggerProvider(loggerProvider)
+const logger = logs.getLogger("phoria-server")
+
+function log(event: string, severityNumber: SeverityNumber, attributes: Record<string, string | undefined> = {}) {
+	logger.emit({
+		severityNumber,
+		severityText: SeverityNumber[severityNumber],
+		body: event,
+		attributes: { event, ...Object.fromEntries(Object.entries(attributes).filter(([, value]) => value !== undefined)) }
+	})
+}
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const nodeEnv = process.env.NODE_ENV ?? "development"
+const isProduction = nodeEnv === "production"
+const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
+const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv, cwd: __dirname })
+const viteDevServer = isProduction
+	? undefined
+	: await import("vite").then((vite) => vite.createServer({ appType: "custom", server: { middlewareMode: true } }))
+const app = createApp()
+
+if (viteDevServer) {
+	app.use(createPhoriaDevCsrRequestHandler(viteDevServer))
+	app.use(createPhoriaDevSsrRequestHandler(viteDevServer, appsettings))
+} else {
+	app.use(createPhoriaCsrRequestHandler(appsettings))
+	app.use(createPhoriaSsrRequestHandler(appsettings))
+}
+
+app.options.onError = (error) => {
+	const err = error instanceof Error ? error : new Error("Unknown error", { cause: error })
+	viteDevServer?.ssrFixStacktrace(err)
+	log("server.error", SeverityNumber.ERROR, { "error.message": err.message, "error.stack": err.stack })
+}
+
+const listenOptions: Partial<ListenOptions> = {
+	https: false,
+	isProd: isProduction,
+	qr: false,
+	tunnel: false,
+	hostname: appsettings.server.host,
+	port: appsettings.server.port ?? 5173
+}
+const listener = await listen(toNodeListener(app), listenOptions)
+log("server.started", SeverityNumber.INFO)
+
+function shutdown(signal: NodeJS.Signals) {
+	log("server.shutdown.started", SeverityNumber.INFO, { signal })
+	void listener.close().then(async () => {
+		log("server.shutdown.completed", SeverityNumber.INFO)
+		await loggerProvider.forceFlush()
+		await loggerProvider.shutdown()
+		process.exit(0)
+	})
+	listener.server.closeIdleConnections()
+	setTimeout(() => {
+		log("server.shutdown.forced", SeverityNumber.FATAL, { signal })
+		void loggerProvider.forceFlush().finally(() => process.exit(1))
+	}, 5000)
+}
+
+process.on("SIGTERM", shutdown)
+process.on("SIGINT", shutdown)
+
+export { app, listener }
