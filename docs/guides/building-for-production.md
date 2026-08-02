@@ -17,7 +17,7 @@ These are the `scripts` that you will need to add to build your Phoria solution 
 ```json
 {
   "scripts": {
-    "build": "run-p build:* -c",
+    "build": "concurrently \"pnpm:build:*\"",
     "build:islands": "vite build --app",
     "build:webapp": "dotnet build --configuration Release"
   }
@@ -34,14 +34,14 @@ pnpm run build
 
 ### `build`
 
-This script is a convenience script that uses the [`npm-run-all`](https://github.com/mysticatea/npm-run-all) package to run the other two build scripts in parallel.
+This script is a convenience script that uses the [`concurrently`](https://github.com/open-cli-tools/concurrently) package to run the other two build scripts in parallel.
 
 ```shell
-pnpm add -D npm-run-all
+pnpm add -D concurrently
 ```
 
 > [!NOTE]
-> `npm-run-all` is not required and you can use some other package or tool or shell feature (e.g. `&`) to do the same thing, if you prefer. The reason it is used here is because `&` doesn't work consistently on Windows and we want our scripts to be platform-agnostic.
+> The `pnpm:build:*` shorthand runs every `build:*` script in parallel via `pnpm run`. `concurrently` is not required and you can use some other package or tool or shell feature (e.g. `&`) to do the same thing, if you prefer. The reason it is used here is because `&` doesn't work consistently on Windows and we want our scripts to be platform-agnostic.
 
 ### `build:islands`
 

@@ -22,6 +22,7 @@ catalog:
   "@vitejs/plugin-react": ^6.0.4
   "@vitejs/plugin-vue": ^6.0.8
   "@vitest/browser-playwright": ^4.1.10
+  concurrently: ^10.0.4
   cross-env: ^10.1.0
   destr: ^2.0.5
   empathic: ^2.0.1
