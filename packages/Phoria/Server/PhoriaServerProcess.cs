@@ -44,7 +44,7 @@ public sealed class PhoriaServerProcess
 	{
 	}
 
-	internal PhoriaServerProcess(
+	public PhoriaServerProcess(
 		ILogger<PhoriaServerProcess> logger,
 		IPhoriaServerMonitor serverMonitor,
 		IHostEnvironment environment,
