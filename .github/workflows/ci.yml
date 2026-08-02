@@ -105,11 +105,6 @@ jobs:
 
       - name: Start preview and run smoke test
         run: |
-          pnpm --filter framework-multiple preview &
-          PREVIEW_PID=$!
-          for i in $(seq 1 60); do
-            curl -skf https://localhost:5247 > /dev/null 2>&1 && break
-            sleep 1
-          done
+          trap 'pnpm --filter framework-multiple stop || true' EXIT
+          pnpm --filter framework-multiple preview
           NODE_TLS_REJECT_UNAUTHORIZED=0 pnpm --filter framework-multiple test:smoke
-          kill $PREVIEW_PID

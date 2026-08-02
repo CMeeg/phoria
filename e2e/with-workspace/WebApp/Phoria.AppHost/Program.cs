@@ -22,6 +22,7 @@ var nodeEnvironment = isDev ? "development" : "production";
 builder.AddProject<Projects.WebApp>("webapp")
 	.WithHttpEndpoint(port: 5247, name: "http", isProxied: false)
 	.WithEnvironment("DOTNET_ENVIRONMENT", "Preview")
+	.WithEnvironment("ASPNETCORE_ENVIRONMENT", "Preview")
 	.WithOtlpExporter(Aspire.Hosting.OtlpProtocol.HttpProtobuf);
 
 builder.AddExecutable("phoria-server", nodeCommand, Path.Combine(webAppDirectory, "ui"), nodeArguments)

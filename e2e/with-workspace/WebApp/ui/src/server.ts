@@ -53,6 +53,10 @@ const isProduction = nodeEnv === "production"
 const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
 const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv })
 
+if (isProduction) {
+	appsettings.root = "."
+}
+
 // Create Vite dev server if not in production environment
 
 const viteDevServer = isProduction

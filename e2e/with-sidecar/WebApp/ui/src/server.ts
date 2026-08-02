@@ -51,6 +51,10 @@ const nodeEnv = process.env.NODE_ENV ?? "development"
 const isProduction = nodeEnv === "production"
 const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
 const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv, cwd: __dirname })
+
+if (isProduction) {
+	appsettings.root = "."
+}
 const viteDevServer = isProduction
 	? undefined
 	: await import("vite").then((vite) => vite.createServer({ appType: "custom", server: { middlewareMode: true } }))
