@@ -24,6 +24,9 @@ public sealed class PhoriaServerMonitor
 	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory;
 	private SemaphoreSlim? semaphore;
 	private PeriodicTimer? periodicTimer;
+	private Task? monitoringTask;
+	private CancellationTokenSource? monitoringCancellation;
+	private TaskCompletionSource firstHealthy = CreateFirstHealthySource();
 
 	public PhoriaServerStatus ServerStatus { get; private set; }
 
@@ -47,30 +50,41 @@ public sealed class PhoriaServerMonitor
 
 	public async Task StartMonitoring(CancellationToken cancellationToken)
 	{
-		if (periodicTimer != null)
+		if (monitoringTask != null)
 		{
+			await firstHealthy.Task.WaitAsync(cancellationToken);
 			return;
 		}
 
 		semaphore = new(1, 1);
+		firstHealthy = CreateFirstHealthySource();
+		monitoringCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+		monitoringTask = MonitorAsync(monitoringCancellation.Token);
 
-		// Make an initial health check
+		await firstHealthy.Task.WaitAsync(cancellationToken);
+	}
 
-		await CheckHealth();
-
-		// Start a periodic health check
-
-		periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.HealthCheckInterval));
-
-		while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
+	private async Task MonitorAsync(CancellationToken cancellationToken)
+	{
+		try
 		{
-			await CheckHealth();
+			await CheckHealth(cancellationToken);
+			periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.HealthCheckInterval));
+
+			while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
+			{
+				await CheckHealth(cancellationToken);
+			}
+		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			firstHealthy.TrySetCanceled(cancellationToken);
 		}
 	}
 
-	private async Task CheckHealth()
+	private async Task CheckHealth(CancellationToken cancellationToken)
 	{
-		if (await semaphore!.WaitAsync(0))
+		if (await semaphore!.WaitAsync(0, cancellationToken))
 		{
 			using HttpClient httpClient = phoriaServerHttpClientFactory.CreateClient();
 
@@ -80,17 +94,21 @@ public sealed class PhoriaServerMonitor
 
 			try
 			{
-				HttpResponseMessage response = await httpClient.GetAsync(HealthCheckUrl, timeout.Token);
+				using CancellationTokenSource linkedTimeout = CancellationTokenSource.CreateLinkedTokenSource(
+					cancellationToken,
+					timeout.Token);
+				HttpResponseMessage response = await httpClient.GetAsync(HealthCheckUrl, linkedTimeout.Token);
 
 				if (response.IsSuccessStatusCode)
 				{
-					PhoriaHealthCheckResult? result = await response.Content.ReadFromJsonAsync<PhoriaHealthCheckResult>(jsonDeserializeOptions);
+					PhoriaHealthCheckResult? result = await response.Content.ReadFromJsonAsync<PhoriaHealthCheckResult>(jsonDeserializeOptions, cancellationToken);
 
 					if (result != null)
 					{
 						logger.LogServerIsHealthy(ServerStatus.Url);
 
 						ServerStatus = CreateHealthyServerStatus(result);
+						firstHealthy.TrySetResult();
 
 						return;
 					}
@@ -99,6 +117,10 @@ public sealed class PhoriaServerMonitor
 				logger.LogServerIsUnhealthy(ServerStatus.Url);
 
 				ServerStatus = CreateUnhealthyServerStatus();
+			}
+			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+			{
+				throw;
 			}
 			catch (Exception ex)
 			{
@@ -132,14 +154,23 @@ public sealed class PhoriaServerMonitor
 		Url = options.GetServerUrl()
 	};
 
-	public Task StopMonitoring()
+	public async Task StopMonitoring()
 	{
+		monitoringCancellation?.Cancel();
+
+		if (monitoringTask is not null)
+		{
+			await monitoringTask;
+		}
+
 		Dispose();
 
 		semaphore = null;
 		periodicTimer = null;
+		monitoringTask = null;
+		monitoringCancellation?.Dispose();
+		monitoringCancellation = null;
 
-		return Task.CompletedTask;
 	}
 
 	public void Dispose()
@@ -147,6 +178,9 @@ public sealed class PhoriaServerMonitor
 		semaphore?.Dispose();
 		periodicTimer?.Dispose();
 	}
+
+	private static TaskCompletionSource CreateFirstHealthySource() =>
+		new(TaskCreationOptions.RunContinuationsAsynchronously);
 }
 
 internal sealed record PhoriaHealthCheckResult

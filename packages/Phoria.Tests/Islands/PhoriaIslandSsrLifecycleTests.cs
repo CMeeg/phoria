@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Phoria.IO;
 using Phoria.Islands;
@@ -79,12 +80,44 @@ public class PhoriaIslandSsrLifecycleTests
 			new HealthyServerMonitor(),
 			new PhoriaIslandScopedContext(),
 			new StubSsr(result),
-			Options.Create(new PhoriaOptions()));
+			Options.Create(new PhoriaOptions()),
+			NullLogger<PhoriaIslandComponentFactory>.Instance);
 
 		_ = await factory.CreateAsync("Example", null, null);
 		factory.Dispose();
 
 		AssertDisposed(contentPool);
+	}
+
+	[Fact]
+	public async Task ComponentFactory_DegradesIsomorphicIslandWhenServerIsUnhealthy()
+	{
+		var ssr = new TrackingSsr();
+		var factory = new PhoriaIslandComponentFactory(
+			new UnhealthyServerMonitor(),
+			new PhoriaIslandScopedContext(),
+			ssr,
+			Options.Create(new PhoriaOptions()),
+			NullLogger<PhoriaIslandComponentFactory>.Instance);
+
+		PhoriaIslandHtmlContent content = await factory.CreateAsync("Example", null, new PhoriaIslandClientLoadDirective());
+
+		Assert.Equal(0, ssr.CallCount);
+		Assert.NotNull(content);
+		factory.Dispose();
+	}
+
+	[Fact]
+	public async Task ComponentFactory_StillThrowsForServerOnlyIslandWhenServerIsUnhealthy()
+	{
+		var factory = new PhoriaIslandComponentFactory(
+			new UnhealthyServerMonitor(),
+			new PhoriaIslandScopedContext(),
+			new TrackingSsr(),
+			Options.Create(new PhoriaOptions()),
+			NullLogger<PhoriaIslandComponentFactory>.Instance);
+
+		await Assert.ThrowsAsync<PhoriaIslandComponentException>(() => factory.CreateAsync("Example", null, null));
 	}
 
 	private static void AssertDisposed(StreamPool pool) => Assert.Throws<ObjectDisposedException>(() => _ = pool.Stream.Length);
@@ -148,11 +181,39 @@ public class PhoriaIslandSsrLifecycleTests
 		public Task<PhoriaIslandSsrResult> RenderIsland(PhoriaIsland island, CancellationToken cancellationToken = default) => Task.FromResult(result);
 	}
 
+	private sealed class TrackingSsr : IPhoriaIslandSsr
+	{
+		public int CallCount { get; private set; }
+
+		public Task<PhoriaIslandSsrResult> RenderIsland(PhoriaIsland island, CancellationToken cancellationToken = default)
+		{
+			CallCount++;
+			return Task.FromResult(new PhoriaIslandSsrResult
+			{
+				Headers = new HttpResponseMessage().Headers,
+				Content = new StreamPool()
+			});
+		}
+	}
+
 	private sealed class HealthyServerMonitor : IPhoriaServerMonitor
 	{
 		public PhoriaServerStatus ServerStatus { get; } = new()
 		{
 			Health = PhoriaServerHealth.Healthy,
+			Url = "http://localhost"
+		};
+
+		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
+
+		public Task StopMonitoring() => Task.CompletedTask;
+	}
+
+	private sealed class UnhealthyServerMonitor : IPhoriaServerMonitor
+	{
+		public PhoriaServerStatus ServerStatus { get; } = new()
+		{
+			Health = PhoriaServerHealth.Unhealthy,
 			Url = "http://localhost"
 		};
 

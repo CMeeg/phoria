@@ -14,6 +14,7 @@ public sealed class PhoriaServerMonitorService(IPhoriaServerMonitor serverMonito
 		try
 		{
 			await serverMonitor.StartMonitoring(stoppingToken);
+			await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
 		}
 		catch (OperationCanceledException)
 		{
