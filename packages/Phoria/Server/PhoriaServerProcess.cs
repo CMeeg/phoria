@@ -88,7 +88,10 @@ public sealed class PhoriaServerProcess(
 
 		if (await semaphore!.WaitAsync(0, cancellationToken))
 		{
-			logger.LogServerProcessIsStarting(processOptions.Command, string.Join(" ", processOptions.Arguments ?? []));
+			if (logger.IsEnabled(LogLevel.Information))
+			{
+				logger.LogServerProcessIsStarting(processOptions.Command, string.Join(" ", processOptions.Arguments ?? []));
+			}
 
 			try
 			{
