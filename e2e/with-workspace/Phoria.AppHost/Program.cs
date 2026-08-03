@@ -3,7 +3,6 @@ using Microsoft.Extensions.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 var webAppDirectory = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "WebApp"));
-var workspaceRoot = Path.GetFullPath(Path.Combine(webAppDirectory, ".."));
 var environment = builder.Environment.EnvironmentName;
 var isDevelopment = builder.Environment.IsDevelopment();
 
@@ -18,8 +17,8 @@ var nodeCommand = "tsx";
 var nodeArguments = new[] { Path.Combine(webAppDirectory, "ui", "src", "server.ts") };
 var nodeEnvironment = "development";
 // The Vite dev server resolves the root from `process.cwd()` and only discovers the vite config in the current directory,
-// so in development it must be started from the workspace root where the config lives.
-var nodeWorkingDirectory = workspaceRoot;
+// so in development it must be started from the WebApp directory where the config lives.
+var nodeWorkingDirectory = webAppDirectory;
 
 if (!isDevelopment)
 {
@@ -27,7 +26,7 @@ if (!isDevelopment)
 	nodeCommand = processConfiguration["Command"] ?? throw new InvalidOperationException("Phoria server command is not configured.");
 	nodeArguments = processConfiguration.GetSection("Arguments").GetChildren().Select(section => section.Value ?? string.Empty).ToArray();
 	nodeEnvironment = "production";
-	// In production the root is the `ui` directory; a non-development profile cannot use the workspace root.
+	// In production the root is the `ui` directory; a non-development profile cannot use the WebApp directory.
 	nodeWorkingDirectory = Path.Combine(webAppDirectory, "ui");
 }
 

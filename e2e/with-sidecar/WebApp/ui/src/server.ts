@@ -52,9 +52,6 @@ const isProduction = nodeEnv === "production"
 const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
 const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv, cwd: __dirname })
 
-if (isProduction) {
-	appsettings.root = "."
-}
 const viteDevServer = isProduction
 	? undefined
 	: await import("vite").then((vite) => vite.createServer({ appType: "custom", server: { middlewareMode: true } }))
@@ -82,6 +79,15 @@ const listenOptions: Partial<ListenOptions> = {
 	hostname: appsettings.server.host,
 	port: appsettings.server.port ?? 5173
 }
+
+if (viteDevServer?.config.server?.https) {
+	listenOptions.https = {
+		cert: viteDevServer.config.server.https.cert?.toString(),
+		key: viteDevServer.config.server.https.key?.toString()
+	}
+}
+
+// NOTE: If using https in production, you will need to source and pass the https options to the listener
 const listener = await listen(toNodeListener(app), listenOptions)
 log("server.started", SeverityNumber.INFO)
 

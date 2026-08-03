@@ -83,7 +83,7 @@ These are the `scripts` that you will need to preview the production build of ou
 ```json
 {
   "scripts": {
-    "preview": "aspire run"
+    "preview": "aspire start"
   }
 }
 ```
@@ -114,7 +114,7 @@ pnpm run build
 pnpm run preview
 ```
 
-The AppHost sets `DOTNET_ENVIRONMENT=Preview` for the Web App and `NODE_ENV=production` for the Phoria Server. Use the dashboard URL printed by `aspire run` to inspect both resources and their OpenTelemetry logs.
+The AppHost sets `DOTNET_ENVIRONMENT=Preview` for the Web App and `NODE_ENV=production` for the Phoria Server. Use the dashboard URL printed by `aspire start` to inspect both resources and their OpenTelemetry logs. When you are done, stop the preview with `aspire stop` so that no managed resources are left running.
 
 ## Next steps
 

@@ -598,6 +598,6 @@ pnpm run build
 pnpm run preview
 ```
 
-The `preview` script should be `aspire run` and should run from the directory containing the AppHost. The AppHost uses `Aspire.AppHost.Sdk` 13.4.6, calls `DistributedApplication.CreateBuilder`, adds the Web App with `Projects.WebApp`, and adds the compiled Phoria Server with `AddExecutable`. Keep the server command and arguments in `appsettings.Preview.json`; the AppHost should load that file rather than duplicating them. Aspire's dashboard provides the local resource view and OpenTelemetry log output.
+The `preview` script should be `aspire start` and should run from the directory containing the AppHost. The AppHost uses `Aspire.AppHost.Sdk`, calls `DistributedApplication.CreateBuilder`, adds the Web App with `Projects.WebApp`, and adds the compiled Phoria Server with `AddExecutable`. Keep the server command and arguments in `appsettings.Preview.json`; the AppHost should load that file rather than duplicating them. Aspire's dashboard provides the local resource view and OpenTelemetry log output.
 
 If you're curious about how Phoria works in a production environment you can also check out the [building for production](./building-for-production.md) guide.

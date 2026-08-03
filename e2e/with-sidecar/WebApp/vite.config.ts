@@ -5,5 +5,5 @@ import { dotnetDevCerts } from "@phoria/vite-plugin-dotnet-dev-certs"
 import { defineConfig } from "vite"
 
 export default defineConfig({
-	plugins: [dotnetDevCerts(), phoria({ cwd: "WebApp" }), phoriaReact(), inspectConfig()]
+	plugins: [dotnetDevCerts(), phoria(), phoriaReact(), inspectConfig()]
 })

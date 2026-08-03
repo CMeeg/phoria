@@ -9,7 +9,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Aspire.Hosting.AppHost" Version="13.4.6" />
-		<ProjectReference Include="../WebApp.csproj" />
+		<ProjectReference Include="../WebApp/WebApp.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -35,6 +35,7 @@ builder.Services.AddPhoria(options =>
 {
 	if (builder.Environment.IsEnvironment("Preview"))
 	{
+		// In the Preview environment the AppHost owns the Node process; the WebApp must not spawn its own.
 		options.Server.Process = null;
 	}
 });

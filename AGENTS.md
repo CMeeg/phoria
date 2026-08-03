@@ -107,6 +107,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - Language version: 13.0 (pinned — see `Directory.Build.props`; `latest` is not per-TFM and would offer C# 15 to the `net8.0` build on the .NET 10 SDK)
 - Central package management via `Directory.Packages.props`
 - The `Phoria.csproj` targets `net8.0;net10.0` (net9.0 dropped — see `docs/PROJECT.md`)
+- **Comments are opt-in, not expected**: only add them when they explain a non-obvious decision (e.g. the Preview `Server.Process = null` override in the e2e apps) — never to restate what the code already says
 
 ## Gotchas
 
@@ -136,8 +137,18 @@ The `e2e/` apps are full .NET + Vite applications used for integration testing. 
 
 - `build` — builds both Vite (islands + server) and .NET
 - `dev` — runs the Vite dev server via tsx
-- `dev:aspire` — starts the sibling WebApp, Vite dev server, and Aspire dashboard in Development mode (`framework-multiple` and `with-workspace`)
+- `dev:aspire` — starts the sibling WebApp, Vite dev server, and Aspire dashboard in Development mode (all three apps)
 - `preview` — starts the Aspire AppHost with the compiled Vite server and .NET app
 - `lint` / `check` — Biome and TypeScript checking
+
+**The Vite dev server resolves `root` and `cwd` from `process.cwd()` and only discovers `vite.config.ts` in the current working directory.** Every dev/prod flow therefore spawns the Node process from a specific working directory:
+
+- Each e2e AppHost ships a `Properties/launchSettings.json` with a `Development` profile (matching the official `aspire-apphost` template) that sets `DOTNET_ENVIRONMENT`/`ASPNETCORE_ENVIRONMENT`. Without it, `aspire run` would default the csproj AppHost to Production — the docs' "Development by default" only applies via the launch profile or the single-file AppHost path.
+- `framework-multiple` / `with-workspace` in dev are spawned by the AppHost from the workspace/WebApp root (where `vite.config.ts` lives); in Preview the AppHost spawns from `WebApp/ui` where `appsettings.root = "."` points.
+- `with-sidecar` relies on `PhoriaServerProcess`, which always spawns from the WebApp content root — so its config lives in `WebApp/vite.config.ts`, its appsettings root is the default `"ui"` (never `"."`), and its dev process arguments run `../node_modules/tsx/dist/cli.mjs` from the WebApp directory.
+
+Keep the config in the directory the spawned process starts in; a config one level up is not discovered. Relative `root`/`cwd` resolve against the spawn directory, not the config file.
+
+`aspire run`/`aspire start` write an `aspire.config.json` (recording `appHost.path`) in the directory they run from — e.g. `e2e/framework-multiple/`, `e2e/with-sidecar/`, and `e2e/with-workspace/WebApp/`. It is the CLI's modern AppHost config file and is committed, not ignored. The e2e scripts still pass `--apphost` explicitly: `aspire run`/`aspire start` would resolve from the config fine, but `aspire stop` resolves its target through the DCP backchannel (not the config) and can hit an interactive selection prompt when more than one AppHost is discoverable — failing non-interactively.
 
 Aspire CLI 13.4.6 may leave DCP-managed resources running after non-interactive SIGINT; use `aspire stop` when scripted teardown is required.

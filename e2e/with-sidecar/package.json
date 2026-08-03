@@ -5,13 +5,15 @@
 	"type": "module",
 	"scripts": {
 		"build": "concurrently \"pnpm:build:*\"",
-		"build:islands": "vite --config WebApp/vite.config.ts build --app",
+		"build:islands": "cd WebApp && vite build --app",
 		"build:webapp": "dotnet build WebApp/WebApp.csproj --configuration Release",
 		"check": "tsc",
-		"dev": "tsx ./WebApp/ui/src/server.ts",
+		"dev": "cd WebApp && tsx ./ui/src/server.ts",
+		"dev:aspire": "aspire run --apphost ./Phoria.AppHost/Phoria.AppHost.csproj",
 		"lint": "biome check",
 		"preview": "aspire start --apphost ./Phoria.AppHost/Phoria.AppHost.csproj --environment Preview",
-		"stop": "aspire stop --apphost ./Phoria.AppHost/Phoria.AppHost.csproj"
+		"stop": "aspire stop --apphost ./Phoria.AppHost/Phoria.AppHost.csproj",
+		"test:smoke": "vitest run --config vitest.smoke.config.ts"
 	},
 	"files": [
 		"WebApp/ui/dist"
@@ -37,6 +39,7 @@
 		"concurrently": "catalog:",
 		"tsx": "catalog:",
 		"typescript": "catalog:",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"vitest": "catalog:"
 	}
 }
