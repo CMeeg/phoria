@@ -60,7 +60,7 @@ jobs:
         run: dotnet test --solution Phoria.sln --configuration Release
 
   test-browser:
-    name: Browser & smoke tests
+    name: Browser tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -95,16 +95,47 @@ jobs:
       - name: Browser-mode component tests
         run: pnpm test:browser
 
-      - name: Build e2e app
-        run: pnpm --filter framework-multiple build
+  test-e2e:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [build-and-test, test-browser]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            8.0.x
+          global-json-file: "./global.json"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build packages
+        run: pnpm build
 
       - name: Install Aspire CLI
         run: |
           curl -fsSL https://aspire.dev/install.sh | bash -s -- --version "13.4.6" --skip-path
           echo "$HOME/.aspire/bin" >> "$GITHUB_PATH"
 
-      - name: Start preview and run smoke test
+      - name: Run e2e tests
         run: |
-          trap 'pnpm --filter framework-multiple stop || true' EXIT
-          pnpm --filter framework-multiple preview
-          NODE_TLS_REJECT_UNAUTHORIZED=0 pnpm --filter framework-multiple test:smoke
+          for app in framework-multiple with-sidecar with-workspace; do
+            pnpm --filter "$app" build
+            pnpm --filter "$app" preview
+            NODE_TLS_REJECT_UNAUTHORIZED=0 pnpm --filter "$app" test:e2e
+            pnpm --filter "$app" stop || true
+          done
