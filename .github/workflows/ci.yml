@@ -134,8 +134,10 @@ jobs:
       - name: Run e2e tests
         run: |
           for app in framework-multiple with-sidecar with-workspace; do
-            pnpm --filter "$app" build
-            pnpm --filter "$app" preview
-            NODE_TLS_REJECT_UNAUTHORIZED=0 pnpm --filter "$app" test:e2e
-            pnpm --filter "$app" stop || true
+            (
+              trap 'pnpm --filter "$app" stop || true' EXIT
+              pnpm --filter "$app" build
+              pnpm --filter "$app" preview
+              NODE_TLS_REJECT_UNAUTHORIZED=0 pnpm --filter "$app" test:e2e
+            )
           done
