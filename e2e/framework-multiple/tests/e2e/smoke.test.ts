@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 const webAppUrl = process.env.PHORIA_WEBAPP_URL ?? "http://localhost:5247"
 
-describe("framework-multiple smoke", () => {
+describe("framework-multiple e2e", () => {
 	it("serves the home page with rendered island markup", async () => {
 		const response = await fetch(webAppUrl)
 
