@@ -13,22 +13,6 @@ var webAppConfiguration = new ConfigurationBuilder()
 	.Build();
 
 var port = int.TryParse(webAppConfiguration["Phoria:Server:Port"], out var configuredPort) ? configuredPort : 5173;
-var nodeCommand = "tsx";
-var nodeArguments = new[] { Path.Combine(webAppDirectory, "ui", "src", "server.ts") };
-var nodeEnvironment = "development";
-// The Vite dev server resolves the root from `process.cwd()` and only discovers the vite config in the current directory,
-// so in development it must be started from the WebApp directory where the config lives.
-var nodeWorkingDirectory = webAppDirectory;
-
-if (!isDevelopment)
-{
-	var processConfiguration = webAppConfiguration.GetSection("Phoria:Server:Process");
-	nodeCommand = processConfiguration["Command"] ?? throw new InvalidOperationException("Phoria server command is not configured.");
-	nodeArguments = processConfiguration.GetSection("Arguments").GetChildren().Select(section => section.Value ?? string.Empty).ToArray();
-	nodeEnvironment = "production";
-	// In production the root is the `ui` directory; a non-development profile cannot use the WebApp directory.
-	nodeWorkingDirectory = Path.Combine(webAppDirectory, "ui");
-}
 
 builder.AddProject<Projects.WebApp>("webapp")
 	.WithHttpEndpoint(port: 5247, name: "http", isProxied: false)
@@ -36,10 +20,13 @@ builder.AddProject<Projects.WebApp>("webapp")
 	.WithEnvironment("ASPNETCORE_ENVIRONMENT", environment)
 	.WithOtlpExporter(Aspire.Hosting.OtlpProtocol.HttpProtobuf);
 
-builder.AddExecutable("phoria-server", nodeCommand, nodeWorkingDirectory, nodeArguments)
-	.WithWorkingDirectory(nodeWorkingDirectory)
+// The Vite dev server resolves the root from `process.cwd()` and only discovers the vite config in the current
+// directory, so both scripts must run from the WebApp directory where `vite.config.ts` lives.
+builder.AddJavaScriptApp("phoria-server", webAppDirectory)
+	.WithRunScript(isDevelopment ? "dev:server" : "preview:server")
+	.WithPnpm(install: false)
 	.WithHttpEndpoint(port: port, name: "http", isProxied: false)
-	.WithEnvironment("NODE_ENV", nodeEnvironment)
+	.WithEnvironment("NODE_ENV", isDevelopment ? "development" : "production")
 	.WithEnvironment("DOTNET_ENVIRONMENT", environment)
 	.WithOtlpExporter(Aspire.Hosting.OtlpProtocol.HttpProtobuf);
 

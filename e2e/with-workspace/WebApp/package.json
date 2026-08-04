@@ -12,6 +12,7 @@
 		"dev:server": "tsx ./ui/src/server.ts",
 		"lint": "biome check",
 		"preview": "aspire start --environment Preview",
+		"preview:server": "node ./ui/dist/server/server.js",
 		"stop": "aspire stop --all",
 		"test:e2e": "vitest run --config vitest.e2e.config.ts"
 	},
