@@ -8,11 +8,12 @@
 		"build:islands": "vite build --app",
 		"build:webapp": "dotnet build --configuration Release",
 		"check": "tsc",
-		"dev": "tsx ./ui/src/server.ts",
-		"dev:aspire": "aspire run --apphost ../Phoria.AppHost/Phoria.AppHost.csproj",
+		"dev": "aspire run",
+		"dev:server": "tsx ./ui/src/server.ts",
 		"lint": "biome check",
-		"preview": "aspire start --apphost ../Phoria.AppHost/Phoria.AppHost.csproj --environment Preview",
-		"stop": "aspire stop --apphost ../Phoria.AppHost/Phoria.AppHost.csproj"
+		"preview": "aspire start --environment Preview",
+		"stop": "aspire stop --all",
+		"test:e2e": "vitest run --config vitest.e2e.config.ts"
 	},
 	"files": [
 		"ui/dist"
@@ -45,6 +46,7 @@
 		"postcss-preset-env": "catalog:",
 		"tsx": "catalog:",
 		"typescript": "catalog:",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"vitest": "catalog:"
 	}
 }
