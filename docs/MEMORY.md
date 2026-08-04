@@ -128,7 +128,7 @@ Dated log of decisions made while shaping the project. One line each, with the w
   package.
 - Centralized full numeric logger event IDs in nested `EventId` feature groups,
   preserving emitted IDs while removing composite `EventFeature` expressions.
-- Sibling Aspire AppHosts now support `dev:aspire` and Preview orchestration;
+- Sibling Aspire AppHosts now support `dev` and Preview orchestration;
   the with-sidecar app remains the explicit .NET-owned Node-process model.
 - Deferred `IMemoryPoolFactory<byte>` post-1.0 because it lacks the stream and
   buffer-writer semantics required by current consumers. Aspire 13.4.6 SIGINT
@@ -138,7 +138,7 @@ Dated log of decisions made while shaping the project. One line each, with the w
 ## 2026-08-04 — E2E app polish
 
 - with-sidecar Development Node is developer-owned via `pnpm dev:server`, with the WebApp monitor-only and no `Phoria:Server:Process`; Preview/Production Node is WebApp-owned.
-- AppHosts always use `AddJavaScriptApp` via `dev:server`/`preview:server`, keeping the Node command in the package scripts and ownership model consistent.
+- The framework-multiple and with-workspace AppHosts always use `AddJavaScriptApp` via `dev:server`/`preview:server`, keeping the Node command in package scripts; with-sidecar retains its WebApp-owned Preview/Production model.
 - Dropped the unused `Cwd` option rather than retaining configuration with no effect.
 - Removing the production `root = "."` override fixes Docker production asset resolution by preserving the content-root-relative UI path.
 - Dropped explicit `--apphost` arguments in favour of committed `aspire.config.json` files and `aspire stop --all` for non-interactive teardown.
