@@ -14,10 +14,11 @@ import {
 import { createApp, toNodeListener } from "h3"
 import { type ListenOptions, listen } from "listhen"
 
+const hasOtlpEndpoint = Boolean(process.env.OTEL_EXPORTER_OTLP_ENDPOINT)
 const loggerProvider = new LoggerProvider({
 	processors: [
 		new SimpleLogRecordProcessor({
-			exporter: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ? new OTLPLogExporter() : new ConsoleLogRecordExporter()
+			exporter: hasOtlpEndpoint ? new OTLPLogExporter() : new ConsoleLogRecordExporter()
 		})
 	]
 })
@@ -68,7 +69,11 @@ if (viteDevServer) {
 app.options.onError = (error) => {
 	const err = error instanceof Error ? error : new Error("Unknown error", { cause: error })
 	viteDevServer?.ssrFixStacktrace(err)
-	log("server.error", SeverityNumber.ERROR, { "error.message": err.message, "error.stack": err.stack })
+	log("server.error", SeverityNumber.ERROR, {
+		"error.message": err.message,
+		"error.stack": err.stack,
+		"error.cause": err.cause === undefined ? undefined : String(err.cause)
+	})
 }
 
 const listenOptions: Partial<ListenOptions> = {
