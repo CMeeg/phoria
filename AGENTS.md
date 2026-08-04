@@ -75,10 +75,10 @@ dotnet test --solution Phoria.sln --configuration Release  # xUnit v3 tests for 
 
 `global.json` sets `test.runner: Microsoft.Testing.Platform`, so `dotnet test` runs in MTP mode — pass `--solution <path>` (not a bare path) to run every project's test executable across both target frameworks.
 
-E2E smoke test (requires a preview build running):
+E2E test (requires a preview build running):
 
 ```bash
-pnpm --filter framework-multiple test:smoke
+pnpm --filter framework-multiple test:e2e
 ```
 
 ### CI Order
@@ -133,22 +133,24 @@ NuGet publishing uses the `scripts/dotnet/publish.js` script via `pnpm --filter 
 
 ## E2E Apps
 
-The `e2e/` apps are full .NET + Vite applications used for integration testing. They are **not** part of the .NET solution. `framework-multiple` and `with-workspace` use Aspire AppHosts to own the Node process; `with-sidecar` exercises the alternative where `PhoriaServerProcess` owns Node from the .NET WebApp. Each has its own `package.json` with:
+The `e2e/` apps are full .NET + Vite applications used for integration testing. They are **not** part of the .NET solution. `framework-multiple` and `with-workspace` use Aspire AppHosts to own the Node process; `with-sidecar` exercises the alternative where the developer or .NET WebApp owns Node depending on the environment. Each has its own `package.json` with:
 
 - `build` — builds both Vite (islands + server) and .NET
-- `dev` — runs the Vite dev server via tsx
-- `dev:aspire` — starts the sibling WebApp, Vite dev server, and Aspire dashboard in Development mode (all three apps)
+- `dev` — runs the Aspire AppHost via `aspire run`
+- `dev:server` — runs the Phoria Server with Vite HMR via tsx
 - `preview` — starts the Aspire AppHost with the compiled Vite server and .NET app
+- `stop` — stops all Aspire apps via `aspire stop --all`
+- `test:e2e` — runs the E2E tests
 - `lint` / `check` — Biome and TypeScript checking
 
 **The Vite dev server resolves `root` and `cwd` from `process.cwd()` and only discovers `vite.config.ts` in the current working directory.** Every dev/prod flow therefore spawns the Node process from a specific working directory:
 
 - Each e2e AppHost ships a `Properties/launchSettings.json` with a `Development` profile (matching the official `aspire-apphost` template) that sets `DOTNET_ENVIRONMENT`/`ASPNETCORE_ENVIRONMENT`. Without it, `aspire run` would default the csproj AppHost to Production — the docs' "Development by default" only applies via the launch profile or the single-file AppHost path.
-- `framework-multiple` / `with-workspace` in dev are spawned by the AppHost from the workspace/WebApp root (where `vite.config.ts` lives); in Preview the AppHost spawns from `WebApp/ui` where `appsettings.root = "."` points.
-- `with-sidecar` relies on `PhoriaServerProcess`, which always spawns from the WebApp content root — so its config lives in `WebApp/vite.config.ts`, its appsettings root is the default `"ui"` (never `"."`), and its dev process arguments run `../node_modules/tsx/dist/cli.mjs` from the WebApp directory.
+- `framework-multiple` / `with-workspace` use `AddJavaScriptApp` in the AppHost to own Node, running `dev:server` or `preview:server` from the framework-multiple workspace root or with-workspace WebApp directory.
+- `with-sidecar` in Development is developer-owned via `pnpm dev:server` from the app root; the WebApp is monitor-only and has no `Phoria:Server:Process`. In Preview/Production, the WebApp owns Node and spawns `node ui/dist/server/server.js` from the content root.
 
 Keep the config in the directory the spawned process starts in; a config one level up is not discovered. Relative `root`/`cwd` resolve against the spawn directory, not the config file.
 
-`aspire run`/`aspire start` write an `aspire.config.json` (recording `appHost.path`) in the directory they run from — e.g. `e2e/framework-multiple/`, `e2e/with-sidecar/`, and `e2e/with-workspace/WebApp/`. It is the CLI's modern AppHost config file and is committed, not ignored. The e2e scripts still pass `--apphost` explicitly: `aspire run`/`aspire start` would resolve from the config fine, but `aspire stop` resolves its target through the DCP backchannel (not the config) and can hit an interactive selection prompt when more than one AppHost is discoverable — failing non-interactively.
+`aspire run`/`aspire start` resolve the committed `aspire.config.json` in the directory they run from. `aspire stop --all` stops all discoverable AppHosts without an interactive target selection.
 
 Aspire CLI 13.4.6 may leave DCP-managed resources running after non-interactive SIGINT; use `aspire stop` when scripted teardown is required.

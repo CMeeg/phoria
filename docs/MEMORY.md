@@ -134,3 +134,13 @@ Dated log of decisions made while shaping the project. One line each, with the w
   buffer-writer semantics required by current consumers. Aspire 13.4.6 SIGINT
   cleanup remains an environmental limitation, and Node shutdown OTel delivery
   remains an observability gap requiring collector-backed testing.
+
+## 2026-08-04 — E2E app polish
+
+- with-sidecar Development Node is developer-owned via `pnpm dev:server`, with the WebApp monitor-only and no `Phoria:Server:Process`; Preview/Production Node is WebApp-owned.
+- AppHosts always use `AddJavaScriptApp` via `dev:server`/`preview:server`, keeping the Node command in the package scripts and ownership model consistent.
+- Dropped the unused `Cwd` option rather than retaining configuration with no effect.
+- Removing the production `root = "."` override fixes Docker production asset resolution by preserving the content-root-relative UI path.
+- Dropped explicit `--apphost` arguments in favour of committed `aspire.config.json` files and `aspire stop --all` for non-interactive teardown.
+- Renamed the E2E smoke test to `test:e2e` to describe the full end-to-end test command.
+- Split CI into a `test-e2e` job covering all three E2E apps so each ownership model is exercised.

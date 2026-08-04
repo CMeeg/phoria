@@ -561,7 +561,7 @@ The recommended development workflow uses an Aspire AppHost. From the directory 
 dotnet dev-certs https --trust
 
 # Start the Web App, Phoria Server with Vite HMR, and Aspire dashboard
-pnpm dev:aspire
+pnpm dev
 ```
 
 The Aspire dashboard URL is printed by `aspire run`; it shows structured logs and resource health for both the Web App and Phoria Server. Press `Ctrl+C` to stop the workflow.
@@ -570,7 +570,7 @@ For a lighter-weight alternative without the dashboard, use two terminals:
 
 ```shell
 # Terminal 1: start the Phoria Server with Vite HMR
-pnpm dev
+pnpm dev:server
 
 # Terminal 2: start the Phoria Web App
 dotnet run --project WebApp/WebApp.csproj
@@ -579,7 +579,7 @@ dotnet run --project WebApp/WebApp.csproj
 > [!TIP]
 > The `dotnet run` command doesn't automatically launch the browser unfortunately, but you can find the URL for the web app in the terminal output or by looking in your `WebApp/Properties/launchSettings.json` file.
 
-When using the two-terminal development workflow with a debugger, stopping the debugger stops only the .NET process. The Node development server runs independently, so stop it manually in the terminal where `pnpm dev` is running. Do not run the debugger against the sidecar production model while `Phoria:Server:Process` is configured: the host owns that Node process, and debugger termination can orphan it. Use the sibling Aspire preview workflow to integration-test graceful shutdown of the AppHost-owned Node process.
+When using the two-terminal development workflow with a debugger, stopping the debugger stops only the .NET process. The Node development server runs independently, so stop it manually in the terminal where `pnpm dev:server` is running. Do not run the debugger against the sidecar production model while `Phoria:Server:Process` is configured: the host owns that Node process, and debugger termination can orphan it. Use the sibling Aspire preview workflow to integration-test graceful shutdown of the AppHost-owned Node process.
 
 Now you will be able to navigate to the web app in your browser and:
 
@@ -598,6 +598,6 @@ pnpm run build
 pnpm run preview
 ```
 
-The `preview` script should be `aspire start` and should run from the directory containing the AppHost. The AppHost uses `Aspire.AppHost.Sdk`, calls `DistributedApplication.CreateBuilder`, adds the Web App with `Projects.WebApp`, and adds the compiled Phoria Server with `AddExecutable`. Keep the server command and arguments in `appsettings.Preview.json`; the AppHost should load that file rather than duplicating them. Aspire's dashboard provides the local resource view and OpenTelemetry log output.
+The `preview` script should be `aspire start` and should run from the directory containing the AppHost. The AppHost uses `Aspire.AppHost.Sdk`, calls `DistributedApplication.CreateBuilder`, adds the Web App with `Projects.WebApp`, and adds the compiled Phoria Server with `AddJavaScriptApp`, using `WithRunScript("preview:server")`. The server command and arguments no longer live in `appsettings.Preview.json`. Aspire's dashboard provides the local resource view and OpenTelemetry log output.
 
 If you're curious about how Phoria works in a production environment you can also check out the [building for production](./building-for-production.md) guide.
