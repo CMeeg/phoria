@@ -45,8 +45,8 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"destr": "^2.0.5",
-		"empathic": "^2.0.1",
+		"destr": "catalog:",
+		"empathic": "catalog:",
 		"tinyexec": "^1.2.4"
 	},
 	"devDependencies": {

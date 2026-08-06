@@ -19,6 +19,9 @@ catalogs:
     '@opentelemetry/sdk-logs':
       specifier: ^0.221.0
       version: 0.221.0
+    '@rollup/pluginutils':
+      specifier: ^5.4.0
+      version: 5.4.0
     '@sveltejs/vite-plugin-svelte':
       specifier: ^7.2.0
       version: 7.2.0
@@ -46,12 +49,21 @@ catalogs:
     cross-env:
       specifier: ^10.1.0
       version: 10.1.0
+    destr:
+      specifier: ^2.0.5
+      version: 2.0.5
+    empathic:
+      specifier: ^2.0.1
+      version: 2.0.1
     h3:
       specifier: ^1.15.11
       version: 1.15.11
     listhen:
       specifier: ^1.10.1
       version: 1.10.1
+    magic-string:
+      specifier: ^1.1.0
+      version: 1.1.0
     playwright:
       specifier: ^1.62.0
       version: 1.62.0
@@ -348,13 +360,13 @@ importers:
         specifier: ^6.1.7
         version: 6.1.7
       destr:
-        specifier: ^2.0.5
+        specifier: 'catalog:'
         version: 2.0.5
       empathic:
-        specifier: ^2.0.1
+        specifier: 'catalog:'
         version: 2.0.1
       h3:
-        specifier: ^1.15.11
+        specifier: 'catalog:'
         version: 1.15.11
       mime:
         specifier: ^4.1.0
@@ -388,10 +400,10 @@ importers:
   packages/phoria-react:
     dependencies:
       '@rollup/pluginutils':
-        specifier: ^5.4.0
+        specifier: 'catalog:'
         version: 5.4.0(rollup@4.24.2)
       magic-string:
-        specifier: ^1.1.0
+        specifier: 'catalog:'
         version: 1.1.0
     devDependencies:
       '@phoria/phoria':
@@ -443,10 +455,10 @@ importers:
   packages/phoria-svelte:
     dependencies:
       '@rollup/pluginutils':
-        specifier: ^5.4.0
+        specifier: 'catalog:'
         version: 5.4.0(rollup@4.24.2)
       magic-string:
-        specifier: ^1.1.0
+        specifier: 'catalog:'
         version: 1.1.0
     devDependencies:
       '@phoria/phoria':
@@ -480,10 +492,10 @@ importers:
   packages/phoria-vue:
     dependencies:
       '@rollup/pluginutils':
-        specifier: ^5.4.0
+        specifier: 'catalog:'
         version: 5.4.0(rollup@4.24.2)
       magic-string:
-        specifier: ^1.1.0
+        specifier: 'catalog:'
         version: 1.1.0
     devDependencies:
       '@phoria/phoria':
@@ -517,10 +529,10 @@ importers:
   packages/vite-plugin-dotnet-dev-certs:
     dependencies:
       destr:
-        specifier: ^2.0.5
+        specifier: 'catalog:'
         version: 2.0.5
       empathic:
-        specifier: ^2.0.1
+        specifier: 'catalog:'
         version: 2.0.1
       tinyexec:
         specifier: ^1.2.4

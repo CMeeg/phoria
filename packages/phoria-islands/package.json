@@ -64,9 +64,9 @@
 	},
 	"dependencies": {
 		"defu": "^6.1.7",
-		"destr": "^2.0.5",
-		"empathic": "^2.0.1",
-		"h3": "^1.15.11",
+		"destr": "catalog:",
+		"empathic": "catalog:",
+		"h3": "catalog:",
 		"mime": "^4.1.0"
 	},
 	"devDependencies": {
