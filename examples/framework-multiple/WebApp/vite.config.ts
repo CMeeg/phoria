@@ -6,11 +6,9 @@ import { phoriaVue } from "@phoria/phoria-vue/vite"
 import { dotnetDevCerts } from "@phoria/vite-plugin-dotnet-dev-certs"
 import { defineConfig } from "vite"
 
-// https://vite.dev/config/
 export default defineConfig({
-	publicDir: "public",
-	resolve: {
-		tsconfigPaths: true
-	},
-	plugins: [dotnetDevCerts(), phoria({ cwd: "WebApp" }), phoriaReact(), phoriaSvelte(), phoriaVue(), inspectConfig()]
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [dotnetDevCerts(), phoria(), phoriaReact(), phoriaSvelte(), phoriaVue(), inspectConfig()],
 })
