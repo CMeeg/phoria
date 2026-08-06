@@ -33,7 +33,7 @@ The goal is to bring the project up to date, harden it, and reach a
 
 - Ship a **stable, tested, production-ready `1.0.0`** of the existing feature
   set.
-- Establish a **test foundation** (unit + e2e) as the base for everything else.
+- Establish a **test foundation** (unit + integration) as the base for everything else.
 - **Modernize** dependencies and platform (Vite 8, latest React/Svelte/Vue,
   .NET 10).
 - **Harden the server** for production robustness (top author concern).
@@ -46,7 +46,7 @@ The goal is to bring the project up to date, harden it, and reach a
 
 v1 is successful when:
 
-- Unit tests (Vitest for JS, xUnit for .NET) and Playwright e2e tests exist and
+- Unit tests (Vitest for JS, xUnit for .NET) and Playwright browser tests exist and
   run in CI; the root `test` script is real.
 - The known vite-process shutdown bug is fixed and no longer reproducible.
 - Server-process lifecycle events and errors — in both the .NET host and the
@@ -63,15 +63,15 @@ v1 is successful when:
 
 ### In
 
-- Test foundation: Vitest (JS packages), xUnit (.NET), Playwright (e2e apps).
+- Test foundation: Vitest (JS packages), xUnit (.NET), Playwright (browser tests).
 - Dependency/platform updates: Vite 8, latest React/Svelte/Vue, .NET 10;
   `net8.0;net10.0` (net9.0 dropped — see Open questions).
 - Server robustness: process shutdown bug (`Process.Kill()` process-tree,
   `StartServer`/`StopServer` semaphore race), production error handling,
   lifecycle hardening (in-process start, monitor/reconnect, graceful
-  degradation, SIGTERM→grace-period→kill-tree stop sequence), hardened e2e
-  shutdown paths (Node/Vite sidecar signal handling, `run-p` replacement with
-  a signal-forwarding orchestrator), health/observability delivered via
+  degradation, SIGTERM→grace-period→kill-tree stop sequence), hardened
+  shutdown paths for the Node/Vite sidecar (signal handling, `run-p`
+  replacement with a signal-forwarding orchestrator), health/observability delivered via
   **OpenTelemetry logging** (.NET host + Node/Vite sidecar — logging only;
   traces/metrics left open, see Open questions), and an assessment of `.NET 10`
   memory pools. `IMemoryPoolFactory<byte>` adoption is explicitly deferred
@@ -128,8 +128,8 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
    `Process.Kill()` process-tree bug), the `StartServer`/`StopServer` semaphore
    race, undisposed `StreamPool`s, the unconditional
    `DangerousAcceptAnyServerCertificateValidator`, prod error handling,
-   lifecycle hardening, hardened e2e shutdown paths (Node/Vite sidecar signal
-   handling, `run-p` replacement), OpenTelemetry logging (.NET host + Node/Vite
+   lifecycle hardening, hardened shutdown paths for the Node/Vite sidecar
+   (signal handling, `run-p` replacement), OpenTelemetry logging (.NET host + Node/Vite
    sidecar) as the concrete delivery of health/observability, and `.NET 10`
    memory-pool assessment and deferred-issue close-out are complete. The
    memory-pool replacement remains deferred post-1.0. Task-by-task detail:
@@ -178,6 +178,6 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   extra coverage. `net8.0` is retained until its Nov 2026 EOL, then revisited.
 - TODO: Decide whether OpenTelemetry traces/metrics (beyond logging) are in
   scope for v1, or deferred entirely to a future milestone.
-- E2E AppHosts currently use an OTLP HTTP exporter for dashboard visibility;
-  decide later whether a production exporter/target and .NET↔Node log
-  correlation across the sidecar boundary are required for v1.
+- Aspire AppHosts in the examples use an OTLP HTTP exporter for dashboard
+  visibility; decide later whether a production exporter/target and .NET↔Node
+  log correlation across the sidecar boundary are required for v1.

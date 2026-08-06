@@ -24,9 +24,9 @@ manifest consumed by the SSR and .NET integration.
 At runtime, the .NET server monitor gates startup on the first healthy Phoria
 Server check and refreshes health periodically. Isomorphic islands fall back to
 client-only rendering while the server is unhealthy and resume SSR on later
-requests after recovery. Aspire AppHosts own the Node process in the sibling
-development/preview e2e apps; the sidecar app instead configures
-`PhoriaServerProcess` to own Node from the .NET host.
+requests after recovery. In Development and Preview, the example Aspire
+AppHosts own the Node process via `AddJavaScriptApp`; in Production the .NET
+host owns Node via `PhoriaServerProcess` (`Phoria:Server:Process`).
 
 This document is intentionally a concise orientation. Detailed behavior and
 configuration are documented in [`docs/guides/`](guides/), while milestone
