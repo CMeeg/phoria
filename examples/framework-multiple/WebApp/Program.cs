@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.ResponseCompression;
 using OpenTelemetry.Logs;
 using Phoria;
 
@@ -16,14 +15,6 @@ builder.Logging.AddOpenTelemetry(options =>
 	}
 });
 
-// Add services to the container
-
-builder.Services.AddResponseCompression(options =>
-{
-	options.EnableForHttps = true;
-	options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["image/svg+xml"]);
-});
-
 IMvcBuilder mvcBuilder = builder.Services.AddRazorPages();
 
 if (builder.Environment.IsDevelopment())
@@ -31,48 +22,28 @@ if (builder.Environment.IsDevelopment())
 	mvcBuilder.AddRazorRuntimeCompilation();
 }
 
-builder.Services.AddPhoria(options =>
-{
-	if (builder.Environment.IsEnvironment("Preview"))
-	{
-		// In the Preview environment the AppHost owns the Node process; the WebApp must not spawn its own.
-		options.Server.Process = null;
-	}
-});
+builder.Services.AddPhoria();
 
 WebApplication app = builder.Build();
-
-// Configure the HTTP request pipeline
 
 if (!app.Environment.IsDevelopment())
 {
 	app.UseExceptionHandler("/Error");
-
 	app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
-app.UseResponseCompression();
-
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthorization();
-
 app.MapStaticAssets();
-
-app.MapRazorPages()
-	.WithStaticAssets();
+app.MapRazorPages().WithStaticAssets();
 
 if (app.Environment.IsDevelopment())
 {
-	// WebSockets are required for the Vite Dev Server's HMR (Hot Module Reload) feature
 	app.UseWebSockets();
 }
 
-// The order of the Phoria middleware matters so we will place it last
 app.UsePhoria();
 
 app.Run();
