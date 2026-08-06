@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="../../packages/Phoria/Phoria.csproj" />
+  <Project Path="AppHost/AppHost.csproj" />
+  <Project Path="WebApp/WebApp.csproj" />
+</Solution>

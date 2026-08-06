@@ -62,8 +62,8 @@
 		"test:browser": "vitest run --config vitest.browser.config.ts"
 	},
 	"dependencies": {
-		"@rollup/pluginutils": "catalog:",
-		"magic-string": "catalog:"
+		"@rollup/pluginutils": "^5.4.0",
+		"magic-string": "^1.1.0"
 	},
 	"devDependencies": {
 		"@phoria/phoria": "workspace:*",

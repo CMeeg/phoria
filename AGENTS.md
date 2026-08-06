@@ -120,6 +120,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - **Vite 8 uses Rolldown/Oxc** — `rollupOptions` is deprecated in favour of `rolldownOptions` in build config.
 - **`resolve.tsconfigPaths: true`** (built into Vite 8) replaces the separate `vite-tsconfig-paths` plugin — do not reintroduce the plugin.
 - **All pnpm settings live in `pnpm-workspace.yaml`**, not `package.json`/`.npmrc` (e.g. `packageExtensions`, `peerDependencyRules`, catalogs).
+- **JS package runtime `dependencies` must use literal semver ranges, never `catalog:`.** `examples/` installs the packages via `file:`, and pnpm errors on `catalog:` specs in packages outside the workspace (it resolves the raw manifest). devDependencies may keep using `catalog:`.
 
 ## Versioning & Publishing
 
@@ -154,3 +155,12 @@ Keep the config in the directory the spawned process starts in; a config one lev
 `aspire run`/`aspire start` resolve the committed `aspire.config.json` in the directory they run from. `aspire stop --all` stops all discoverable AppHosts without an interactive target selection.
 
 Aspire CLI 13.4.6 may leave DCP-managed resources running after non-interactive SIGINT; use `aspire stop` when scripted teardown is required.
+
+## Examples
+
+`examples/` contains standalone example apps (user-facing), distinct from the `e2e/` workspace integration tests. Examples are **deliberately outside the pnpm workspace**: the root `pnpm-workspace.yaml` globs do not match them, and each example ships its own `pnpm-workspace.yaml` + committed `pnpm-lock.yaml`.
+
+- pnpm uses the **nearest** `pnpm-workspace.yaml`, so running commands inside an example's directory shadows the repo-root workspace — no `--ignore-workspace` flag needed.
+- pnpm 11 reads build-script settings from `pnpm-workspace.yaml` (the `pnpm` field in `package.json` is ignored), so each example carries its own `allowBuilds` (esbuild, Biome, etc.).
+- Examples reference local packages via `file:` (npm) and `ProjectReference` (NuGet), so they require the phoria packages to be built first (`pnpm build` at the repo root). Because they are outside the workspace, `turbo` and `pnpm --filter`/`pnpm -r` do not run their scripts — run them from the example's `WebApp` directory.
+- `getting-started` keeps `package.json` and `vite.config.ts` in `WebApp/` (the Vite dev server only discovers config in the spawned working directory); `aspire start`/`aspire run` locate the example-root `aspire.config.json`, while `aspire stop` runs from the example root with `--all`.

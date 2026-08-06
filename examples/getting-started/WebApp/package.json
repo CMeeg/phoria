@@ -1,0 +1,47 @@
+{
+  "name": "getting-started",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "ui/dist"
+  ],
+  "scripts": {
+    "build": "concurrently \"pnpm:build:*\"",
+    "build:islands": "vite build --app",
+    "build:webapp": "dotnet build WebApp.csproj --configuration Release",
+    "check": "tsc",
+    "dev": "aspire run",
+    "dev:server": "tsx ./ui/src/server.ts",
+    "lint": "biome check",
+    "preview": "aspire start --environment Preview",
+    "preview:server": "node ui/dist/server/server.js",
+    "stop": "aspire stop --all",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
+  },
+  "dependencies": {
+    "@opentelemetry/api-logs": "^0.221.0",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.221.0",
+    "@opentelemetry/sdk-logs": "^0.221.0",
+    "@phoria/phoria": "file://../../../packages/phoria-islands",
+    "@phoria/phoria-react": "file://../../../packages/phoria-react",
+    "h3": "^1.15.11",
+    "listhen": "^1.10.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.5",
+    "@meeg/vite-plugin-inspect-config": "~0.3.0",
+    "@phoria/vite-plugin-dotnet-dev-certs": "file://../../../packages/vite-plugin-dotnet-dev-certs",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "concurrently": "^10.0.4",
+    "tsx": "^4.23.1",
+    "typescript": "~6.0.3",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  }
+}
