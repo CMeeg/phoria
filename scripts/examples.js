@@ -12,6 +12,8 @@ const root = resolve(scriptDir, "..")
 const jsPackages = {
 	"@phoria/phoria": "packages/phoria-islands",
 	"@phoria/phoria-react": "packages/phoria-react",
+	"@phoria/phoria-svelte": "packages/phoria-svelte",
+	"@phoria/phoria-vue": "packages/phoria-vue",
 	"@phoria/vite-plugin-dotnet-dev-certs": "packages/vite-plugin-dotnet-dev-certs"
 }
 
