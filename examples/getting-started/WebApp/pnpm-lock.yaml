@@ -18,11 +18,11 @@ importers:
         specifier: ^0.221.0
         version: 0.221.0(@opentelemetry/api@1.9.1)
       '@phoria/phoria':
-        specifier: file://../../../packages/phoria-islands
-        version: file:../../../packages/phoria-islands(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))
+        specifier: ^0.4.2
+        version: 0.4.2(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))
       '@phoria/phoria-react':
-        specifier: file://../../../packages/phoria-react
-        version: file:../../../packages/phoria-react(@phoria/phoria@file:../../../packages/phoria-islands(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)))(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@vitejs/plugin-react@6.0.5(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))
+        specifier: ^0.4.2
+        version: 0.4.2(@phoria/phoria@0.4.2(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)))(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@vitejs/plugin-react@6.0.5(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))
       h3:
         specifier: ^1.15.11
         version: 1.15.11
@@ -43,8 +43,8 @@ importers:
         specifier: ~0.3.0
         version: 0.3.0(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))
       '@phoria/vite-plugin-dotnet-dev-certs':
-        specifier: file://../../../packages/vite-plugin-dotnet-dev-certs
-        version: file:../../../packages/vite-plugin-dotnet-dev-certs(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))
+        specifier: ^0.2.1
+        version: 0.2.1(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -366,29 +366,29 @@ packages:
     bundledDependencies:
       - napi-wasm
 
-  '@phoria/phoria-react@file:../../../packages/phoria-react':
-    resolution: {directory: ../../../packages/phoria-react, type: directory}
-    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
+  '@phoria/phoria-react@0.4.2':
+    resolution: {integrity: sha512-zt6O/obEhC7sp//AoBq3JcVVLdFRGDA/v3RpZDPBIPPN4JgosZn//yj8wgdulRsQCkP3ToDy/Wl4+FswGXeR/Q==}
+    engines: {node: ^18.17.1 || ^20.3.0 || >=22.0.0}
     peerDependencies:
-      '@phoria/phoria': '>=0.4.0 <1.0.0'
+      '@phoria/phoria': ~0.4.0
       '@types/react': ^19.0.0
       '@types/react-dom': ^19.0.0
-      '@vitejs/plugin-react': ^6.0.0
+      '@vitejs/plugin-react': ^4.0.0
       react: ^19.0.0
       react-dom: ^19.0.0
-      vite: ^8.0.0
+      vite: ^6.0.0
 
-  '@phoria/phoria@file:../../../packages/phoria-islands':
-    resolution: {directory: ../../../packages/phoria-islands, type: directory}
-    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
+  '@phoria/phoria@0.4.2':
+    resolution: {integrity: sha512-Wane2sYjhXzd7tzklCLjL6YxcspobZlxkFPLQP4e91Q/OMt1EqpTtPkK/Ol6/vulwjfadl+6Ei5EkBTTgiSTGg==}
+    engines: {node: ^18.17.1 || ^20.3.0 || >=22.0.0}
     peerDependencies:
-      vite: ^8.0.0
+      vite: ^6.0.0
 
-  '@phoria/vite-plugin-dotnet-dev-certs@file:../../../packages/vite-plugin-dotnet-dev-certs':
-    resolution: {directory: ../../../packages/vite-plugin-dotnet-dev-certs, type: directory}
-    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
+  '@phoria/vite-plugin-dotnet-dev-certs@0.2.1':
+    resolution: {integrity: sha512-qoiXhGvEOr4IWLYO90Fkmrwy86Ny4IVxeGfiat+vIwanTFDc+jFvsoD0wmX0Dx8AEr1vNyWJyXdWI2G8tSL+KQ==}
+    engines: {node: ^18.17.1 || ^20.3.0 || >=22.0.0}
     peerDependencies:
-      vite: ^8.0.0
+      vite: ^6.0.0
 
   '@rolldown/binding-android-arm64@1.2.3':
     resolution: {integrity: sha512-zrJtHDcaZJ1Fp7xf4hNl+7seH9Cn/N5TwLYkhgXREtBwAd/jaqW3uqeHxpDugJLVICWg4eW44kOQEGJ1r6jCGw==}
@@ -626,8 +626,8 @@ packages:
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
 
-  empathic@2.0.1:
-    resolution: {integrity: sha512-YGRs8knHhKHVShLkFET/rWAU8kmHbOV5LwN938RHI0pljAJ1Gf6SzXsSmRaEzcXTtOOmVqJ5+WtQPL5uigY50Q==}
+  empathic@1.1.0:
+    resolution: {integrity: sha512-rsPft6CK3eHtrlp9Y5ALBb+hfK+DWnA4WFebbazxjWyx8vSm3rZeoM3z9irsjcqO3PYRzlfv27XIB4tz2DV7RA==}
     engines: {node: '>=14'}
 
   es-module-lexer@2.3.1:
@@ -785,9 +785,6 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
-  magic-string@1.1.0:
-    resolution: {integrity: sha512-kS3VHe0nEPST2saQV4Rbkchcd3UBRkVTQHo1D3h/ZTwFDhai/mfKkmtPAtD129EOI7K3HlHIsFOt0WrI2/oU9g==}
-
   mime@4.1.0:
     resolution: {integrity: sha512-X5ju04+cAzsojXKes0B/S4tcYtFAJ6tTMuSPBEn9CPGlrWr8Fiw7qYeLT0XyH80HSoAoqWCaz+MWKh22P7G1cw==}
     engines: {node: '>=16'}
@@ -881,6 +878,9 @@ packages:
   tinyclip@0.1.15:
     resolution: {integrity: sha512-uo33abH+Ays0xYaDysoBt494Hb3hsEczMpcC0MwFl773pazORx4fmvKhclhR1wonUbB6vvpRsvVMwnhfqeMc+A==}
     engines: {node: ^16.14.0 || >= 17.3.0}
+
+  tinyexec@0.3.2:
+    resolution: {integrity: sha512-KQQR9yN7R5+OSwaK0XQoj22pwHoTlgYqmUscPYoknOoWCWfj/5/ABTMRi69FrKU5ffPVh5QcFikpWJI/P1ocHA==}
 
   tinyexec@1.3.0:
     resolution: {integrity: sha512-QKAl9m8gWWGHV8jZcPeym6j+XULi6tOf1mT83WYJ4Lk2ytW/uwAWkrP0uFsdoYMdueVJ0qs26wZ+23xeB4ibNQ==}
@@ -1223,34 +1223,34 @@ snapshots:
       is-glob: 4.0.3
       picomatch: 4.0.5
 
-  '@phoria/phoria-react@file:../../../packages/phoria-react(@phoria/phoria@file:../../../packages/phoria-islands(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)))(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@vitejs/plugin-react@6.0.5(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))':
+  '@phoria/phoria-react@0.4.2(@phoria/phoria@0.4.2(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)))(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(@vitejs/plugin-react@6.0.5(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))':
     dependencies:
-      '@phoria/phoria': file:../../../packages/phoria-islands(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))
+      '@phoria/phoria': 0.4.2(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))
       '@rollup/pluginutils': 5.4.0
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       '@vitejs/plugin-react': 6.0.5(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))
-      magic-string: 1.1.0
+      magic-string: 0.30.21
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
       vite: 8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)
     transitivePeerDependencies:
       - rollup
 
-  '@phoria/phoria@file:../../../packages/phoria-islands(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))':
+  '@phoria/phoria@0.4.2(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))':
     dependencies:
       defu: 6.1.7
       destr: 2.0.5
-      empathic: 2.0.1
+      empathic: 1.1.0
       h3: 1.15.11
       mime: 4.1.0
       vite: 8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)
 
-  '@phoria/vite-plugin-dotnet-dev-certs@file:../../../packages/vite-plugin-dotnet-dev-certs(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))':
+  '@phoria/vite-plugin-dotnet-dev-certs@0.2.1(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8))':
     dependencies:
       destr: 2.0.5
-      empathic: 2.0.1
-      tinyexec: 1.3.0
+      empathic: 1.1.0
+      tinyexec: 0.3.2
       vite: 8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)
 
   '@rolldown/binding-android-arm64@1.2.3':
@@ -1421,7 +1421,7 @@ snapshots:
 
   emoji-regex@10.6.0: {}
 
-  empathic@2.0.1: {}
+  empathic@1.1.0: {}
 
   es-module-lexer@2.3.1: {}
 
@@ -1575,10 +1575,6 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  magic-string@1.1.0:
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
-
   mime@4.1.0: {}
 
   nanoid@3.3.17: {}
@@ -1661,6 +1657,8 @@ snapshots:
   tinybench@2.9.0: {}
 
   tinyclip@0.1.15: {}
+
+  tinyexec@0.3.2: {}
 
   tinyexec@1.3.0: {}
 

@@ -6,7 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="../../../packages/Phoria/Phoria.csproj" />
+		<PackageReference Include="Phoria" />
 	</ItemGroup>
 
 	<ItemGroup>
