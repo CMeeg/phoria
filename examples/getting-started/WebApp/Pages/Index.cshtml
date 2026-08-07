@@ -1,8 +1,12 @@
 @page
 @model IndexModel
 @{
-	ViewData["Title"] = "Phoria sidecar";
+    ViewData["Title"] = "Home page";
 }
 
-<h1>Phoria sidecar</h1>
-<phoria-island component="ReactCounter" client="Client.Load" props="new { StartAt = 5 }"></phoria-island>
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+<phoria-island component="Counter" client="Client.Load" props="new { StartAt = 5 }"></phoria-island>

@@ -1,9 +1,9 @@
 import { registerComponents } from "@phoria/phoria"
 
 registerComponents({
-  ReactCounter: {
+  Counter: {
     loader: {
-      module: () => import("./Counter.tsx"),
+      module: () => import("./counter/counter.tsx"),
       component: (module) => module.Counter,
     },
     framework: "react",

@@ -3,9 +3,10 @@
 .vite-config/
 .vite-inspect/
 bin/
-dist/
+**/dist/**
 node_modules/
 obj/
+!**/wwwroot/lib/**/dist/**
 
 *.tmp
 *.tsbuildinfo

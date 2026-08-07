@@ -1,10 +1,10 @@
 import { useState } from "react"
 
-interface CounterProps {
+export interface CounterProps {
   startAt?: number
 }
 
-function Counter({ startAt = 0 }: CounterProps) {
+export function Counter({ startAt = 0 }: CounterProps) {
   const [count, setCount] = useState(startAt)
 
   return (
@@ -13,5 +13,3 @@ function Counter({ startAt = 0 }: CounterProps) {
     </button>
   )
 }
-
-export { Counter }
