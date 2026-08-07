@@ -2,10 +2,12 @@
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 const base = import.meta.env.BASE_URL
 
-let { startAt = 0 } = $props()
+let { initialCount = 0 } = $props()
 
+// initialCount intentionally seeds independent local state; later prop changes should not reset count
+// svelte-ignore state_referenced_locally
 // biome-ignore lint/correctness/noUnusedVariables: used in template
-let count = $state(startAt)
+let count = $state(initialCount)
 </script>
 
 <div class="svelte-counter">

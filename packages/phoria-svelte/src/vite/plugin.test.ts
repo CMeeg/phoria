@@ -1,3 +1,4 @@
+import type { EnvironmentOptions } from "vite"
 import { describe, expect, it } from "vitest"
 import { phoriaSvelte } from "./plugin"
 
@@ -20,5 +21,17 @@ describe("phoria-svelte plugin", () => {
 		plugin.config(config, { command: "serve", mode: "development" })
 
 		expect(config.optimizeDeps.include).toEqual(["custom-dep", "svelte"])
+	})
+
+	it("externalizes svelte for the ssr environment so the compiled component and the SSR renderer share one module instance", () => {
+		const plugins = phoriaSvelte() as unknown as {
+			configEnvironment: (name: string, options: EnvironmentOptions) => void
+		}[]
+		const plugin = plugins[plugins.length - 1]
+		const options: EnvironmentOptions = {}
+
+		plugin.configEnvironment("ssr", options)
+
+		expect(options.resolve?.external).toEqual(["@phoria/phoria-svelte/server", "svelte"])
 	})
 })

@@ -26,7 +26,15 @@ const defaultOptions: PhoriaSveltePluginOptions = {
 }
 
 function setSsrEnvironment(options: EnvironmentOptions) {
-	const external = ["@phoria/phoria-svelte/server"]
+	// `@phoria/phoria-svelte/server` is externalized (loaded via Node's ESM
+	// loader), so it resolves `svelte/server` outside of Vite's SSR module
+	// runner. Externalizing `svelte` too keeps both sides on the same Node
+	// module instance - otherwise the compiled `*.svelte` component (transformed
+	// by Vite's SSR runner) gets its own copy of `svelte/internal/server`, whose
+	// module-level `ssr_context` never sees the renderer's context and `push_element`
+	// crashes reading `null`.
+
+	const external = ["@phoria/phoria-svelte/server", "svelte"]
 
 	options.resolve ??= {}
 

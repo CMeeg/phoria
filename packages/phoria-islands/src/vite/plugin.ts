@@ -44,16 +44,16 @@ function setServer(config: UserConfig, appsettings: Partial<PhoriaAppSettings>) 
 	config.server = options
 }
 
-function setEntry(options: BuildEnvironmentOptions, root?: string, entryFile?: string) {
+function setEntry(options: BuildEnvironmentOptions, entryFile?: string) {
 	if (typeof entryFile === "undefined") {
 		return
 	}
 
-	const input = root ? `${root}/${entryFile}` : entryFile
+	// `entryFile` is relative to the Vite config root, which `setRoot` sets to `appsettings.root`
 
 	options.rolldownOptions = {
 		...options.rolldownOptions,
-		input
+		input: entryFile
 	}
 }
 
@@ -66,7 +66,7 @@ function setClientEnvironment(options: EnvironmentOptions, appsettings: Partial<
 	options.build.emptyOutDir ??= true
 	options.build.outDir = `${appsettings.build?.outDir ?? defaultOutDir}/${pluginName}/${environment.client}`
 
-	setEntry(options.build, appsettings.root, appsettings.entry)
+	setEntry(options.build, appsettings.entry)
 }
 
 function setSsrEnvironment(options: EnvironmentOptions, appsettings: Partial<PhoriaAppSettings>) {
@@ -90,7 +90,7 @@ function setSsrEnvironment(options: EnvironmentOptions, appsettings: Partial<Pho
 	options.build.copyPublicDir ??= false
 	options.build.outDir = `${appsettings.build?.outDir ?? defaultOutDir}/${pluginName}/${environment.ssr}`
 
-	setEntry(options.build, appsettings.root, appsettings.ssrEntry)
+	setEntry(options.build, appsettings.ssrEntry)
 }
 
 function setServerEnvironment(
@@ -119,7 +119,7 @@ function setServerEnvironment(
 	options.build.emptyOutDir ??= true
 	options.build.outDir = `${appsettings.build?.outDir ?? defaultOutDir}/${environment.server}`
 
-	setEntry(options.build, appsettings.root, serverEntry)
+	setEntry(options.build, serverEntry)
 }
 
 function parseWorkingDirectory(cwd: string | undefined) {
