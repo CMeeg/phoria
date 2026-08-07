@@ -15,11 +15,12 @@ import {
 	useBase
 } from "h3"
 import mime from "mime/lite"
-import { isRunnableDevEnvironment, type ViteDevServer } from "vite"
+import { isRunnableDevEnvironment, type RunnableDevEnvironment, type ViteDevServer } from "vite"
 import { getFrameworks } from "~/register"
 import type { PhoriaAppSettings } from "./appsettings"
 import { PhoriaIsland } from "./phoria-island"
 import type { PhoriaServerEntry } from "./ssr"
+import type { PhoriaViteDevServer } from "./vite"
 
 /**
  * A request handler that can be mounted on a Phoria Server app.
@@ -186,16 +187,24 @@ function createPhoriaSsrRequestHandler(
 }
 
 function createPhoriaDevSsrRequestHandler(
-	viteDevServer: ViteDevServer,
+	viteDevServer: ViteDevServer | PhoriaViteDevServer,
 	appsettings: PhoriaAppSettings
 ): PhoriaRequestHandler {
 	const environment = viteDevServer.environments.ssr
+	const isRunnable =
+		"_vite" in viteDevServer
+			? (viteDevServer._vite.isRunnableDevEnvironment as (environment: unknown) => boolean)
+			: isRunnableDevEnvironment
 
-	if (!isRunnableDevEnvironment(environment)) {
+	if (!isRunnable(environment)) {
 		throw new Error("Vite dev server does not have a runnable SSR environment.")
 	}
 
-	const ssrRouter = createPhoriaSsrRouter(() => environment.runner.import(appsettings.ssrEntry), appsettings.ssrBase)
+	const runnableEnvironment = environment as RunnableDevEnvironment
+	const ssrRouter = createPhoriaSsrRouter(
+		() => runnableEnvironment.runner.import(appsettings.ssrEntry),
+		appsettings.ssrBase
+	)
 
 	return ssrRouter.handler
 }

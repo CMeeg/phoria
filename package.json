@@ -15,6 +15,7 @@
 		"examples:bump": "node scripts/examples.js bump",
 		"examples:check": "node scripts/examples.js check",
 		"examples:link": "node scripts/examples.js link",
+		"examples:refresh": "node scripts/examples.js refresh",
 		"examples:sync": "node scripts/examples.js sync",
 		"lint": "turbo run lint",
 		"publish": "changeset publish && pnpm --filter phoria-dotnet run publish",

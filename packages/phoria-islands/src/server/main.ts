@@ -16,6 +16,7 @@ import type {
 	RenderPhoriaIslandComponent,
 	RenderPhoriaIslandComponentOptions
 } from "./ssr"
+import { createPhoriaViteDevServer, type PhoriaViteDevServer } from "./vite"
 
 export type {
 	PhoriaAppSettings,
@@ -26,6 +27,7 @@ export type {
 	PhoriaRequestHandler,
 	PhoriaServerEntry,
 	PhoriaServerEntryLoader,
+	PhoriaViteDevServer,
 	RenderPhoriaIslandComponent,
 	RenderPhoriaIslandComponentOptions
 }
@@ -34,6 +36,7 @@ export {
 	createPhoriaDevCsrRequestHandler,
 	createPhoriaDevSsrRequestHandler,
 	createPhoriaSsrRequestHandler,
+	createPhoriaViteDevServer,
 	getPhoriaAppSettings,
 	PhoriaIsland,
 	parsePhoriaAppSettings

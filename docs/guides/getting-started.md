@@ -255,6 +255,7 @@ import {
   createPhoriaCsrRequestHandler,
   createPhoriaDevCsrRequestHandler,
   createPhoriaDevSsrRequestHandler,
+  createPhoriaViteDevServer,
   createPhoriaSsrRequestHandler,
   parsePhoriaAppSettings
 } from "@phoria/phoria/server"
@@ -276,14 +277,7 @@ const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv, cwd: 
 
 const viteDevServer = isProduction
   ? undefined
-  : await import("vite").then((vite) =>
-      vite.createServer({
-        appType: "custom",
-        server: {
-          middlewareMode: true
-        }
-      })
-    )
+  : await createPhoriaViteDevServer(import("vite"))
 
 // Create http server
 

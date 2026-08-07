@@ -46,6 +46,86 @@ async function getHead(path) {
 	return stdout
 }
 
+async function readCatalog() {
+	const yaml = await readFile(join(root, "pnpm-workspace.yaml"), "utf8")
+	const lines = yaml.split("\n")
+	const catalog = {}
+
+	for (let i = 0; i < lines.length; i++) {
+		if (!/^catalog:\s*$/.test(lines[i])) {
+			continue
+		}
+
+		for (let j = i + 1; j < lines.length; j++) {
+			const line = lines[j]
+
+			if (line.trim() === "") {
+				continue
+			}
+
+			if (!/^\s/.test(line)) {
+				break
+			}
+
+			const match = line.match(/^\s{2}(?:"([^"]+)"|([^:]+)):\s*(?:"([^"]*)"|(\S+))\s*$/)
+
+			if (!match) {
+				throw new Error(`Unsupported catalog entry in pnpm-workspace.yaml: "${line}"`)
+			}
+
+			catalog[match[1] ?? match[2]] = match[3] ?? match[4]
+		}
+
+		break
+	}
+
+	return catalog
+}
+
+async function literalizeCatalogDeps(pkgPath, catalog) {
+	const text = await readFile(pkgPath, "utf8")
+	let literalized = text
+
+	for (const section of ["dependencies", "devDependencies"]) {
+		const json = JSON.parse(text)[section] ?? {}
+
+		for (const name of Object.keys(json)) {
+			if (json[name] !== "catalog:") {
+				continue
+			}
+
+			const spec = catalog[name]
+
+			if (spec === undefined) {
+				throw new Error(`No catalog entry for "${name}" (${pkgPath}, ${section})`)
+			}
+
+			const needle = `"${name}": "catalog:"`
+
+			if (!literalized.includes(needle)) {
+				throw new Error(`Expected "${needle}" in ${pkgPath}`)
+			}
+
+			literalized = literalized.split(needle).join(`"${name}": "${spec}"`)
+		}
+	}
+
+	if (literalized !== text) {
+		await writeFile(pkgPath, literalized)
+	}
+}
+
+async function restorePackagesFromHead() {
+	for (const dir of Object.values(jsPackages)) {
+		const pkgPath = join(root, dir, "package.json")
+		const rel = relative(root, pkgPath)
+
+		if ((await readFile(pkgPath, "utf8")) !== (await getHead(pkgPath))) {
+			await run(`git checkout -- ${rel}`)
+		}
+	}
+}
+
 function findExamples() {
 	const dir = join(root, "examples")
 
@@ -86,11 +166,17 @@ async function link(exampleDir) {
 		const section = pkg.dependencies?.[name] ? "dependencies" : pkg.devDependencies?.[name] ? "devDependencies" : null
 
 		if (section) {
-			pkg[section][name] = `link:../../../${dir}`
+			pkg[section][name] = `file:../../../${dir}`
 		}
 	}
 
 	await writeJson(pkgPath, pkg)
+
+	const catalog = await readCatalog()
+
+	for (const dir of Object.values(jsPackages)) {
+		await literalizeCatalogDeps(join(root, dir, "package.json"), catalog)
+	}
 
 	const csproj = await readFile(csprojPath(exampleDir), "utf8")
 
@@ -110,11 +196,20 @@ async function link(exampleDir) {
 	await run("dotnet restore WebApp.csproj", exampleDir)
 
 	console.log(
-		`Linked ${exampleDir} to local packages. Run \`pnpm build\` at the repo root first, and \`pnpm examples:sync\` before committing.`
+		`Linked ${exampleDir} to local packages (file: refs, catalog literalized). ` +
+			`Run \`pnpm build\` at the repo root first. After every rebuild, run \`pnpm examples:refresh\` to refresh the hard links (a plain \`pnpm install\` does not). ` +
+			`Run \`pnpm examples:sync\` before committing.`
 	)
 }
 
+async function refresh(exampleDir) {
+	await run("pnpm install --force", exampleDir)
+	console.log(`Refreshed hard links for ${exampleDir}.`)
+}
+
 async function sync(exampleDir) {
+	await restorePackagesFromHead()
+
 	const pkgPath = join(exampleDir, "package.json")
 	const headPkg = JSON.parse(await getHead(pkgPath))
 	const pkg = await readJson(pkgPath)
@@ -169,6 +264,16 @@ async function sync(exampleDir) {
 
 	await run(`git checkout -- ${relative(root, join(exampleDir, "pnpm-lock.yaml"))}`)
 	await run("pnpm install --frozen-lockfile", exampleDir)
+
+	// Running root-level pnpm commands (e.g. `pnpm build`) while the packages'
+	// `catalog:` specifiers are literalized rewrites the root lockfile. Restore it
+	// since it can only be dirty from link-induced churn at this point.
+	const { stdout: rootLockStatus } = await execAsync("git status --porcelain pnpm-lock.yaml", { cwd: root })
+
+	if (rootLockStatus.trim()) {
+		await run("git checkout -- pnpm-lock.yaml")
+		console.log("Restored the root pnpm-lock.yaml (it was modified by link-induced catalog: churn).")
+	}
 
 	console.log(`Restored ${exampleDir} to its committed state.`)
 }
@@ -254,11 +359,11 @@ async function bump(exampleDir) {
 	console.log(`Bumped ${exampleDir} to ${versions.join(", ")} (registry refs).`)
 }
 
-const modes = { link, sync, check, bump }
+const modes = { link, sync, check, bump, refresh }
 const mode = process.argv[2]
 
 if (!modes[mode]) {
-	console.error("Usage: node scripts/examples.js <link|sync|check|bump>")
+	console.error("Usage: node scripts/examples.js <link|sync|check|bump|refresh>")
 	process.exit(1)
 }
 
