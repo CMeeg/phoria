@@ -16,24 +16,26 @@ var webAppConfiguration = new ConfigurationBuilder()
 
 var webAppPort = 5373;
 
-builder.AddProject<Projects.WebApp>("webapp")
-	.WithHttpEndpoint(port: webAppPort, name: "http", isProxied: false)
-	.WithEnvironment("DOTNET_ENVIRONMENT", environment)
-	.WithEnvironment("ASPNETCORE_ENVIRONMENT", environment)
-	.WithOtlpExporter(OtlpProtocol.HttpProtobuf);
-
 // The Vite dev server resolves the root from `process.cwd()` and only discovers the vite config in the current
 // directory, so package.json scripts must run from the same directory where `vite.config.ts` lives
 
 var phoriaServerPort = int.TryParse(webAppConfiguration["Phoria:Server:Port"], out var configuredPort) ? configuredPort : 5173;
 
-builder.AddJavaScriptApp("phoria-server", webAppDirectory)
+var phoriaServer = builder.AddJavaScriptApp("phoria-server", webAppDirectory)
 	.WithRunScript(isDevelopment ? "dev:server" : "preview:server")
 	.WithPnpm(install: false)
-	.WithHttpEndpoint(port: phoriaServerPort, name: "http", isProxied: false)
+	.WithHttpsEndpoint(port: phoriaServerPort, name: "https", isProxied: false)
+	.WithHttpHealthCheck("/hc")
 	.WithEnvironment("NODE_ENV", isDevelopment ? "development" : "production")
 	.WithEnvironment("DOTNET_ENVIRONMENT", environment)
 	.WithEnvironment("ASPNETCORE_ENVIRONMENT", environment)
 	.WithOtlpExporter(OtlpProtocol.HttpProtobuf);
+
+builder.AddProject<Projects.WebApp>("webapp")
+	.WithHttpEndpoint(port: webAppPort, name: "http", isProxied: false)
+	.WithEnvironment("DOTNET_ENVIRONMENT", environment)
+	.WithEnvironment("ASPNETCORE_ENVIRONMENT", environment)
+	.WithOtlpExporter(OtlpProtocol.HttpProtobuf)
+	.WaitFor(phoriaServer);
 
 builder.Build().Run();

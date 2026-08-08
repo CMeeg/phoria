@@ -22,7 +22,9 @@
   "dependencies": {
     "@opentelemetry/api-logs": "^0.221.0",
     "@opentelemetry/exporter-logs-otlp-http": "^0.221.0",
+    "@opentelemetry/resources": "^2.10.0",
     "@opentelemetry/sdk-logs": "^0.221.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
     "@phoria/phoria": "^0.4.2",
     "@phoria/phoria-react": "^0.4.2",
     "h3": "^1.15.11",

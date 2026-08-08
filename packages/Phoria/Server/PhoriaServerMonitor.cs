@@ -118,24 +118,36 @@ public sealed class PhoriaServerMonitor
 					}
 				}
 
-				logger.LogServerIsUnhealthy(ServerStatus.Url);
+			LogServerIsUnhealthy();
 
-				ServerStatus = CreateUnhealthyServerStatus();
-			}
-			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-			{
-				throw;
-			}
-			catch (Exception ex)
-			{
-				logger.LogServerIsUnhealthy(ServerStatus.Url, ex);
+			ServerStatus = CreateUnhealthyServerStatus();
+		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			throw;
+		}
+		catch (Exception ex)
+		{
+			LogServerIsUnhealthy(ex);
 
-				ServerStatus = CreateUnhealthyServerStatus();
-			}
+			ServerStatus = CreateUnhealthyServerStatus();
+		}
 			finally
 			{
 				semaphore.Release();
 			}
+		}
+	}
+
+	private void LogServerIsUnhealthy(Exception? exception = null)
+	{
+		if (firstHealthy.Task.IsCompletedSuccessfully)
+		{
+			logger.LogServerIsUnhealthy(ServerStatus.Url, exception);
+		}
+		else
+		{
+			logger.LogServerIsNotReadyYet(ServerStatus.Url);
 		}
 	}
 
@@ -200,6 +212,14 @@ internal static partial class PhoriaServerMonitorLogMessages
 		Message = "Phoria server at {Url} is healthy.",
 		Level = LogLevel.Debug)]
 	internal static partial void LogServerIsHealthy(
+		this ILogger logger,
+		string url);
+
+	[LoggerMessage(
+		EventId = EventId.Server.ServerIsNotReadyYet,
+		Message = "Phoria server at {Url} is not ready yet.",
+		Level = LogLevel.Debug)]
+	internal static partial void LogServerIsNotReadyYet(
 		this ILogger logger,
 		string url);
 

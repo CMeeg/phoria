@@ -28,6 +28,7 @@ public static class EventId
 		public const int ProcessStarting = 1214;
 		public const int ProcessTerminationSignalSent = 1215;
 		public const int ProcessForceStopped = 1216;
+		public const int ServerIsNotReadyYet = 1217;
 	}
 
 	public static class Vite

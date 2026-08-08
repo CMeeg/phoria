@@ -40,6 +40,9 @@ There is some prerequisite software you will need to have installed before you g
 * **Code editor** - We recommend [VS Code](https://code.visualstudio.com/), but you can use any code editor you like
 * **Terminal** - You will need to be able to run CLI tools through a terminal of your choice
 
+> [!TIP]
+> On Linux, when you run the web app via `aspire run` the Aspire CLI verifies the [ASP.NET Core developer certificate](https://learn.microsoft.com/dotnet/core/tools/dotnet-dev-certs) on every start. That check only reports the certificate as trusted when `SSL_CERT_DIR` includes `~/.aspnet/dev-certs/trust`, so without it you will see a "Developer certificates may not be fully trusted" warning on each run. Add `export SSL_CERT_DIR="$HOME/.aspnet/dev-certs/trust"` to your shell profile and run `aspire certs trust` (or `dotnet dev-certs https --trust`) once to install the certificate into the stores. The warning is benign for the dev flow described in this guide, but the certificate is also what the Phoria Server's HTTPS listener (configured via the `dotnetDevCerts` Vite plugin below) uses to serve the web app over TLS.
+
 You will also need an existing dotnet web app. If you do not already have an existing dotnet web app then we recommend [cloning an example project](#clone-an-example-project) rather than following the rest of this guide, but if you still want to proceed you can create a new web app using the dotnet CLI:
 
 

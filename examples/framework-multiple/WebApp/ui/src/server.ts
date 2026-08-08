@@ -2,7 +2,9 @@ import { dirname } from "node:path"
 import { fileURLToPath } from "node:url"
 import { logs, SeverityNumber } from "@opentelemetry/api-logs"
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http"
+import { defaultResource, resourceFromAttributes } from "@opentelemetry/resources"
 import { ConsoleLogRecordExporter, LoggerProvider, SimpleLogRecordProcessor } from "@opentelemetry/sdk-logs"
+import { SEMRESATTRS_SERVICE_NAME } from "@opentelemetry/semantic-conventions"
 import {
   createPhoriaCsrRequestHandler,
   createPhoriaDevCsrRequestHandler,
@@ -16,7 +18,9 @@ import { createApp, toNodeListener } from "h3"
 import { type ListenOptions, listen } from "listhen"
 
 const hasOtlpEndpoint = Boolean(process.env.OTEL_EXPORTER_OTLP_ENDPOINT)
+const serverResource = defaultResource().merge(resourceFromAttributes({ [SEMRESATTRS_SERVICE_NAME]: "phoria-server" }))
 const loggerProvider = new LoggerProvider({
+  resource: serverResource,
   processors: [
     new SimpleLogRecordProcessor({
       exporter: hasOtlpEndpoint ? new OTLPLogExporter() : new ConsoleLogRecordExporter(),
@@ -31,6 +35,7 @@ function log(event: string, severityNumber: SeverityNumber, attributes: Record<s
     severityNumber,
     severityText: SeverityNumber[severityNumber],
     body: event,
+    eventName: event,
     attributes: {
       event,
       ...Object.fromEntries(
