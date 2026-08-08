@@ -8,6 +8,8 @@ Phoria is an Islands architecture framework for .NET powered by Vite. It renders
 
 **Current focus:** driving the project to a stable, production-ready `1.0.0`. See [`docs/PROJECT.md`](docs/PROJECT.md) for the v1 milestone scope, phases, and open questions.
 
+**Read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) first** — it is the canonical deep dive on the runtime model (the .NET host, the Phoria Server Node sidecar, the Vite plugin, and how they cooperate over HTTP). Consult it before changing anything about how components render, how the server is launched/owned, or how assets are produced and served; treat it as the source of truth the code and docs must stay consistent with.
+
 ## Repository Structure
 
 Monorepo using **pnpm workspaces** + **Turborepo** (task running/caching) + **Changesets** (publishing).
@@ -108,6 +110,11 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - Central package management via `Directory.Packages.props`
 - The `Phoria.csproj` targets `net8.0;net10.0` (net9.0 dropped — see `docs/PROJECT.md`)
 - **Comments are opt-in, not expected**: only add them when they explain a non-obvious decision (e.g. the `process.cwd()` constraint comment in the example AppHost `Program.cs`) — never to restate what the code already says
+
+### Markdown & prose
+
+- **Don't hard-wrap prose with line breaks** — write each paragraph as an unbroken line and let the reader's editor/viewer soft-wrap it. Applies to `docs/*.md`, `AGENTS.md`, and any other plain-text docs.
+- Markdown structure still follows normal conventions: block elements (headings, tables, fenced code blocks) go on their own lines, and each list item — including nested items and continuation prose — stays on a single line.
 
 ## Gotchas
 
