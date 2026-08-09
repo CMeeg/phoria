@@ -13,7 +13,7 @@
 	</ItemGroup>
 
 	<PropertyGroup>
-		<DefaultItemExcludes>$(DefaultItemExcludes);package.json</DefaultItemExcludes>
+		<DefaultItemExcludes>$(DefaultItemExcludes);package.json;ui/**</DefaultItemExcludes>
 	</PropertyGroup>
 
 	<ItemGroup>

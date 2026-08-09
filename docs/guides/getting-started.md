@@ -569,12 +569,16 @@ For a lighter-weight alternative without the dashboard, use two terminals:
 # Terminal 1: start the Phoria Server with Vite HMR
 pnpm dev:server
 
-# Terminal 2: start the Phoria Web App
-dotnet run --project WebApp/WebApp.csproj
+# Terminal 2: start the Phoria Web App with dotnet watch (hot reload)
+pnpm dev:webapp
 ```
 
+Add a `dev:webapp` script to `package.json` that runs `dotnet watch` (e.g. `"dev:webapp": "dotnet watch --project WebApp/WebApp.csproj"`). Running the web app with `dotnet watch` enables .NET hot reload: edits to C# or Razor files are applied in place without restarting the process, and `aspnetcore-browser-refresh.js` is injected into the page so the browser refreshes automatically. Response compression is disabled in development because it would prevent that script from being served. Vite HMR in Terminal 1 continues to handle changes to UI components.
+
+The Aspire workflow (`pnpm dev`) runs the web app with `dotnet run` rather than `dotnet watch` — Aspire's built-in `dotnet watch` support is restart-based and can be flaky, so the two-terminal flow is the recommended way to get in-place hot reload.
+
 > [!TIP]
-> The `dotnet run` command doesn't automatically launch the browser unfortunately, but you can find the URL for the web app in the terminal output or by looking in your `WebApp/Properties/launchSettings.json` file.
+> Neither command automatically launches the browser, but you can find the URL for the web app in the terminal output or by looking in your `WebApp/Properties/launchSettings.json` file.
 
 When using the two-terminal development workflow with a debugger, stopping the debugger stops only the .NET process. The Node development server runs independently, so stop it manually in the terminal where `pnpm dev:server` is running. Do not run the debugger against the sidecar production model while `Phoria:Server:Process` is configured: the host owns that Node process, and debugger termination can orphan it. Use the sibling Aspire preview workflow to integration-test graceful shutdown of the AppHost-owned Node process.
 

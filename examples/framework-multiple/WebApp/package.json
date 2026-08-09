@@ -13,6 +13,7 @@
     "check": "tsc",
     "dev": "aspire run",
     "dev:server": "tsx ./ui/src/server.ts",
+    "dev:webapp": "dotnet watch",
     "lint": "biome check",
     "preview": "aspire start --environment Preview",
     "preview:server": "node ui/dist/server/server.js",

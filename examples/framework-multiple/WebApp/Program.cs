@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.ResponseCompression;
 using OpenTelemetry.Logs;
 using Phoria;
 
@@ -21,28 +22,36 @@ if (builder.Environment.IsDevelopment())
 {
 	mvcBuilder.AddRazorRuntimeCompilation();
 }
+else
+{
+	builder.Services.AddResponseCompression(options =>
+	{
+		options.EnableForHttps = true;
+		options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["image/svg+xml"]);
+	});
+}
 
 builder.Services.AddPhoria();
 
 WebApplication app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
-{
-	app.UseExceptionHandler("/Error");
-	app.UseHsts();
-}
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-app.UseAuthorization();
-app.MapStaticAssets();
-app.MapRazorPages().WithStaticAssets();
-
 if (app.Environment.IsDevelopment())
 {
 	app.UseWebSockets();
 }
+else
+{
+	app.UseExceptionHandler("/Error");
+	app.UseHsts();
+	app.UseResponseCompression();
+}
+
+app.UseHttpsRedirection();
+
+app.UseRouting();
+app.UseAuthorization();
+app.MapStaticAssets();
+app.MapRazorPages().WithStaticAssets();
 
 app.UsePhoria();
 
