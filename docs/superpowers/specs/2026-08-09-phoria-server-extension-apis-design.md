@@ -20,9 +20,8 @@ The CSR and SSR handler factories use `phoriaConsoleLogger` when no logger is su
 Make the parsed Phoria section extensible through a generic additional-property shape:
 
 ```ts
-interface PhoriaAppSettings<TAdditional extends Record<string, unknown> = Record<string, never>>
-  extends PhoriaBaseAppSettings,
-    TAdditional {}
+type PhoriaAppSettings<TAdditional extends object = object> =
+  PhoriaBaseAppSettings & TAdditional
 ```
 
 `parsePhoriaAppSettings<TAdditional>()` returns `Promise<PhoriaAppSettings<TAdditional>>`. The parser continues to merge arbitrary `phoria` JSON properties at runtime, but the core package does not name or interpret extension properties.

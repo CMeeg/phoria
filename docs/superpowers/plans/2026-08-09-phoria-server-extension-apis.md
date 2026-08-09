@@ -35,7 +35,7 @@
 - Modify: `pnpm-workspace.yaml`
 
 **Interfaces:**
-- Produces `PhoriaLogger`, `phoriaConsoleLogger`, and `PhoriaAppSettings<TAdditional = Record<string, never>>` for later tasks.
+- Produces `PhoriaLogger`, `phoriaConsoleLogger`, and `PhoriaAppSettings<TAdditional = object>` for later tasks.
 - `parsePhoriaAppSettings<TAdditional>(options?)` returns `Promise<PhoriaAppSettings<TAdditional>>`.
 
 - [ ] **Step 1: Add the core logger module and failing export test**
@@ -63,7 +63,7 @@ Export the type and value from `server/main.ts`. Update `routing.ts` to import t
 Split the current concrete settings interface into a base interface plus an extension intersection. Preserve all existing base fields (`root`, `base`, `entry`, `ssrBase`, `ssrEntry`, `server`, `build`) and implement:
 
 ```ts
-type PhoriaAppSettings<TAdditional extends Record<string, unknown> = Record<string, never>> =
+type PhoriaAppSettings<TAdditional extends object = object> =
 	PhoriaBaseAppSettings & TAdditional
 ```
 

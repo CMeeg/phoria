@@ -18,6 +18,7 @@ import mime from "mime/lite"
 import { isRunnableDevEnvironment, type RunnableDevEnvironment, type ViteDevServer } from "vite"
 import { getFrameworks } from "~/register"
 import type { PhoriaAppSettings } from "./appsettings"
+import { type PhoriaLogger, phoriaConsoleLogger } from "./logger"
 import { PhoriaIsland } from "./phoria-island"
 import type { PhoriaServerEntry } from "./ssr"
 import type { PhoriaViteDevServer } from "./vite"
@@ -29,18 +30,6 @@ import type { PhoriaViteDevServer } from "./vite"
  * change in a future minor release. Treat values of this type as opaque.
  */
 type PhoriaRequestHandler = EventHandler<EventHandlerRequest, unknown>
-
-interface PhoriaLogger {
-	info(message: string, data?: Record<string, unknown>): void
-	warn(message: string, data?: Record<string, unknown>): void
-	error(message: string, data?: Record<string, unknown>): void
-}
-
-const defaultPhoriaLogger: PhoriaLogger = {
-	info: (message, data) => console.info(message, data),
-	warn: (message, data) => console.warn(message, data),
-	error: (message, data) => console.error(message, data)
-}
 
 function isServerEntry(serverEntry: unknown): serverEntry is PhoriaServerEntry {
 	if (typeof serverEntry === "undefined" || serverEntry === null) {
@@ -63,7 +52,7 @@ type PhoriaServerEntryLoader = () => Promise<Record<string, unknown>>
 function createPhoriaSsrRouter(
 	loadServerEntry: PhoriaServerEntryLoader,
 	base: string,
-	logger: PhoriaLogger = defaultPhoriaLogger
+	logger: PhoriaLogger = phoriaConsoleLogger
 ) {
 	const router = createRouter()
 
@@ -167,7 +156,7 @@ function createPhoriaSsrRequestHandler(
 	options?: Partial<PhoriaSsrRequestHandlerOptions>
 ): PhoriaRequestHandler {
 	const opts = { ...defaultSsrRequestHandlerOptions, ...options }
-	const logger = opts.logger ?? defaultPhoriaLogger
+	const logger = opts.logger ?? phoriaConsoleLogger
 
 	// Without `pathToFileURL` you will receive a `ERR_UNSUPPORTED_ESM_URL_SCHEME` error on Windows
 	const ssrEntry = pathToFileURL(
@@ -223,7 +212,7 @@ function createPhoriaCsrRequestHandler(
 	options?: Partial<PhoriaCsrRequestHandlerOptions>
 ): PhoriaRequestHandler {
 	const opts = { ...defaultCsrRequestHandlerOptions, ...options }
-	const logger = opts.logger ?? defaultPhoriaLogger
+	const logger = opts.logger ?? phoriaConsoleLogger
 
 	const staticFilehandler = defineEventHandler((event) => {
 		return serveStatic(event, {

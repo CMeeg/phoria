@@ -66,6 +66,9 @@ catalogs:
     cross-env:
       specifier: ^10.1.0
       version: 10.1.0
+    defu:
+      specifier: ^6.1.7
+      version: 6.1.7
     destr:
       specifier: ^2.0.5
       version: 2.0.5
@@ -131,7 +134,7 @@ importers:
   packages/phoria-islands:
     dependencies:
       defu:
-        specifier: ^6.1.7
+        specifier: 'catalog:'
         version: 6.1.7
       destr:
         specifier: 'catalog:'
@@ -207,7 +210,7 @@ importers:
         specifier: 'catalog:'
         version: 2.10.0(@opentelemetry/api@1.9.1)
       defu:
-        specifier: ^6.1.7
+        specifier: 'catalog:'
         version: 6.1.7
       destr:
         specifier: 'catalog:'
@@ -219,6 +222,9 @@ importers:
         specifier: 'catalog:'
         version: 1.15.11
     devDependencies:
+      '@phoria/phoria':
+        specifier: workspace:*
+        version: link:../phoria-islands
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
