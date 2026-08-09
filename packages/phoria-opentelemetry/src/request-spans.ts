@@ -32,7 +32,7 @@ function createPhoriaRequestSpanHook({ base, ssrBase }: PhoriaRequestSpanHookOpt
 			return
 		}
 
-		if (event.method === "GET" && event.path.startsWith(base)) {
+		if (event.method === "GET" && (event.path === base || event.path.startsWith(`${base}/`))) {
 			span.updateName("phoria-server.csr.asset")
 		}
 	}

@@ -1,5 +1,5 @@
 import type { H3Event } from "h3"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { createPhoriaRequestSpanHook } from "./request-spans"
 
 describe("createPhoriaRequestSpanHook", () => {
@@ -15,5 +15,18 @@ describe("createPhoriaRequestSpanHook", () => {
 		const event = { context: {}, method: "GET", path: "/ui/asset.js" } as H3Event
 
 		expect(() => hook.onBeforeResponse(event)).not.toThrow()
+	})
+
+	it("renames only CSR assets under the configured base path", () => {
+		const hook = createPhoriaRequestSpanHook({ base: "/ui", ssrBase: "/ssr" })
+		const updateName = vi.fn()
+
+		for (const path of ["/uifoo", "/ui/asset.js"]) {
+			const event = { context: { phoriaSpan: { updateName } }, method: "GET", path } as unknown as H3Event
+			hook.onBeforeResponse(event)
+		}
+
+		expect(updateName).toHaveBeenCalledTimes(1)
+		expect(updateName).toHaveBeenCalledWith("phoria-server.csr.asset")
 	})
 })
