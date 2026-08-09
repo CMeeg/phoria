@@ -271,7 +271,7 @@ public class PhoriaServerMonitorTests
 		{
 			if (DateTime.UtcNow >= deadline)
 			{
-				return;
+				throw new TimeoutException($"Condition was not met within {timeout}.");
 			}
 
 			await Task.Delay(100);
