@@ -3,8 +3,8 @@ import { fileURLToPath } from "node:url"
 import {
   createPhoriaLogger,
   createPhoriaObservability,
-  createPhoriaRequestSpanHook,
-  parsePhoriaObservabilityAppSettings,
+  type PhoriaOtelAppSettings,
+  withPhoriaOtelInstrumentation,
 } from "@phoria/opentelemetry"
 import {
   createPhoriaCsrRequestHandler,
@@ -26,10 +26,9 @@ const nodeEnv = process.env.NODE_ENV ?? "development"
 const isProduction = nodeEnv === "production"
 
 const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
-const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv, cwd: __dirname })
-const observabilitySettings = await parsePhoriaObservabilityAppSettings({ cwd: __dirname, environment: dotnetEnv })
-const phoriaLogger = createPhoriaLogger(observabilitySettings)
-const observability = createPhoriaObservability(observabilitySettings)
+const appsettings = await parsePhoriaAppSettings<PhoriaOtelAppSettings>({ environment: dotnetEnv, cwd: __dirname })
+const phoriaLogger = createPhoriaLogger(appsettings)
+const observability = createPhoriaObservability(appsettings)
 
 // Create Vite dev server if not in production environment
 
@@ -37,7 +36,7 @@ const viteDevServer = isProduction ? undefined : await createPhoriaViteDevServer
 
 // Create http server
 
-const app = createApp({ ...createPhoriaRequestSpanHook({ base: appsettings.base, ssrBase: appsettings.ssrBase }) })
+const app = createApp(withPhoriaOtelInstrumentation(appsettings))
 
 if (viteDevServer) {
   // Let the Vite dev server handle CSR requests, HMR and SSR
