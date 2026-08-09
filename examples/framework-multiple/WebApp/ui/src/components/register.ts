@@ -3,17 +3,17 @@ import { registerComponents } from "@phoria/phoria"
 registerComponents({
   ReactCounter: {
     loader: {
-      module: () => import("./Counter/Counter.tsx"),
+      module: () => import("./counter/counter.tsx"),
       component: (module) => module.Counter,
     },
     framework: "react",
   },
   VueCounter: {
-    loader: () => import("./Counter/Counter.vue"),
+    loader: () => import("./counter/counter-button.vue"),
     framework: "vue",
   },
   SvelteCounter: {
-    loader: () => import("./Counter/Counter.svelte"),
+    loader: () => import("./counter/counter.svelte"),
     framework: "svelte",
   },
 })

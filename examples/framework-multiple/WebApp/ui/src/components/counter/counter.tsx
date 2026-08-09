@@ -1,12 +1,12 @@
 import { useState } from "react"
 import reactLogo from "/react.svg"
-import css from "./Counter.module.css"
+import css from "./counter.module.css"
 
-interface CounterProps {
+export interface CounterProps {
   startAt?: number
 }
 
-function Counter({ startAt }: CounterProps) {
+export function Counter({ startAt }: CounterProps) {
   const [count, setCount] = useState(startAt ?? 0)
 
   return (
@@ -18,10 +18,8 @@ function Counter({ startAt }: CounterProps) {
         count is {count}
       </button>
       <p>
-        Edit <code>ui/src/components/Counter/Counter.tsx</code> to test HMR
+        Edit <code>ui/src/components/counter/counter.tsx</code> to test HMR
       </p>
     </div>
   )
 }
-
-export { Counter }

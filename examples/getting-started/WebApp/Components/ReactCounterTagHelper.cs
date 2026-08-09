@@ -21,7 +21,7 @@ public class ReactCounterTagHelper : TagHelper
 			StartAt = StartAt ?? 0
 		};
 
-		PhoriaIslandHtmlContent island = await phoriaIslandFactory.CreateAsync("ReactCounter", props, Client.Load);
+		PhoriaIslandHtmlContent island = await phoriaIslandFactory.CreateAsync("Counter", props, Client.Load);
 
 		output.TagName = null;
 		output.TagMode = TagMode.SelfClosing;

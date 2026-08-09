@@ -14,10 +14,6 @@
 {
 	<div class="card">
 		<phoria-island component="ReactCounter" client="Client.Load" props="new { StartAt = 5 }"></phoria-island>
-
-		<vc:react-counter start-at="9" />
-
-		<react-counter start-at="19" />
 	</div>
 }
 @if (Model.ShowVueComponent)
@@ -30,7 +26,7 @@
 {
 	<div class="card">
 		<phoria-island component="SvelteCounter" client="@(Client.Visible("50px"))"
-			props="new { InitialCount = 15 }"></phoria-island>
+			props="new { startAt = 15 }"></phoria-island>
 	</div>
 }
 <p class="read-the-docs">Click on the logos to learn more</p>

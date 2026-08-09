@@ -25,7 +25,7 @@ public class ReactCounterViewComponent : ViewComponent
 			StartAt = startAt ?? 0
 		};
 
-		PhoriaIslandHtmlContent island = await phoriaIslandFactory.CreateAsync("ReactCounter", props, Client.Load);
+		PhoriaIslandHtmlContent island = await phoriaIslandFactory.CreateAsync("Counter", props, Client.Load);
 
 		return new HtmlContentViewComponentResult(island);
 	}

@@ -15,7 +15,7 @@ const count = ref(props.startAt ?? 0)
 		<button type="button" @click="count++">count is {{ count }}</button>
 		<p>
 			Edit
-			<code>ui/src/components/Counter/Counter.vue</code> to test HMR
+			<code>ui/src/components/counter/counter-button.vue</code> to test HMR
 		</p>
 	</div>
 </template>
