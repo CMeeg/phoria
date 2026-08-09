@@ -49,7 +49,7 @@ v1 is successful when:
 - Unit tests (Vitest for JS, xUnit for .NET) and Playwright browser tests exist and
   run in CI; the root `test` script is real.
 - The known vite-process shutdown bug is fixed and no longer reproducible.
-- Server-process lifecycle events and errors — in both the .NET host and the Node/Vite sidecar — emit structured logs via OpenTelemetry, while opt-in tracing and metrics provide production operators cross-runtime visibility into requests, start/stop/crash behavior, and health.
+- Server-process lifecycle events and errors — when the observability logging signal is enabled — emit structured logs via OpenTelemetry in both the .NET host and the Node/Vite sidecar, while opt-in tracing and metrics provide production operators cross-runtime visibility into requests, start/stop/crash behavior, and health.
 - Production error handling degrades gracefully when the SSR server is
   unhealthy (no raw attribute/vite-client leakage).
 - All packages are on current deps and target .NET 8/10.
