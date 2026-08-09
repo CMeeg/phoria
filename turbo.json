@@ -7,6 +7,9 @@
 			"cache": true,
 			"outputs": ["dist/**"]
 		},
+		"phoria-dotnet#build": {
+			"outputs": []
+		},
 		"check": {
 			"dependsOn": ["^build"],
 			"cache": true
