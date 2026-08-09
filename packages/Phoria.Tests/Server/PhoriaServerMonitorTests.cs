@@ -19,7 +19,8 @@ public class PhoriaServerMonitorTests
 		var monitor = new PhoriaServerMonitor(
 			NullLogger<PhoriaServerMonitor>.Instance,
 			Options.Create(options),
-			new StubHttpClientFactory(HttpStatusCode.OK));
+			new StubHttpClientFactory(HttpStatusCode.OK),
+			Options.Create(new PhoriaObservabilityOptions()));
 		using var cancellation = new CancellationTokenSource();
 
 		Task startTask = monitor.StartMonitoring(cancellation.Token);
@@ -39,7 +40,8 @@ public class PhoriaServerMonitorTests
 		var monitor = new PhoriaServerMonitor(
 			NullLogger<PhoriaServerMonitor>.Instance,
 			Options.Create(options),
-			new StubHttpClientFactory(HttpStatusCode.ServiceUnavailable));
+			new StubHttpClientFactory(HttpStatusCode.ServiceUnavailable),
+			Options.Create(new PhoriaObservabilityOptions()));
 		using var cancellation = new CancellationTokenSource();
 
 		Task startTask = monitor.StartMonitoring(cancellation.Token);
@@ -58,7 +60,8 @@ public class PhoriaServerMonitorTests
 		var monitor = new PhoriaServerMonitor(
 			NullLogger<PhoriaServerMonitor>.Instance,
 			Options.Create(options),
-			new ThrowingHttpClientFactory(failure));
+			new ThrowingHttpClientFactory(failure),
+			Options.Create(new PhoriaObservabilityOptions()));
 		using var cancellation = new CancellationTokenSource();
 
 		Task startTask = monitor.StartMonitoring(cancellation.Token);
@@ -75,7 +78,8 @@ public class PhoriaServerMonitorTests
 		var monitor = new PhoriaServerMonitor(
 			NullLogger<PhoriaServerMonitor>.Instance,
 			Options.Create(options),
-			new ChangingHealthHttpClientFactory());
+			new ChangingHealthHttpClientFactory(),
+			Options.Create(new PhoriaObservabilityOptions()));
 		using var cancellation = new CancellationTokenSource();
 		Task startTask = monitor.StartMonitoring(cancellation.Token);
 
@@ -107,7 +111,8 @@ public class PhoriaServerMonitorTests
 		var monitor = new PhoriaServerMonitor(
 			logger,
 			Options.Create(options),
-			new ScriptedHttpClientFactory(i => i == 1 ? UnhealthyResponse() : HealthyResponse()));
+			new ScriptedHttpClientFactory(i => i == 1 ? UnhealthyResponse() : HealthyResponse()),
+			Options.Create(new PhoriaObservabilityOptions()));
 		using var cancellation = new CancellationTokenSource();
 
 		Task startTask = monitor.StartMonitoring(cancellation.Token);
@@ -129,7 +134,8 @@ public class PhoriaServerMonitorTests
 		var monitor = new PhoriaServerMonitor(
 			logger,
 			Options.Create(options),
-			new ScriptedHttpClientFactory(i => i == 1 ? ThrowResponse() : HealthyResponse()));
+			new ScriptedHttpClientFactory(i => i == 1 ? ThrowResponse() : HealthyResponse()),
+			Options.Create(new PhoriaObservabilityOptions()));
 		using var cancellation = new CancellationTokenSource();
 
 		Task startTask = monitor.StartMonitoring(cancellation.Token);
@@ -148,10 +154,12 @@ public class PhoriaServerMonitorTests
 		var options = new PhoriaOptions();
 		options.Server.HealthCheckInterval = 1;
 		var logger = new ListLogger();
+		var observability = new PhoriaObservabilityOptions { LogHealthChecks = true };
 		var monitor = new PhoriaServerMonitor(
 			logger,
 			Options.Create(options),
-			new ScriptedHttpClientFactory(i => i == 1 ? HealthyResponse() : UnhealthyResponse()));
+			new ScriptedHttpClientFactory(i => i == 1 ? HealthyResponse() : UnhealthyResponse()),
+			Options.Create(observability));
 		using var cancellation = new CancellationTokenSource();
 
 		Task startTask = monitor.StartMonitoring(cancellation.Token);
@@ -173,10 +181,12 @@ public class PhoriaServerMonitorTests
 		var options = new PhoriaOptions();
 		options.Server.HealthCheckInterval = 1;
 		var logger = new ListLogger();
+		var observability = new PhoriaObservabilityOptions { LogHealthChecks = true };
 		var monitor = new PhoriaServerMonitor(
 			logger,
 			Options.Create(options),
-			new ScriptedHttpClientFactory(i => i == 1 ? HealthyResponse() : ThrowResponse()));
+			new ScriptedHttpClientFactory(i => i == 1 ? HealthyResponse() : ThrowResponse()),
+			Options.Create(observability));
 		using var cancellation = new CancellationTokenSource();
 
 		Task startTask = monitor.StartMonitoring(cancellation.Token);
@@ -190,6 +200,68 @@ public class PhoriaServerMonitorTests
 		Assert.Contains(logger.Entries, e => e.Level == LogLevel.Error && e.Message.Contains("is unhealthy."));
 		cancellation.Cancel();
 		await monitor.StopMonitoring();
+	}
+
+	[Fact]
+	public async Task Monitor_LogsHealthyOnceForRepeatedHealthyChecks_WhenHealthCheckLoggingIsDisabled()
+	{
+		var options = new PhoriaOptions();
+		options.Server.HealthCheckInterval = 1;
+		var logger = new ListLogger();
+		var factory = new ScriptedHttpClientFactory(_ => HealthyResponse());
+		var monitor = new PhoriaServerMonitor(
+			logger,
+			Options.Create(options),
+			factory,
+			Options.Create(new PhoriaObservabilityOptions()));
+		using var cancellation = new CancellationTokenSource();
+
+		try
+		{
+			await monitor.StartMonitoring(cancellation.Token);
+			await WaitUntilAsync(() => factory.RequestCount >= 2, TimeSpan.FromSeconds(3));
+
+			Assert.Equal(1, logger.Entries.Count(e => e.Level == LogLevel.Debug && e.Message.Contains("is healthy.")));
+		}
+		finally
+		{
+			cancellation.Cancel();
+			await monitor.StopMonitoring();
+		}
+	}
+
+	[Fact]
+	public async Task Monitor_LogsOnlyStatusTransitions_WhenHealthCheckLoggingIsDisabled()
+	{
+		var options = new PhoriaOptions();
+		options.Server.HealthCheckInterval = 1;
+		var logger = new ListLogger();
+		var factory = new ScriptedHttpClientFactory(i => i switch
+		{
+			1 or 4 or 5 => UnhealthyResponse(),
+			_ => HealthyResponse()
+		});
+		var monitor = new PhoriaServerMonitor(
+			logger,
+			Options.Create(options),
+			factory,
+			Options.Create(new PhoriaObservabilityOptions()));
+		using var cancellation = new CancellationTokenSource();
+
+		try
+		{
+			await monitor.StartMonitoring(cancellation.Token);
+			await WaitUntilAsync(() => factory.RequestCount >= 6, TimeSpan.FromSeconds(8));
+
+			Assert.Equal(1, logger.Entries.Count(e => e.Message.Contains("is not ready yet.")));
+			Assert.Equal(2, logger.Entries.Count(e => e.Message.Contains("is healthy.")));
+			Assert.Equal(1, logger.Entries.Count(e => e.Message.Contains("is unhealthy.")));
+		}
+		finally
+		{
+			cancellation.Cancel();
+			await monitor.StopMonitoring();
+		}
 	}
 
 	private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout)
@@ -237,6 +309,8 @@ public class PhoriaServerMonitorTests
 	{
 		private readonly Func<int, HttpResponseMessage> responseFor = responseFor;
 		private int requests;
+
+		public int RequestCount => Volatile.Read(ref requests);
 
 		public HttpClient CreateClient() => new(new ScriptedHttpMessageHandler(this))
 		{

@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Phoria.Diagnostics;
 using Phoria.IO;
 using Phoria.Islands;
 using Phoria.Server;
@@ -26,6 +28,50 @@ public class PhoriaIslandSsrLifecycleTests
 		}, TestContext.Current.CancellationToken));
 
 		AssertDisposed(serializer.Pool!);
+	}
+
+	[Fact]
+	public async Task RenderIsland_CreatesPhoriaSsrActivity()
+	{
+		Activity? capturedActivity = null;
+		var listener = new ActivityListener
+		{
+			ShouldListenTo = source => source.Name == PhoriaActivitySource.Name,
+			Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+			ActivityStopped = activity => capturedActivity = activity
+		};
+		ActivitySource.AddActivityListener(listener);
+
+		var ssr = new PhoriaIslandSsr(
+			new StubHttpClientFactory(_ =>
+			{
+				var response = new HttpResponseMessage(HttpStatusCode.OK)
+				{
+					Content = new StringContent("<span>Example</span>")
+				};
+				response.Headers.Add("x-phoria-island-framework", "react");
+				return response;
+			}),
+			Options.Create(new PhoriaOptions()));
+
+		try
+		{
+			using PhoriaIslandSsrResult result = await ssr.RenderIsland(new PhoriaIsland
+			{
+				ComponentName = "Example"
+			}, TestContext.Current.CancellationToken);
+
+			Assert.NotNull(capturedActivity);
+			Assert.Equal(PhoriaActivitySource.Name, capturedActivity!.Source.Name);
+			Assert.Equal("phoria.ssr.render", capturedActivity.OperationName);
+			Assert.Equal(ActivityKind.Client, capturedActivity.Kind);
+			Assert.Equal("Example", capturedActivity.GetTagItem("phoria.component"));
+			Assert.Equal("react", capturedActivity.GetTagItem("phoria.framework"));
+		}
+		finally
+		{
+			listener.Dispose();
+		}
 	}
 
 	[Fact]
