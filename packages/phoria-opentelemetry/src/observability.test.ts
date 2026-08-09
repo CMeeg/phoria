@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest"
-import type { PhoriaObservabilityAppSettings } from "./appsettings"
+import type { PhoriaOtelAppSettings } from "./appsettings"
 import { createPhoriaObservability } from "./observability"
 
-const disabledSettings: PhoriaObservabilityAppSettings = {
-	logging: false,
-	tracing: {
-		enabled: false,
-		samplingRatio: 0.1
-	},
-	metrics: false
+const disabledSettings: PhoriaOtelAppSettings = {
+	root: "ui",
+	base: "/ui",
+	entry: "entry.ts",
+	ssrBase: "/ssr",
+	ssrEntry: "ssr.ts",
+	server: { host: "localhost", https: false },
+	build: { outDir: "dist" },
+	observability: { logging: false, tracing: { enabled: false, samplingRatio: 0.1 }, metrics: false }
 }
 
 describe("createPhoriaObservability", () => {

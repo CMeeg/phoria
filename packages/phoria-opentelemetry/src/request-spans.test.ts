@@ -1,6 +1,6 @@
 import type { H3Event } from "h3"
 import { describe, expect, it, vi } from "vitest"
-import { createPhoriaRequestSpanHook } from "./request-spans"
+import { createPhoriaRequestSpanHook, withPhoriaOtelInstrumentation } from "./request-spans"
 
 describe("createPhoriaRequestSpanHook", () => {
 	it("returns onRequest and onBeforeResponse hooks", () => {
@@ -27,6 +27,20 @@ describe("createPhoriaRequestSpanHook", () => {
 		}
 
 		expect(updateName).toHaveBeenCalledTimes(1)
+		expect(updateName).toHaveBeenCalledWith("phoria-server.csr.asset")
+	})
+
+	it("creates request hooks from parsed appsettings", () => {
+		const hook = withPhoriaOtelInstrumentation({ base: "/assets", ssrBase: "/render" })
+		const updateName = vi.fn()
+		const event = {
+			context: { phoriaSpan: { updateName } },
+			method: "GET",
+			path: "/assets/app.js"
+		} as unknown as H3Event
+
+		hook.onBeforeResponse(event)
+
 		expect(updateName).toHaveBeenCalledWith("phoria-server.csr.asset")
 	})
 })

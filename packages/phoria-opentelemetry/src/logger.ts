@@ -1,19 +1,12 @@
 import { logs, SeverityNumber } from "@opentelemetry/api-logs"
-import type { PhoriaObservabilityAppSettings } from "./appsettings"
+import { type PhoriaLogger, phoriaConsoleLogger } from "@phoria/phoria/server"
+import { getPhoriaObservabilityAppSettings, type PhoriaOtelAppSettings } from "./appsettings"
 
-interface PhoriaLogger {
-	info(message: string, data?: Record<string, unknown>): void
-	warn(message: string, data?: Record<string, unknown>): void
-	error(message: string, data?: Record<string, unknown>): void
-}
+function createPhoriaLogger(appsettings: PhoriaOtelAppSettings): PhoriaLogger {
+	const settings = getPhoriaObservabilityAppSettings(appsettings)
 
-function createPhoriaLogger(settings: PhoriaObservabilityAppSettings): PhoriaLogger {
 	if (!settings.logging) {
-		return {
-			info: (message, data) => console.info(message, data),
-			warn: (message, data) => console.warn(message, data),
-			error: (message, data) => console.error(message, data)
-		}
+		return phoriaConsoleLogger
 	}
 
 	const logger = logs.getLogger("phoria-server")
@@ -42,5 +35,4 @@ function createPhoriaLogger(settings: PhoriaObservabilityAppSettings): PhoriaLog
 	}
 }
 
-export type { PhoriaLogger }
 export { createPhoriaLogger }

@@ -1,21 +1,31 @@
 import { logs, SeverityNumber } from "@opentelemetry/api-logs"
 import { InMemoryLogRecordExporter, LoggerProvider, SimpleLogRecordProcessor } from "@opentelemetry/sdk-logs"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { PhoriaObservabilityAppSettings } from "./appsettings"
+import type { PhoriaOtelAppSettings } from "./appsettings"
 import { createPhoriaLogger } from "./logger"
 
-const enabledSettings: PhoriaObservabilityAppSettings = {
-	logging: true,
-	tracing: {
-		enabled: false,
-		samplingRatio: 0.1
-	},
-	metrics: false
+const baseAppSettings: PhoriaOtelAppSettings = {
+	root: "ui",
+	base: "/ui",
+	entry: "entry.ts",
+	ssrBase: "/ssr",
+	ssrEntry: "ssr.ts",
+	server: { host: "localhost", https: false },
+	build: { outDir: "dist" }
 }
 
-const disabledSettings: PhoriaObservabilityAppSettings = {
-	...enabledSettings,
-	logging: false
+const enabledSettings: PhoriaOtelAppSettings = {
+	...baseAppSettings,
+	observability: {
+		logging: true,
+		tracing: { enabled: false, samplingRatio: 0.1 },
+		metrics: false
+	}
+}
+
+const disabledSettings: PhoriaOtelAppSettings = {
+	...baseAppSettings,
+	observability: { logging: false }
 }
 
 afterEach(() => {

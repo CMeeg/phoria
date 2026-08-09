@@ -1,6 +1,8 @@
-export type { PhoriaObservabilityAppSettings } from "./appsettings"
-export { parsePhoriaObservabilityAppSettings } from "./appsettings"
-export type { PhoriaLogger } from "./logger"
+export type {
+	PhoriaObservabilityAppSettings,
+	PhoriaObservabilityAppSettingsInput,
+	PhoriaOtelAppSettings
+} from "./appsettings"
 export { createPhoriaLogger } from "./logger"
 export { createPhoriaObservability } from "./observability"
-export { createPhoriaRequestSpanHook } from "./request-spans"
+export { createPhoriaRequestSpanHook, withPhoriaOtelInstrumentation } from "./request-spans"

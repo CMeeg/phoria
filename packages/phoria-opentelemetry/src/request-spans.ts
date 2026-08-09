@@ -1,4 +1,5 @@
 import { type Span, trace } from "@opentelemetry/api"
+import type { PhoriaAppSettings } from "@phoria/phoria/server"
 import { getResponseHeader, type H3Event } from "h3"
 
 interface PhoriaRequestSpanHookOptions {
@@ -40,4 +41,8 @@ function createPhoriaRequestSpanHook({ base, ssrBase }: PhoriaRequestSpanHookOpt
 	return { onRequest, onBeforeResponse }
 }
 
-export { createPhoriaRequestSpanHook }
+function withPhoriaOtelInstrumentation(appsettings: Pick<PhoriaAppSettings, "base" | "ssrBase">) {
+	return createPhoriaRequestSpanHook({ base: appsettings.base, ssrBase: appsettings.ssrBase })
+}
+
+export { createPhoriaRequestSpanHook, withPhoriaOtelInstrumentation }
