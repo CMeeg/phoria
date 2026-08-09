@@ -39,23 +39,22 @@ This lets future integrations extend appsettings without modifying the core pack
 
 ## OTel Adapters
 
-### Settings binding
+### Settings normalization
 
-Export `bindPhoriaObservabilityAppSettings(appsettings)` from `@phoria/opentelemetry`. It accepts the parsed generic Phoria settings object and maps its optional `observability` property onto the existing fully-defaulted `PhoriaObservabilityAppSettings` result. It is synchronous because file I/O has already completed in `parsePhoriaAppSettings`.
-
-The existing standalone observability file parser is removed. `server.ts` performs one appsettings read:
+The generic parser removes the need for a public observability-specific binder. The existing standalone observability file parser is removed, and OTel factories normalize the optional `appsettings.observability` property internally against their package-owned defaults. `server.ts` performs one appsettings read:
 
 ```ts
 const appsettings = await parsePhoriaAppSettings<PhoriaOtelAppSettings>({
   environment: dotnetEnv,
   cwd: __dirname
 })
-const observabilitySettings = bindPhoriaObservabilityAppSettings(appsettings)
+const phoriaLogger = createPhoriaLogger(appsettings)
+const observability = createPhoriaObservability(appsettings)
 ```
 
 ### Logger implementation
 
-The existing OTel logger factory remains the public `createPhoriaLogger` API and returns the core `PhoriaLogger` contract. When logging is disabled it delegates to the core console logger; when enabled it emits OTel log records. The implementation may import the core logger type/value as a package dependency if needed, but the core package never imports OTel.
+The existing OTel logger factory remains the public `createPhoriaLogger` API and returns the core `PhoriaLogger` contract. It accepts the parsed generic appsettings object and normalizes `appsettings.observability` internally. When logging is disabled it delegates to the core console logger; when enabled it emits OTel log records. The implementation may import the core logger type/value as a package dependency if needed, but the core package never imports OTel.
 
 ### Instrumentation wrapper
 
@@ -79,10 +78,10 @@ Move `defu` to the workspace catalog at `^6.1.7`. Both `@phoria/phoria` and `@ph
 
 - Core tests verify the exported console logger shape and existing handler defaults remain functional.
 - Core appsettings tests verify generic parsing retains extension properties and preserves existing defaults/validation.
-- OTel appsettings tests verify binding from a parsed settings object, defaults, and environment override values.
+- OTel appsettings tests verify normalization from a parsed settings object, defaults, and environment override values.
 - OTel logger tests verify the returned value conforms to the core logger contract and preserves console fallback/OTel emission behavior.
 - OTel request-span tests retain existing behavior coverage and add wrapper coverage proving it delegates the configured base and SSR base.
-- Both example `server.ts` files use the single parser call, the binder, and `createApp(withPhoriaOtelInstrumentation(appsettings))`.
+- Both example `server.ts` files use the single parser call, OTel factories that normalize the parsed settings, and `createApp(withPhoriaOtelInstrumentation(appsettings))`.
 
 Verification remains the repository CI sequence: root build, lint, check, JS tests, and .NET tests, plus both example checks/builds using local links where the new package is unpublished.
 
