@@ -27,6 +27,7 @@
     "@opentelemetry/sdk-logs": "^0.221.0",
     "@opentelemetry/semantic-conventions": "^1.43.0",
     "@phoria/phoria": "^0.4.2",
+    "@phoria/opentelemetry": "^0.1.0",
     "@phoria/phoria-react": "^0.4.2",
     "@phoria/phoria-svelte": "^0.3.2",
     "@phoria/phoria-vue": "^0.3.2",

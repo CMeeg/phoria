@@ -1,20 +1,58 @@
 using Microsoft.AspNetCore.ResponseCompression;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using Phoria;
+using Phoria.Diagnostics;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.AddOpenTelemetry(options =>
-{
-	options.IncludeFormattedMessage = true;
-	options.IncludeScopes = true;
-	options.ParseStateValues = true;
+PhoriaObservabilityOptions observability = builder.Configuration
+	.GetSection(PhoriaObservabilityOptions.SectionName)
+	.Get<PhoriaObservabilityOptions>() ?? new();
 
-	if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")))
+if (observability.Logging)
+{
+	builder.Logging.AddOpenTelemetry(options =>
 	{
-		options.AddOtlpExporter();
-	}
-});
+		options.IncludeFormattedMessage = true;
+		options.IncludeScopes = true;
+		options.ParseStateValues = true;
+		if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")))
+		{
+			options.AddOtlpExporter();
+		}
+	});
+}
+
+if (observability.Tracing.Enabled)
+{
+	builder.Services.AddOpenTelemetry().WithTracing(tracing =>
+	{
+		tracing
+			.AddSource(PhoriaActivitySource.Name)
+			.AddAspNetCoreInstrumentation()
+			.AddHttpClientInstrumentation(o => o.FilterHttpRequestMessage =
+				request => request.RequestUri?.AbsolutePath != "/hc")
+			.SetSampler(new ParentBasedSampler(new TraceIdRatioBasedSampler(observability.Tracing.SamplingRatio)));
+		if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")))
+		{
+			tracing.AddOtlpExporter();
+		}
+	});
+}
+
+if (observability.Metrics)
+{
+	builder.Services.AddOpenTelemetry().WithMetrics(metrics =>
+	{
+		metrics.AddAspNetCoreInstrumentation().AddHttpClientInstrumentation();
+		if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")))
+		{
+			metrics.AddOtlpExporter();
+		}
+	});
+}
 
 IMvcBuilder mvcBuilder = builder.Services.AddRazorPages();
 
