@@ -1,6 +1,6 @@
 {
 	"$schema": "https://turbo.build/schema.json",
-	"globalPassThroughEnv": ["NUGET_API_KEY"],
+	"globalPassThroughEnv": ["NUGET_API_KEY", "FORCE_COLOR", "NO_COLOR"],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],

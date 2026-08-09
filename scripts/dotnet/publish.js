@@ -2,6 +2,7 @@ import child_process from "node:child_process"
 import { mkdir, readFile } from "node:fs/promises"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import util from "node:util"
+import { command, error, step } from "../log.js"
 
 const exec = util.promisify(child_process.exec)
 
@@ -15,15 +16,18 @@ async function getPackageJson(path) {
 	}
 }
 
-async function run(command) {
-	const { stdout, stderr } = await exec(command)
+async function run(cmd) {
+	command(cmd)
+
+	const { stdout, stderr } = await exec(cmd)
 
 	if (stdout) {
 		console.log(stdout)
 	}
 
 	if (stderr) {
-		throw new Error(stderr)
+		error(stderr.trim())
+		process.exit(1)
 	}
 }
 
@@ -101,11 +105,15 @@ const { version } = pkg
 
 const distPath = join(cwd, "dist")
 
+step(`📦 Packing ${cwd} (v${version})…`)
+
 await run(`dotnet pack "${cwd}" --include-symbols --nologo -p:Version=${version} --output "${distPath}"`)
 
 // Push the package to the NuGet feed
 
 const packageSource = await getNugetPackageSource(resolve("../../nuget.config"), packageSourceName)
+
+step(`🚀 Pushing Phoria v${version} to ${packageSourceName}…`)
 
 await run(
 	`dotnet nuget push "${join(distPath, "*.nupkg")}" --source "${packageSource}" --api-key ${apiKey} --skip-duplicate`

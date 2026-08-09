@@ -4,6 +4,7 @@ import { readFile, writeFile } from "node:fs/promises"
 import { dirname, join, relative, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
+import { command, error, info, step, success } from "./log.js"
 
 const execAsync = promisify(exec)
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -19,8 +20,10 @@ const jsPackages = {
 
 const dotnetPackage = { name: "Phoria", dir: "packages/Phoria", csproj: "Phoria.csproj" }
 
-async function run(command, cwd = root) {
-	const { stdout, stderr } = await execAsync(command, { cwd })
+async function run(cmd, cwd = root) {
+	command(cmd)
+
+	const { stdout, stderr } = await execAsync(cmd, { cwd })
 
 	if (stdout) {
 		console.log(stdout)
@@ -159,6 +162,8 @@ function packageVersion(version) {
 }
 
 async function link(exampleDir) {
+	step(`🔗 Linking ${exampleDir}…`)
+
 	const pkgPath = join(exampleDir, "package.json")
 	const pkg = await readJson(pkgPath)
 
@@ -181,7 +186,7 @@ async function link(exampleDir) {
 	const csproj = await readFile(csprojPath(exampleDir), "utf8")
 
 	if (csproj.includes(projectReference())) {
-		console.log(`${exampleDir}: already linked`)
+		info(`🔗 ${exampleDir}: already linked`)
 	} else {
 		const match = csproj.match(/<PackageReference Include="Phoria" \/>/)
 
@@ -195,19 +200,31 @@ async function link(exampleDir) {
 	await run("pnpm install", exampleDir)
 	await run("dotnet restore WebApp.csproj", exampleDir)
 
-	console.log(
-		`Linked ${exampleDir} to local packages (file: refs, catalog literalized). ` +
-			`Run \`pnpm build\` at the repo root first. After every rebuild, run \`pnpm examples:refresh\` to refresh the hard links (a plain \`pnpm install\` does not). ` +
+	success(
+		`Linked ${exampleDir} to local packages (file: refs, catalog literalized).\n` +
+			`Run \`pnpm build\` at the repo root first. After every rebuild, run \`pnpm examples:refresh\` to refresh the hard links (a plain \`pnpm install\` does not).\n` +
 			`Run \`pnpm examples:sync\` before committing.`
 	)
 }
 
+let workspaceBuilt = false
+
 async function refresh(exampleDir) {
+	if (!workspaceBuilt) {
+		step("🔨 Building workspace packages…")
+		await run("pnpm build")
+		workspaceBuilt = true
+	}
+
+	step(`🔄 Refreshing hard links for ${exampleDir}…`)
+
 	await run("pnpm install --force", exampleDir)
-	console.log(`Refreshed hard links for ${exampleDir}.`)
+	success(`Refreshed hard links for ${exampleDir}.`)
 }
 
 async function sync(exampleDir) {
+	step(`↩️ Restoring ${exampleDir} to its committed state…`)
+
 	await restorePackagesFromHead()
 
 	const pkgPath = join(exampleDir, "package.json")
@@ -272,13 +289,15 @@ async function sync(exampleDir) {
 
 	if (rootLockStatus.trim()) {
 		await run("git checkout -- pnpm-lock.yaml")
-		console.log("Restored the root pnpm-lock.yaml (it was modified by link-induced catalog: churn).")
+		info("Restored the root pnpm-lock.yaml (it was modified by link-induced catalog: churn).")
 	}
 
-	console.log(`Restored ${exampleDir} to its committed state.`)
+	success(`Restored ${exampleDir} to its committed state.`)
 }
 
 async function check(exampleDir) {
+	step(`🔎 Checking ${exampleDir}…`)
+
 	const problems = []
 
 	const pkgPath = join(exampleDir, "package.json")
@@ -307,14 +326,16 @@ async function check(exampleDir) {
 	}
 
 	if (problems.length) {
-		console.error(problems.join("\n"))
+		error(`${exampleDir}: found ${problems.length} problem(s):\n${problems.join("\n")}`)
 		process.exitCode = 1
 	} else {
-		console.log(`${exampleDir}: OK`)
+		success(`${exampleDir}: OK`)
 	}
 }
 
 async function bump(exampleDir) {
+	step(`⬆️ Bumping ${exampleDir}…`)
+
 	const pkgPath = join(exampleDir, "package.json")
 	const pkg = await readJson(pkgPath)
 	const versions = []
@@ -356,14 +377,14 @@ async function bump(exampleDir) {
 
 	await run("pnpm install", exampleDir)
 
-	console.log(`Bumped ${exampleDir} to ${versions.join(", ")} (registry refs).`)
+	success(`Bumped ${exampleDir} to ${versions.join(", ")} (registry refs).`)
 }
 
 const modes = { link, sync, check, bump, refresh }
 const mode = process.argv[2]
 
 if (!modes[mode]) {
-	console.error("Usage: node scripts/examples.js <link|sync|check|bump|refresh>")
+	error("Usage: node scripts/examples.js <link|sync|check|bump|refresh>")
 	process.exit(1)
 }
 
