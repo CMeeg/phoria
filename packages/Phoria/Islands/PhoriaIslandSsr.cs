@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Options;
+using Phoria.Diagnostics;
 using Phoria.IO;
 using Phoria.Server;
 
@@ -35,6 +37,9 @@ public class PhoriaIslandSsr(
 				options.Islands.PropsSerializer.Serialize(island.Props, propsStreamPool);
 			}
 
+			using Activity? activity = PhoriaActivitySource.Instance.StartActivity("phoria.ssr.render", ActivityKind.Client);
+			activity?.SetTag("phoria.component", island.ComponentName);
+
 			using HttpClient client = phoriaServerHttpClientFactory.CreateClient();
 
 			StreamContent? body = CreatePropsContent(propsStreamPool);
@@ -53,6 +58,8 @@ public class PhoriaIslandSsr(
 			{
 				island.Framework = componentFrameworkHeader.FirstOrDefault();
 			}
+
+			activity?.SetTag("phoria.framework", island.Framework);
 
 			if (response.Headers.TryGetValues(
 				"x-phoria-island-path",

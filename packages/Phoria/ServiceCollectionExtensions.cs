@@ -18,6 +18,9 @@ public static class ServiceCollectionExtensions
 			.BindConfiguration(PhoriaOptions.SectionName)
 			.Configure(configure ?? (_ => { }));
 
+		services.AddOptions<PhoriaObservabilityOptions>()
+			.BindConfiguration(PhoriaObservabilityOptions.SectionName);
+
 		return services.ConfigureServices();
 	}
 

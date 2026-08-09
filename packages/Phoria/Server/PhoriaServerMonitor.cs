@@ -22,6 +22,7 @@ public sealed class PhoriaServerMonitor
 	private readonly ILogger<PhoriaServerMonitor> logger;
 	private readonly PhoriaOptions options;
 	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory;
+	private readonly bool logHealthChecks;
 	private SemaphoreSlim? semaphore;
 	private PeriodicTimer? periodicTimer;
 	private Task? monitoringTask;
@@ -39,11 +40,13 @@ public sealed class PhoriaServerMonitor
 	public PhoriaServerMonitor(
 		ILogger<PhoriaServerMonitor> logger,
 		IOptions<PhoriaOptions> options,
-		IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory)
+		IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory,
+		IOptions<PhoriaObservabilityOptions> observabilityOptions)
 	{
 		this.logger = logger;
 		this.options = options.Value;
 		this.phoriaServerHttpClientFactory = phoriaServerHttpClientFactory;
+		logHealthChecks = observabilityOptions.Value.LogHealthChecks;
 
 		ServerStatus = CreateUnknownServerStatus();
 	}
@@ -109,7 +112,10 @@ public sealed class PhoriaServerMonitor
 
 					if (result != null)
 					{
-						logger.LogServerIsHealthy(ServerStatus.Url);
+						if (logHealthChecks || ServerStatus.Health != PhoriaServerHealth.Healthy)
+						{
+							logger.LogServerIsHealthy(ServerStatus.Url);
+						}
 
 						ServerStatus = CreateHealthyServerStatus(result);
 						firstHealthy.TrySetResult();
@@ -141,6 +147,11 @@ public sealed class PhoriaServerMonitor
 
 	private void LogServerIsUnhealthy(Exception? exception = null)
 	{
+		if (!logHealthChecks && ServerStatus.Health == PhoriaServerHealth.Unhealthy)
+		{
+			return;
+		}
+
 		if (firstHealthy.Task.IsCompletedSuccessfully)
 		{
 			logger.LogServerIsUnhealthy(ServerStatus.Url, exception);
