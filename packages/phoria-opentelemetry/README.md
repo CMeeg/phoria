@@ -9,13 +9,13 @@ import {
 	createPhoriaLogger,
 	createPhoriaObservability,
 	createPhoriaRequestSpanHook,
-	parsePhoriaObservabilitySettings
+	parsePhoriaObservabilityAppSettings
 } from "@phoria/opentelemetry"
 import { createApp, toNodeListener } from "h3"
 import { listen } from "listhen"
 
 const appsettings = { base: "/ui", ssrBase: "/ssr" }
-const settings = parsePhoriaObservabilitySettings({ cwd: __dirname })
+const settings = parsePhoriaObservabilityAppSettings({ cwd: __dirname })
 const logger = createPhoriaLogger(settings)
 const observability = createPhoriaObservability(settings)
 

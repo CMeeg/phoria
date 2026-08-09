@@ -4,7 +4,7 @@ import {
   createPhoriaLogger,
   createPhoriaObservability,
   createPhoriaRequestSpanHook,
-  parsePhoriaObservabilitySettings,
+  parsePhoriaObservabilityAppSettings,
 } from "@phoria/opentelemetry"
 import {
   createPhoriaCsrRequestHandler,
@@ -27,7 +27,7 @@ const isProduction = nodeEnv === "production"
 
 const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
 const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv, cwd: __dirname })
-const observabilitySettings = await parsePhoriaObservabilitySettings({ cwd: __dirname, environment: dotnetEnv })
+const observabilitySettings = await parsePhoriaObservabilityAppSettings({ cwd: __dirname, environment: dotnetEnv })
 const phoriaLogger = createPhoriaLogger(observabilitySettings)
 const observability = createPhoriaObservability(observabilitySettings)
 

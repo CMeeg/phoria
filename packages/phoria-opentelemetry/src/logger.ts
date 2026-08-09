@@ -1,5 +1,5 @@
 import { logs, SeverityNumber } from "@opentelemetry/api-logs"
-import type { PhoriaObservabilitySettings } from "./appsettings"
+import type { PhoriaObservabilityAppSettings } from "./appsettings"
 
 interface PhoriaLogger {
 	info(message: string, data?: Record<string, unknown>): void
@@ -7,7 +7,7 @@ interface PhoriaLogger {
 	error(message: string, data?: Record<string, unknown>): void
 }
 
-function createPhoriaLogger(settings: PhoriaObservabilitySettings): PhoriaLogger {
+function createPhoriaLogger(settings: PhoriaObservabilityAppSettings): PhoriaLogger {
 	if (!settings.logging) {
 		return {
 			info: (message, data) => console.info(message, data),

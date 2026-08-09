@@ -2,9 +2,9 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import { type PhoriaObservabilitySettings, parsePhoriaObservabilitySettings } from "./appsettings"
+import { type PhoriaObservabilityAppSettings, parsePhoriaObservabilityAppSettings } from "./appsettings"
 
-const defaultSettings: PhoriaObservabilitySettings = {
+const defaultSettings: PhoriaObservabilityAppSettings = {
 	logging: false,
 	tracing: {
 		enabled: false,
@@ -41,7 +41,7 @@ afterEach(async () => {
 	await rm(cwd, { recursive: true, force: true })
 })
 
-describe("parsePhoriaObservabilitySettings", () => {
+describe("parsePhoriaObservabilityAppSettings", () => {
 	it("parses the base appsettings file and applies defaults for missing keys", async () => {
 		await writeFile(
 			join(cwd, "appsettings.json"),
@@ -55,7 +55,7 @@ describe("parsePhoriaObservabilitySettings", () => {
 			})
 		)
 
-		const settings = await parsePhoriaObservabilitySettings({ cwd })
+		const settings = await parsePhoriaObservabilityAppSettings({ cwd })
 
 		expect(settings).toEqual({
 			logging: true,
@@ -97,7 +97,7 @@ describe("parsePhoriaObservabilitySettings", () => {
 			})
 		)
 
-		const settings = await parsePhoriaObservabilitySettings({ cwd, environment: "Development" })
+		const settings = await parsePhoriaObservabilityAppSettings({ cwd, environment: "Development" })
 
 		expect(settings.logging).toBe(true)
 		expect(settings.tracing.enabled).toBe(true)
@@ -106,7 +106,7 @@ describe("parsePhoriaObservabilitySettings", () => {
 	})
 
 	it("returns defaults when no appsettings file is found", async () => {
-		const settings = await parsePhoriaObservabilitySettings({ cwd })
+		const settings = await parsePhoriaObservabilityAppSettings({ cwd })
 
 		expect(settings).toEqual(defaultSettings)
 	})
@@ -126,7 +126,7 @@ describe("parsePhoriaObservabilitySettings", () => {
 			})
 		)
 
-		const settings = await parsePhoriaObservabilitySettings({ cwd })
+		const settings = await parsePhoriaObservabilityAppSettings({ cwd })
 
 		expect(settings.logging).toBe(true)
 		expect(settings.metrics).toBe(true)

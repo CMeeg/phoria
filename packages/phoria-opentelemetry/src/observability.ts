@@ -6,12 +6,12 @@ import { ConsoleLogRecordExporter, SimpleLogRecordProcessor } from "@opentelemet
 import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics"
 import { NodeSDK, type NodeSDKConfiguration } from "@opentelemetry/sdk-node"
 import { ParentBasedSampler, TraceIdRatioBasedSampler } from "@opentelemetry/sdk-trace-base"
-import type { PhoriaObservabilitySettings } from "./appsettings"
+import type { PhoriaObservabilityAppSettings } from "./appsettings"
 
 let sdk: NodeSDK | undefined
 let initialized = false
 
-function createPhoriaObservability(settings: PhoriaObservabilitySettings): { shutdown: () => Promise<void> } {
+function createPhoriaObservability(settings: PhoriaObservabilityAppSettings): { shutdown: () => Promise<void> } {
 	if (initialized) {
 		return {
 			shutdown: async () => {

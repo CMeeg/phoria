@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
-import type { PhoriaObservabilitySettings } from "./appsettings"
+import type { PhoriaObservabilityAppSettings } from "./appsettings"
 import { createPhoriaObservability } from "./observability"
 
-const disabledSettings: PhoriaObservabilitySettings = {
+const disabledSettings: PhoriaObservabilityAppSettings = {
 	logging: false,
 	tracing: {
 		enabled: false,

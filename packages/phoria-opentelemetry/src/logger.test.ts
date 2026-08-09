@@ -1,10 +1,10 @@
 import { logs, SeverityNumber } from "@opentelemetry/api-logs"
 import { InMemoryLogRecordExporter, LoggerProvider, SimpleLogRecordProcessor } from "@opentelemetry/sdk-logs"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { PhoriaObservabilitySettings } from "./appsettings"
+import type { PhoriaObservabilityAppSettings } from "./appsettings"
 import { createPhoriaLogger } from "./logger"
 
-const enabledSettings: PhoriaObservabilitySettings = {
+const enabledSettings: PhoriaObservabilityAppSettings = {
 	logging: true,
 	tracing: {
 		enabled: false,
@@ -13,7 +13,7 @@ const enabledSettings: PhoriaObservabilitySettings = {
 	metrics: false
 }
 
-const disabledSettings: PhoriaObservabilitySettings = {
+const disabledSettings: PhoriaObservabilityAppSettings = {
 	...enabledSettings,
 	logging: false
 }

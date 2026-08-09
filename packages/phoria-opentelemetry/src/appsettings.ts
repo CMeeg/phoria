@@ -3,32 +3,32 @@ import { defu } from "defu"
 import { safeDestr } from "destr"
 import { up } from "empathic/find"
 
-interface ObservabilitySettingsFile {
+interface ObservabilityAppSettings {
 	phoria?: {
-		observability?: Partial<PhoriaObservabilitySettings>
+		observability?: Partial<PhoriaObservabilityAppSettings>
 	}
 }
 
-interface PhoriaObservabilityTracingSettings {
+interface PhoriaObservabilityTracingAppSettings {
 	enabled: boolean
 	samplingRatio: number
 }
 
-interface PhoriaObservabilitySettings {
+interface PhoriaObservabilityAppSettings {
 	logging: boolean
 	logHealthChecks?: boolean
-	tracing: PhoriaObservabilityTracingSettings
+	tracing: PhoriaObservabilityTracingAppSettings
 	metrics: boolean
 }
 
-interface PhoriaObservabilitySettingsOptions {
+interface PhoriaObservabilityAppSettingsOptions {
 	fileName: string
 	encoding: BufferEncoding
 	cwd: string
 	environment?: string
 }
 
-const defaultOptions: PhoriaObservabilitySettingsOptions = {
+const defaultOptions: PhoriaObservabilityAppSettingsOptions = {
 	fileName: "appsettings.json",
 	encoding: "utf8",
 	cwd: process.cwd()
@@ -50,7 +50,7 @@ async function parseObservabilityAppSettings(
 	path: string,
 	cwd: string,
 	encoding: BufferEncoding
-): Promise<Partial<PhoriaObservabilitySettings>> {
+): Promise<Partial<PhoriaObservabilityAppSettings>> {
 	const appsettingsPath = up(path, { cwd })
 
 	if (typeof appsettingsPath !== "string") {
@@ -60,7 +60,7 @@ async function parseObservabilityAppSettings(
 	try {
 		const appsettingsContent = await readFile(appsettingsPath, { encoding })
 
-		const appsettings = safeDestr<ObservabilitySettingsFile>(appsettingsContent)
+		const appsettings = safeDestr<ObservabilityAppSettings>(appsettingsContent)
 
 		return appsettings.phoria?.observability ?? {}
 	} catch (error) {
@@ -69,7 +69,7 @@ async function parseObservabilityAppSettings(
 }
 
 // Defaults here must be in sync with the defaults in `Phoria/PhoriaObservabilityOptions.cs`
-const defaultObservabilitySettings: PhoriaObservabilitySettings = {
+const defaultObservabilityAppSettings: PhoriaObservabilityAppSettings = {
 	logging: false,
 	tracing: {
 		enabled: false,
@@ -78,9 +78,9 @@ const defaultObservabilitySettings: PhoriaObservabilitySettings = {
 	metrics: false
 }
 
-async function parsePhoriaObservabilitySettings(
-	options?: Partial<PhoriaObservabilitySettingsOptions>
-): Promise<PhoriaObservabilitySettings> {
+async function parsePhoriaObservabilityAppSettings(
+	options?: Partial<PhoriaObservabilityAppSettingsOptions>
+): Promise<PhoriaObservabilityAppSettings> {
 	const opts = defu(options, defaultOptions)
 	const environment = opts.environment ?? getEnvironment()
 
@@ -92,8 +92,8 @@ async function parsePhoriaObservabilitySettings(
 		opts.encoding
 	)
 
-	return defu(envSettings, baseSettings, defaultObservabilitySettings) as PhoriaObservabilitySettings
+	return defu(envSettings, baseSettings, defaultObservabilityAppSettings) as PhoriaObservabilityAppSettings
 }
 
-export type { PhoriaObservabilitySettings }
-export { parsePhoriaObservabilitySettings }
+export type { PhoriaObservabilityAppSettings }
+export { parsePhoriaObservabilityAppSettings }

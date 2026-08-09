@@ -84,7 +84,7 @@ services.AddOptions<PhoriaObservabilityOptions>().BindConfiguration(PhoriaObserv
 
 ### Node side
 
-- `@phoria/opentelemetry` exposes `parsePhoriaObservabilitySettings({ cwd, environment })` mirroring `parsePhoriaAppSettings` (used at `examples/*/WebApp/ui/src/server.ts:60` with `{ environment: dotnetEnv, cwd: __dirname }`): load `appsettings.json` then `appsettings.{environment}.json` from `cwd`, merge, map to the same shape. Environment resolved as `DOTNET_ENVIRONMENT ?? ASPNETCORE_ENVIRONMENT ?? NODE_ENV ?? "Development"`.
+- `@phoria/opentelemetry` exposes `parsePhoriaObservabilityAppSettings({ cwd, environment })` mirroring `parsePhoriaAppSettings` (used at `examples/*/WebApp/ui/src/server.ts:60` with `{ environment: dotnetEnv, cwd: __dirname }`): load `appsettings.json` then `appsettings.{environment}.json` from `cwd`, merge, map to the same shape. Environment resolved as `DOTNET_ENVIRONMENT ?? ASPNETCORE_ENVIRONMENT ?? NODE_ENV ?? "Development"`.
 
 ## Section 2 — New package `@phoria/opentelemetry`
 
@@ -92,7 +92,7 @@ New workspace package `packages/phoria-opentelemetry` (`@phoria/opentelemetry`),
 
 ### Exports
 
-- `parsePhoriaObservabilitySettings(...)` → `{ logging, logHealthChecks?, tracing: { enabled, samplingRatio }, metrics }` (Section 1).
+- `parsePhoriaObservabilityAppSettings(...)` → `{ logging, logHealthChecks?, tracing: { enabled, samplingRatio }, metrics }` (Section 1).
 - `createPhoriaLogger(settings)` → object structurally compatible with `PhoriaLogger` (`packages/phoria-islands/src/server/routing.ts:33`, `info`/`warn`/`error` with `(message, data?)`). Emits OTel log records (severity + `event` attribute) when `logging` is enabled; falls back to `console.*` otherwise.
 - `createPhoriaObservability(settings)` → `{ shutdown }`. Called **before** `createApp()`/`listen()`:
   - **tracing enabled**: `NodeSDK` with `OTLPTraceExporter`, sampler `parentBased(traceIdRatioBased(samplingRatio))` so SSR requests follow the .NET `traceparent` decision, `HttpInstrumentation` registered.
@@ -222,9 +222,9 @@ if (observability.Metrics)
 Adopt the package (both examples):
 
 ```ts
-import { createPhoriaLogger, createPhoriaObservability, createPhoriaRequestSpanHook, parsePhoriaObservabilitySettings } from "@phoria/opentelemetry"
+import { createPhoriaLogger, createPhoriaObservability, createPhoriaRequestSpanHook, parsePhoriaObservabilityAppSettings } from "@phoria/opentelemetry"
 
-const observabilitySettings = parsePhoriaObservabilitySettings({ cwd: __dirname, environment: dotnetEnv })
+const observabilitySettings = parsePhoriaObservabilityAppSettings({ cwd: __dirname, environment: dotnetEnv })
 const phoriaLogger = createPhoriaLogger(observabilitySettings)
 const observability = await createPhoriaObservability(observabilitySettings)
 

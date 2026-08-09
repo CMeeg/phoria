@@ -2,6 +2,10 @@
 	"name": "@phoria/opentelemetry",
 	"version": "0.1.0",
 	"description": "OpenTelemetry instrumentation for Phoria Server.",
+	"keywords": [
+		"phoria",
+		"opentelemetry"
+	],
 	"author": "Chris Meagher",
 	"license": "MIT",
 	"repository": {
