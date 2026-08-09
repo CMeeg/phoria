@@ -144,3 +144,10 @@ Dated log of decisions made while shaping the project. One line each, with the w
 - Dropped explicit `--apphost` arguments in favour of committed `aspire.config.json` files and `aspire stop --all` for non-interactive teardown.
 - Renamed the E2E smoke test to `test:e2e` to describe the full end-to-end test command.
 - Split CI into a `test-e2e` job covering all three E2E apps so each ownership model is exercised.
+
+## 2026-08-09 — Example OpenTelemetry observability
+
+- Adopted a shared `phoria:observability` configuration for the .NET WebApp and Node/Vite sidecar, with independent opt-in gates for logging, tracing, and metrics; tracing uses the `Phoria` ActivitySource and a `phoria.ssr.render` span around each SSR call.
+- The Node `@phoria/opentelemetry` package parses the shared appsettings files, configures NodeSDK instrumentation, enriches h3 spans for SSR and CSR requests, falls back to console logging when OTel logging is disabled, and flushes providers during shutdown.
+- `/hc` is filtered from Node and .NET spans and metrics, while `logHealthChecks` controls periodic health logging so the monitor logs status changes without repeating a stable result.
+- Examples use local package linking during development before publication; release sync restores registry ranges and must update the new package references after publication.

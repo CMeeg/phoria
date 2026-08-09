@@ -15,6 +15,7 @@ const jsPackages = {
 	"@phoria/phoria-react": "packages/phoria-react",
 	"@phoria/phoria-svelte": "packages/phoria-svelte",
 	"@phoria/phoria-vue": "packages/phoria-vue",
+	"@phoria/opentelemetry": "packages/phoria-opentelemetry",
 	"@phoria/vite-plugin-dotnet-dev-certs": "packages/vite-plugin-dotnet-dev-certs"
 }
 
@@ -230,17 +231,16 @@ async function sync(exampleDir) {
 	const pkgPath = join(exampleDir, "package.json")
 	const headPkg = JSON.parse(await getHead(pkgPath))
 	const pkg = await readJson(pkgPath)
+	let usedRegistryFallback = false
 
-	for (const [name] of Object.entries(jsPackages)) {
+	for (const [name, dir] of Object.entries(jsPackages)) {
 		for (const section of ["dependencies", "devDependencies"]) {
 			if (pkg[section]?.[name]) {
 				const headSpec = headPkg[section]?.[name]
+				const { version } = await readJson(join(root, dir, "package.json"))
 
-				if (!headSpec) {
-					throw new Error(`HEAD has no ${name} in ${section}; cannot restore ${exampleDir}`)
-				}
-
-				pkg[section][name] = headSpec
+				pkg[section][name] = headSpec ?? `^${version}`
+				usedRegistryFallback ||= !headSpec
 			}
 		}
 	}
@@ -279,8 +279,21 @@ async function sync(exampleDir) {
 		await writeFile(propsPath, props.replace(currentPv, ""))
 	}
 
-	await run(`git checkout -- ${relative(root, join(exampleDir, "pnpm-lock.yaml"))}`)
-	await run("pnpm install --frozen-lockfile", exampleDir)
+	const lockPath = join(exampleDir, "pnpm-lock.yaml")
+	await run(`git checkout -- ${relative(root, lockPath)}`)
+	const lockfile = await readFile(lockPath, "utf8")
+	const lockNeedsUpdate = Object.entries(jsPackages).some(([name]) =>
+		["dependencies", "devDependencies"].some((section) => {
+			const spec = pkg[section]?.[name]
+			return spec && (!lockfile.includes(name) || !lockfile.includes(`specifier: ${spec}`))
+		})
+	)
+
+	if (usedRegistryFallback || lockNeedsUpdate) {
+		info("Skipped frozen install because the restored package dependency is newer than the committed example lockfile.")
+	} else {
+		await run("pnpm install --frozen-lockfile", exampleDir)
+	}
 
 	// Running root-level pnpm commands (e.g. `pnpm build`) while the packages'
 	// `catalog:` specifiers are literalized rewrites the root lockfile. Restore it
