@@ -21,7 +21,7 @@ public sealed class PhoriaServerMonitor
 
 	private readonly ILogger<PhoriaServerMonitor> logger;
 	private readonly PhoriaOptions options;
-	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory;
+	private readonly Func<HttpClient> createHealthCheckClient;
 	private readonly bool logHealthChecks;
 	private SemaphoreSlim? semaphore;
 	private PeriodicTimer? periodicTimer;
@@ -42,10 +42,28 @@ public sealed class PhoriaServerMonitor
 		IOptions<PhoriaOptions> options,
 		IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory,
 		IOptions<PhoriaObservabilityOptions> observabilityOptions)
+		: this(logger, options, phoriaServerHttpClientFactory.CreateClient, observabilityOptions)
+	{
+	}
+
+	internal PhoriaServerMonitor(
+		ILogger<PhoriaServerMonitor> logger,
+		IOptions<PhoriaOptions> options,
+		IPhoriaServerHealthCheckHttpClientFactory phoriaServerHealthCheckHttpClientFactory,
+		IOptions<PhoriaObservabilityOptions> observabilityOptions)
+		: this(logger, options, phoriaServerHealthCheckHttpClientFactory.CreateClient, observabilityOptions)
+	{
+	}
+
+	private PhoriaServerMonitor(
+		ILogger<PhoriaServerMonitor> logger,
+		IOptions<PhoriaOptions> options,
+		Func<HttpClient> createHealthCheckClient,
+		IOptions<PhoriaObservabilityOptions> observabilityOptions)
 	{
 		this.logger = logger;
 		this.options = options.Value;
-		this.phoriaServerHttpClientFactory = phoriaServerHttpClientFactory;
+		this.createHealthCheckClient = createHealthCheckClient;
 		logHealthChecks = observabilityOptions.Value.LogHealthChecks;
 
 		ServerStatus = CreateUnknownServerStatus();
@@ -93,7 +111,7 @@ public sealed class PhoriaServerMonitor
 	{
 		if (await semaphore!.WaitAsync(0, cancellationToken))
 		{
-			using HttpClient httpClient = phoriaServerHttpClientFactory.CreateClient();
+			using HttpClient httpClient = createHealthCheckClient();
 
 			using var timeout = new CancellationTokenSource(
 				TimeSpan.FromSeconds(options.Server.HealthCheckTimeout)

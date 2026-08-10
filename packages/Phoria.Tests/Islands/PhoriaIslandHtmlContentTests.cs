@@ -2,6 +2,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
@@ -62,6 +63,7 @@ public class PhoriaIslandHtmlContentTests
 	private static HttpClientHandler GetPrimaryHandler(string environmentName)
 	{
 		var services = new ServiceCollection();
+		services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
 		services.AddSingleton<IHostEnvironment>(new TestHostEnvironment { EnvironmentName = environmentName });
 		services.AddPhoria();
 
