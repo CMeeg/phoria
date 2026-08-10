@@ -9,7 +9,7 @@ public interface IPhoriaServerHttpClientFactory
 
 internal interface IPhoriaServerHealthCheckHttpClientFactory
 {
-	HttpClient CreateClient();
+	HttpClient CreateHealthCheckClient();
 }
 
 internal sealed class PhoriaServerHttpClientFactory(

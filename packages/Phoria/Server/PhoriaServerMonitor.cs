@@ -51,7 +51,7 @@ public sealed class PhoriaServerMonitor
 		IOptions<PhoriaOptions> options,
 		IPhoriaServerHealthCheckHttpClientFactory phoriaServerHealthCheckHttpClientFactory,
 		IOptions<PhoriaObservabilityOptions> observabilityOptions)
-		: this(logger, options, phoriaServerHealthCheckHttpClientFactory.CreateClient, observabilityOptions)
+		: this(logger, options, phoriaServerHealthCheckHttpClientFactory.CreateHealthCheckClient, observabilityOptions)
 	{
 	}
 
