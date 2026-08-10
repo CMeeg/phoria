@@ -25,6 +25,7 @@ function createPhoriaObservability(appsettings: PhoriaOtelAppSettings): { shutdo
 	const tracingEnabled = settings.tracing.enabled
 	const metricsEnabled = settings.metrics
 	const loggingEnabled = settings.logging
+	const httpInstrumentationEnabled = tracingEnabled || metricsEnabled
 
 	if (!tracingEnabled && !metricsEnabled && !loggingEnabled) {
 		return { shutdown: async () => {} }
@@ -51,7 +52,7 @@ function createPhoriaObservability(appsettings: PhoriaOtelAppSettings): { shutdo
 		config.logRecordProcessors = [new SimpleLogRecordProcessor({ exporter })]
 	}
 
-	if (tracingEnabled || metricsEnabled) {
+	if (httpInstrumentationEnabled) {
 		config.instrumentations = [
 			new HttpInstrumentation({
 				ignoreIncomingRequestHook: (request) => request.url === "/hc"
@@ -62,7 +63,7 @@ function createPhoriaObservability(appsettings: PhoriaOtelAppSettings): { shutdo
 	sdk = new NodeSDK(config)
 	sdk.start()
 
-	if (tracingEnabled || metricsEnabled) {
+	if (httpInstrumentationEnabled) {
 		// `require-in-the-middle` only patches core modules as they are required.
 		// Phoria's own static import chain loads node:http/node:https before
 		// `sdk.start()`, so without this the patch never fires. Re-requiring via
