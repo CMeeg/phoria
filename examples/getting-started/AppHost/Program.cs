@@ -20,11 +20,22 @@ var webAppPort = 5373;
 // directory, so package.json scripts must run from the same directory where `vite.config.ts` lives
 
 var phoriaServerPort = int.TryParse(webAppConfiguration["Phoria:Server:Port"], out var configuredPort) ? configuredPort : 5173;
+var phoriaServerHttps = bool.TryParse(webAppConfiguration["Phoria:Server:Https"], out var configuredHttps) && configuredHttps;
 
 var phoriaServer = builder.AddJavaScriptApp("phoria-server", webAppDirectory)
 	.WithRunScript(isDevelopment ? "dev:server" : "preview:server")
-	.WithPnpm(install: false)
-	.WithHttpsEndpoint(port: phoriaServerPort, name: "https", isProxied: false)
+	.WithPnpm(install: false);
+
+if (phoriaServerHttps)
+{
+	phoriaServer.WithHttpsEndpoint(port: phoriaServerPort, name: "https", isProxied: false);
+}
+else
+{
+	phoriaServer.WithHttpEndpoint(port: phoriaServerPort, name: "http", isProxied: false);
+}
+
+phoriaServer
 	.WithHttpHealthCheck("/hc")
 	.WithEnvironment("NODE_ENV", isDevelopment ? "development" : "production")
 	.WithEnvironment("DOTNET_ENVIRONMENT", environment)
