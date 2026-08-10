@@ -62,6 +62,16 @@ function createPhoriaObservability(appsettings: PhoriaOtelAppSettings): { shutdo
 	sdk = new NodeSDK(config)
 	sdk.start()
 
+	if (tracingEnabled || metricsEnabled) {
+		// `require-in-the-middle` only patches core modules as they are required.
+		// Phoria's own static import chain loads node:http/node:https before
+		// `sdk.start()`, so without this the patch never fires. Re-requiring via
+		// `process.getBuiltinModule` runs the now-registered hook; RITM returns
+		// already-patched modules unchanged, so this is idempotent in dev.
+		process.getBuiltinModule("http")
+		process.getBuiltinModule("https")
+	}
+
 	return {
 		shutdown: async () => {
 			await sdk?.shutdown()
