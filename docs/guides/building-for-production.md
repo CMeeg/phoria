@@ -116,6 +116,8 @@ pnpm run preview
 
 The AppHost sets `DOTNET_ENVIRONMENT=Preview` for the Web App and `NODE_ENV=production` for the Phoria Server. Use the dashboard URL printed by `aspire start` to inspect both resources and their OpenTelemetry logs. When you are done, stop the preview with `aspire stop` so that no managed resources are left running.
 
+Because ASP.NET Core only auto-loads static web assets in the `Development` environment, a Preview app must opt in for `MapStaticAssets` to serve the assets that live in the build output rather than `wwwroot` (e.g. the generated `<app>.styles.css` and fingerprinted files). Call `builder.WebHost.UseStaticWebAssets()` guarded by the Preview environment before the app is configured — as the example apps' `Program.cs` do — otherwise those requests fail with `Could not find file` errors.
+
 ## Next steps
 
 If you would now like to try deploying your production build you can check out the [deployment](./deployment.md) guide.

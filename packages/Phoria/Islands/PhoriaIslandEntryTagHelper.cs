@@ -60,6 +60,10 @@ public partial class PhoriaIslandEntryTagHelper(
 	private readonly PhoriaOptions options = options.Value;
 	private readonly IUrlHelperFactory urlHelperFactory = urlHelperFactory;
 
+	// Optional styles elements (like <phoria-island-styles/>) render nothing when the entry has no CSS, so a
+	// missing stylesheet is expected rather than something worth warning about
+	protected virtual bool WarnWhenCssChunksMissing => true;
+
 	/// <summary>
 	/// The path to your Phoria client entry file.
 	/// </summary>
@@ -217,7 +221,11 @@ public partial class PhoriaIslandEntryTagHelper(
 
 				if (count == 0)
 				{
-					logger.LogManifestEntryDoesntHaveCssChunks(value);
+					if (WarnWhenCssChunksMissing)
+					{
+						logger.LogManifestEntryDoesntHaveCssChunks(value);
+					}
+
 					output.SuppressOutput();
 					return;
 				}

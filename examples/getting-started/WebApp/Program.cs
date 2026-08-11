@@ -7,6 +7,13 @@ using Phoria.Diagnostics;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+// Static web assets are only auto-loaded in Development; enable them for Preview so MapStaticAssets
+// can serve the manifest from the build output.
+if (builder.Environment.IsEnvironment("Preview"))
+{
+	builder.WebHost.UseStaticWebAssets();
+}
+
 PhoriaObservabilityOptions observability = builder.Configuration
 	.GetSection(PhoriaObservabilityOptions.SectionName)
 	.Get<PhoriaObservabilityOptions>() ?? new();
