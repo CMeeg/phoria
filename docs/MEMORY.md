@@ -149,5 +149,5 @@ Dated log of decisions made while shaping the project. One line each, with the w
 
 - Adopted a shared `phoria:observability` configuration for the .NET WebApp and Node/Vite sidecar, with independent opt-in gates for logging, tracing, and metrics; tracing uses the `Phoria` ActivitySource and a `phoria.ssr.render` span around each SSR call.
 - The Node `@phoria/opentelemetry` package parses the shared appsettings files, configures NodeSDK instrumentation, enriches h3 spans for SSR and CSR requests, falls back to console logging when OTel logging is disabled, and flushes providers during shutdown.
-- `/hc` is filtered from Node and .NET spans and metrics, while `logHealthChecks` controls periodic health logging so the monitor logs status changes without repeating a stable result.
+- `/hc` is filtered from Node spans and metrics and from .NET spans; the .NET host's `/hc` client metrics remain a residual limitation because OpenTelemetry .NET 1.17.0 exposes no per-request filter for the runtime-built `System.Net.Http` metrics. `logHealthChecks` controls periodic health logging so the monitor logs status changes without repeating a stable result.
 - Examples use local package linking during development before publication; release sync restores registry ranges and must update the new package references after publication.

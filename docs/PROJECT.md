@@ -135,7 +135,7 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   `StopServer` semaphore race; a debugger-stop-specific TODO in
   `PhoriaServerProcessService` still needs confirming after the fix lands.
   Tied to the author's top worry (server robustness).
-- **Dual-runtime OpenTelemetry observability** — the .NET host and Node/Vite sidecar are separate runtimes, so the examples use a shared `phoria:observability` contract with independent opt-in logging, tracing, and metrics gates; tracing propagates across the SSR HTTP boundary and `/hc` is excluded from spans and metrics.
+- **Dual-runtime OpenTelemetry observability** — the .NET host and Node/Vite sidecar are separate runtimes, so the examples use a shared `phoria:observability` contract with independent opt-in logging, tracing, and metrics gates; tracing propagates across the SSR HTTP boundary; `/hc` is excluded from spans on the .NET host and from both spans and metrics on the Node sidecar, though the .NET host's `/hc` client metrics remain a residual limitation (OpenTelemetry .NET 1.17.0 exposes no per-request filter for the runtime's built-in HTTP client metrics).
 - **.NET 10 adoption** — memory-pool and lifecycle API changes may interact
   with the server process/monitor design.
 - **Dependency upgrade breakage** — Vite 6→8 (Rolldown/Oxc) and framework
@@ -147,6 +147,7 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   .NET-referenced assets (resolve in the Phase 3 spike).
 - TODO: Decide go/no-go outcomes for each exploration spike (composition,
   streaming, server actions, Deno).
+- TODO: Filter the .NET host's `/hc` client metrics once OpenTelemetry .NET (or the runtime) supports per-request metric filtering; the runtime-built `System.Net.Http` metrics cannot currently be filtered per request.
 - RESOLVED (Phase 1): `net9.0` is dropped now — it is STS and reaches EOL the
   same day as `net8.0` (2026-11-10), so keeping it cost a TFM leg for zero
   extra coverage. `net8.0` is retained until its Nov 2026 EOL, then revisited.
