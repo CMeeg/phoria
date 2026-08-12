@@ -16,9 +16,16 @@ public sealed class PhoriaServerMonitorService(IPhoriaServerMonitor serverMonito
 			await serverMonitor.StartMonitoring(stoppingToken);
 			await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
 		}
-		catch (OperationCanceledException)
+		catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
 		{
 			await serverMonitor.StopMonitoring();
+		}
+		catch
+		{
+			// e.g. the startup timeout: stop the monitor cleanly (cancels the poll loop and
+			// disposes the timer/semaphore), then let the exception stop the host.
+			await serverMonitor.StopMonitoring();
+			throw;
 		}
 	}
 }

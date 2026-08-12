@@ -264,6 +264,56 @@ public class PhoriaServerMonitorTests
 		}
 	}
 
+	[Fact]
+	public async Task StartMonitoring_ThrowsTimeoutException_WhenStartupTimeoutElapses()
+	{
+		var options = new PhoriaOptions();
+		options.Server.HealthCheckInterval = 1;
+		options.Server.StartupTimeout = 1;
+		var logger = new ListLogger();
+		var monitor = new PhoriaServerMonitor(
+			logger,
+			Options.Create(options),
+			new StubHttpClientFactory(HttpStatusCode.ServiceUnavailable),
+			Options.Create(new PhoriaObservabilityOptions()));
+		using var cancellation = new CancellationTokenSource();
+
+		await Assert.ThrowsAsync<TimeoutException>(
+			() => monitor.StartMonitoring(cancellation.Token)
+				.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+
+		Assert.Contains(logger.Entries, e => e.Level == LogLevel.Error && e.Message.Contains("startup timeout", StringComparison.OrdinalIgnoreCase));
+		await monitor.StopMonitoring();
+	}
+
+	[Fact]
+	public async Task Monitor_PreservesLastKnownHealthyModeAndFrameworksWhenUnhealthy()
+	{
+		var options = new PhoriaOptions();
+		options.Server.HealthCheckInterval = 1;
+		var monitor = new PhoriaServerMonitor(
+			NullLogger<PhoriaServerMonitor>.Instance,
+			Options.Create(options),
+			new ScriptedHttpClientFactory(i => i == 1
+				? HealthyResponse("production", ["react"])
+				: UnhealthyResponse()),
+			Options.Create(new PhoriaObservabilityOptions()));
+		using var cancellation = new CancellationTokenSource();
+		Task startTask = monitor.StartMonitoring(cancellation.Token);
+
+		await startTask.WaitAsync(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
+		Assert.Equal(PhoriaServerHealth.Healthy, monitor.ServerStatus.Health);
+		Assert.Equal(PhoriaServerMode.Production, monitor.ServerStatus.Mode);
+
+		await WaitUntilAsync(() => monitor.ServerStatus.Health == PhoriaServerHealth.Unhealthy, TimeSpan.FromSeconds(3));
+
+		Assert.Equal(PhoriaServerHealth.Unhealthy, monitor.ServerStatus.Health);
+		Assert.Equal(PhoriaServerMode.Production, monitor.ServerStatus.Mode);
+		Assert.Equal(["react"], monitor.ServerStatus.Frameworks);
+		cancellation.Cancel();
+		await monitor.StopMonitoring();
+	}
+
 	private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout)
 	{
 		var deadline = DateTime.UtcNow.Add(timeout);
@@ -278,10 +328,14 @@ public class PhoriaServerMonitorTests
 		}
 	}
 
-	private static HttpResponseMessage HealthyResponse() => new(HttpStatusCode.OK)
+	private static HttpResponseMessage HealthyResponse(string mode = "development", string[]? frameworks = null)
 	{
-		Content = new StringContent("{\"mode\":\"development\",\"frameworks\":[]}")
-	};
+		string frameworksJson = string.Join(",", (frameworks ?? []).Select(f => $"\"{f}\""));
+		return new(HttpStatusCode.OK)
+		{
+			Content = new StringContent($"{{\"mode\":\"{mode}\",\"frameworks\":[{frameworksJson}]}}")
+		};
+	}
 
 	private static HttpResponseMessage UnhealthyResponse() => new(HttpStatusCode.ServiceUnavailable);
 

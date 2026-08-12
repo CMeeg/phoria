@@ -73,7 +73,7 @@ public sealed class PhoriaServerMonitor
 	{
 		if (monitoringTask != null)
 		{
-			await firstHealthy.Task.WaitAsync(cancellationToken);
+			await WaitForFirstHealthy(cancellationToken);
 			return;
 		}
 
@@ -82,7 +82,29 @@ public sealed class PhoriaServerMonitor
 		monitoringCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 		monitoringTask = MonitorAsync(monitoringCancellation.Token);
 
-		await firstHealthy.Task.WaitAsync(cancellationToken);
+		await WaitForFirstHealthy(cancellationToken);
+	}
+
+	private async Task WaitForFirstHealthy(CancellationToken cancellationToken)
+	{
+		if (options.Server.StartupTimeout > 0)
+		{
+			try
+			{
+				await firstHealthy.Task.WaitAsync(
+					TimeSpan.FromSeconds(options.Server.StartupTimeout),
+					cancellationToken);
+			}
+			catch (TimeoutException)
+			{
+				logger.LogServerStartupTimeout(ServerStatus.Url, options.Server.StartupTimeout);
+				throw;
+			}
+		}
+		else
+		{
+			await firstHealthy.Task.WaitAsync(cancellationToken);
+		}
 	}
 
 	private async Task MonitorAsync(CancellationToken cancellationToken)
@@ -188,11 +210,17 @@ public sealed class PhoriaServerMonitor
 		Url = options.GetServerUrl()
 	};
 
-	private PhoriaServerStatus CreateUnhealthyServerStatus() => new()
+	private PhoriaServerStatus CreateUnhealthyServerStatus()
 	{
-		Health = PhoriaServerHealth.Unhealthy,
-		Url = options.GetServerUrl()
-	};
+		PhoriaServerStatus last = ServerStatus;
+		return new()
+		{
+			Health = PhoriaServerHealth.Unhealthy,
+			Mode = last.Mode,
+			Frameworks = last.Frameworks,
+			Url = options.GetServerUrl()
+		};
+	}
 
 	private PhoriaServerStatus CreateUnknownServerStatus() => new()
 	{
@@ -260,4 +288,13 @@ internal static partial class PhoriaServerMonitorLogMessages
 		this ILogger logger,
 		string url,
 		Exception? exception = null) => logServerIsUnhealthy(logger, url, exception);
+
+	[LoggerMessage(
+		EventId = EventId.Server.ServerStartupTimeout,
+		Message = "Phoria server at {Url} did not become healthy within the {Seconds} second startup timeout.",
+		Level = LogLevel.Error)]
+	internal static partial void LogServerStartupTimeout(
+		this ILogger logger,
+		string url,
+		int seconds);
 }
