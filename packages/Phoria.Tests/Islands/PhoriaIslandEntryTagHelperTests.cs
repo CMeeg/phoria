@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
@@ -121,6 +122,42 @@ public class PhoriaIslandEntryTagHelperTests
 		Assert.Empty(output.Content.GetContent());
 	}
 
+	[Fact]
+	public void Process_ServerUnhealthy_SuppressesOutputAndLogsWarning()
+	{
+		var logger = new ListLogger<PhoriaIslandEntryTagHelper>();
+		var manifest = new ViteManifest(new Dictionary<string, ViteChunk>
+		{
+			["src/entry.ts"] = new() { File = "assets/entry.js" }
+		});
+		var manifestReader = new StubManifestReader(manifest);
+		var options = Options.Create(new PhoriaOptions { Root = "ui", Base = "/ui" });
+		var urlHelperFactory = new StubUrlHelperFactory(new StubUrlHelper());
+
+		var tagHelper = new PhoriaIslandEntryTagHelper(
+			logger,
+			manifestReader,
+			new UnhealthyServerMonitor(),
+			new PhoriaIslandEntryTagHelperMonitor(),
+			options,
+			urlHelperFactory)
+		{
+			PhoriaSrc = "src/entry.ts"
+		};
+		tagHelper.ViewContext = new ViewContext { View = new StubView() };
+
+		TagHelperContext context = CreateTagHelperContext();
+		TagHelperOutput output = CreateTagHelperOutput("script");
+
+		// Act
+		tagHelper.Process(context, output);
+
+		// Assert
+		Assert.Contains(logger.Messages, message => message.Contains("suppressing", StringComparison.Ordinal));
+		Assert.Empty(output.Content.GetContent());
+		Assert.Null(output.Attributes["src"]);
+	}
+
 	private static TagHelperContext CreateTagHelperContext() =>
 		new(
 			new TagHelperAttributeList(),
@@ -161,12 +198,32 @@ public class PhoriaIslandEntryTagHelperTests
 	{
 		public PhoriaServerStatus ServerStatus { get; } = new()
 		{
+			Health = PhoriaServerHealth.Healthy,
 			Mode = mode,
 			Url = "http://localhost:5173"
 		};
 
 		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
 		public Task StopMonitoring() => Task.CompletedTask;
+	}
+
+	private sealed class UnhealthyServerMonitor : IPhoriaServerMonitor
+	{
+		public PhoriaServerStatus ServerStatus { get; } = new()
+		{
+			Health = PhoriaServerHealth.Unhealthy,
+			Url = "http://localhost:5173"
+		};
+
+		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
+		public Task StopMonitoring() => Task.CompletedTask;
+	}
+
+	private sealed class StubView : IView
+	{
+		public string Path => "test";
+
+		public Task RenderAsync(ViewContext context) => Task.CompletedTask;
 	}
 
 	private sealed class StubManifestReader(IViteManifest manifest) : IViteManifestReader

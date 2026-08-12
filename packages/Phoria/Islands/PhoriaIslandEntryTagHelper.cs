@@ -108,6 +108,16 @@ public partial class PhoriaIslandEntryTagHelper(
 			return;
 		}
 
+		// While the server is unhealthy its status can't be trusted (an unknown status defaults to
+		// Development), which would otherwise emit dev URLs in production. Suppress the element instead.
+
+		if (serverMonitor.ServerStatus.Health != PhoriaServerHealth.Healthy)
+		{
+			logger.LogEntryTagsSuppressedWhileUnhealthy(ViewContext.View.Path);
+			output.SuppressOutput();
+			return;
+		}
+
 		// Removes the leading '~/' from the value. This is needed because the manifest file doesn't contain the leading '~/' or '/'.
 		value = value.TrimStart('~', '/');
 
@@ -322,4 +332,12 @@ internal static partial class PhoriaIslandEntryTagHelperLogMessages
 		Message = "The entry '{Entry}' doesn't have CSS chunks",
 		Level = LogLevel.Warning)]
 	internal static partial void LogManifestEntryDoesntHaveCssChunks(this ILogger logger, string entry);
+
+	[LoggerMessage(
+		EventId = EventId.Islands.EntryTagsSuppressedWhileUnhealthy,
+		Message = "Phoria server is unhealthy; suppressing entry tags (check {View}).",
+		Level = LogLevel.Warning)]
+	internal static partial void LogEntryTagsSuppressedWhileUnhealthy(
+		this ILogger logger,
+		string view);
 }
