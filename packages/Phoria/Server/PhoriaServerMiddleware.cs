@@ -4,6 +4,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using EventId = Phoria.Logging.EventId;
 
 namespace Phoria.Server;
@@ -12,11 +13,13 @@ internal sealed class PhoriaServerMiddleware(
 	ILogger<PhoriaServerMiddleware> logger,
 	IPhoriaServerMonitor serverMonitor,
 	IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory,
+	IOptions<PhoriaOptions> options,
 	RequestDelegate next)
 {
 	private readonly ILogger<PhoriaServerMiddleware> logger = logger;
 	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
 	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory = phoriaServerHttpClientFactory;
+	private readonly PhoriaOptions options = options.Value;
 	private readonly RequestDelegate next = next;
 
 	/// <inheritdoc />
@@ -24,27 +27,35 @@ internal sealed class PhoriaServerMiddleware(
 		HttpContext context,
 		IViteDevServerHmrProxy viteDevServerHmrProxy)
 	{
-		// If the request doesn't have an endpoint, the request path is not null and the request method is GET, and the server is healthy, proxy the request to the server
+		// If the request doesn't have an endpoint, the request path is not null and the request method is GET, proxy the request to the server
 
 		if (context.GetEndpoint() == null
 			&& context.Request.Path.HasValue
-			&& context.Request.Method == HttpMethod.Get.Method
-			&& serverMonitor.ServerStatus.Health == PhoriaServerHealth.Healthy)
+			&& context.Request.Method == HttpMethod.Get.Method)
 		{
-			// If it's an HMR (hot module reload) request, delegate processing to a WebSocket proxy, otherwise, process the request via HTTP
+			if (serverMonitor.ServerStatus.Health == PhoriaServerHealth.Healthy)
+			{
+				// If it's an HMR (hot module reload) request, delegate processing to a WebSocket proxy, otherwise, process the request via HTTP
 
-			Task proxyRequest = ViteDevServerHmrProxy.IsHmrRequest(context)
-				? viteDevServerHmrProxy.ProxyAsync(context, CancellationToken.None)
-				: ProxyViaHttpAsync(context, next);
+				Task proxyRequest = ViteDevServerHmrProxy.IsHmrRequest(context)
+					? viteDevServerHmrProxy.ProxyAsync(context, CancellationToken.None)
+					: ProxyViaHttpAsync(context, next);
 
-			await proxyRequest;
+				await proxyRequest;
+				return;
+			}
+
+			if (options.Server.UnavailableBehavior == PhoriaServerUnavailableBehavior.Fail)
+			{
+				logger.LogServerUnavailable(serverMonitor.ServerStatus.Url);
+				context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+				return;
+			}
 		}
-		else
-		{
-			// If the request path is null, call the next middleware
 
-			await next(context);
-		}
+		// If the request path is null, call the next middleware
+
+		await next(context);
 	}
 
 	private async Task ProxyViaHttpAsync(HttpContext context, RequestDelegate next)
@@ -82,6 +93,13 @@ internal sealed class PhoriaServerMiddleware(
 		{
 			logger.LogMiddlewareProxyViaHttpError(requestUrl, ex);
 
+			if (options.Server.UnavailableBehavior == PhoriaServerUnavailableBehavior.Fail)
+			{
+				logger.LogServerUnavailable(serverMonitor.ServerStatus.Url);
+				context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+				return;
+			}
+
 			await next(context);
 		}
 	}
@@ -110,4 +128,12 @@ internal static partial class PhoriaServerMiddlewareLogMessages
 		this ILogger logger,
 		string url,
 		Exception? exception = null) => logMiddlewareProxyViaHttpError(logger, url, exception);
+
+	[LoggerMessage(
+		EventId = EventId.Server.MiddlewareServerUnavailable,
+		Message = "Phoria server at {Url} is unavailable; returning 503.",
+		Level = LogLevel.Warning)]
+	internal static partial void LogServerUnavailable(
+		this ILogger logger,
+		string url);
 }
