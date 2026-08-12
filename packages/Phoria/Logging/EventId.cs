@@ -8,6 +8,8 @@ public static class EventId
 		public const int ViteManifestKeyNotFound = 1102;
 		public const int ManifestEntryDoesntHaveCssChunks = 1103;
 		public const int ServerUnhealthyDegradingToClient = 1104;
+		public const int ServerUnhealthySuppressingComponent = 1105;
+		public const int EntryTagsSuppressedWhileUnhealthy = 1106;
 	}
 
 	public static class Server
@@ -29,6 +31,9 @@ public static class EventId
 		public const int ProcessTerminationSignalSent = 1215;
 		public const int ProcessForceStopped = 1216;
 		public const int ServerIsNotReadyYet = 1217;
+		public const int ServerStartupTimeout = 1218;
+		public const int ServerRestartLimitExceeded = 1219;
+		public const int MiddlewareServerUnavailable = 1220;
 	}
 
 	public static class Vite
