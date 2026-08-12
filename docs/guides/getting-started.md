@@ -7,16 +7,10 @@ There are two ways you can get started:
 
 ## Clone an example project
 
-You can use [giget](https://unjs.io/packages/giget) to quickly clone an example project:
-
-```shell
-npx giget@latest gh:cmeeg/phoria-examples/examples/<example_name> <target_dir>
-```
+The repository includes `examples/getting-started` for React and `examples/framework-multiple` for React, Svelte and Vue. These examples are standalone workspaces; run `pnpm install` and the example commands from their `WebApp` directory.
 
 > [!IMPORTANT]
-> You will need to replace:
-> * `<example_name>` with the directory name of the [example project you want to clone](https://github.com/CMeeg/phoria-examples/tree/main/examples)
-> * `<target_dir>` with the name of the local directory you want to clone the example project to
+> If you are starting from a clone of this repository, use one of the local examples. Their package scripts must be run from the example's `WebApp` directory.
 
 ## Manually add Phoria to an existing dotnet project
 
@@ -27,7 +21,7 @@ You can substitute "Getting Started" for your own project / solution name wherev
 > [!NOTE]
 > This guide will not cover some aspects of setting up a new project such as configuring Git or VS Code or linting or testing tools as it is assumed that you will add and configure these things as you go or when you're ready based on your own preferences.
 >
-> You can use the [getting-started](https://github.com/CMeeg/phoria-examples/tree/main/examples/getting-started) example project as a reference if you wish, which is a complete example of a project created using this guide.
+> You can use the local [`examples/getting-started`](../../examples/getting-started) project as a reference, which is a complete example of a project created using this guide.
 
 ### Prerequisites
 
@@ -573,7 +567,7 @@ pnpm dev:server
 pnpm dev:webapp
 ```
 
-Add a `dev:webapp` script to `package.json` that runs `dotnet watch` (e.g. `"dev:webapp": "dotnet watch --project WebApp/WebApp.csproj"`). Running the web app with `dotnet watch` enables .NET hot reload: edits to C# or Razor files are applied in place without restarting the process, and `aspnetcore-browser-refresh.js` is injected into the page so the browser refreshes automatically. Response compression is disabled in development because it would prevent that script from being served. Vite HMR in Terminal 1 continues to handle changes to UI components.
+Add a `dev:webapp` script to `package.json` that runs `dotnet watch` (for example, `"dev:webapp": "dotnet watch"` when the script runs from the WebApp directory). Running the web app with `dotnet watch` enables .NET hot reload: edits to C# or Razor files are applied in place without restarting the process, and `aspnetcore-browser-refresh.js` is injected into the page so the browser refreshes automatically. Response compression is disabled in development because it would prevent that script from being served. Vite HMR in Terminal 1 continues to handle changes to UI components.
 
 The Aspire workflow (`pnpm dev`) runs the web app with `dotnet run` rather than `dotnet watch` — Aspire's built-in `dotnet watch` support is restart-based and can be flaky, so the two-terminal flow is the recommended way to get in-place hot reload.
 
@@ -599,6 +593,6 @@ pnpm run build
 pnpm run preview
 ```
 
-The `preview` script should be `aspire start` and should run from the directory containing the AppHost. The AppHost uses `Aspire.AppHost.Sdk`, calls `DistributedApplication.CreateBuilder`, adds the Web App with `Projects.WebApp`, and adds the compiled Phoria Server with `AddJavaScriptApp`, using `WithRunScript("preview:server")`. The server command and arguments no longer live in `appsettings.Preview.json`. Aspire's dashboard provides the local resource view and OpenTelemetry log output.
+The `preview` script should be `aspire start --environment Preview` and should run from the WebApp directory. The AppHost uses `Aspire.AppHost.Sdk`, calls `DistributedApplication.CreateBuilder`, adds the Web App with `Projects.WebApp`, and adds the compiled Phoria Server with `AddJavaScriptApp`, using `WithRunScript("preview:server")`. The server command and arguments live in the WebApp package script, not in `appsettings.Preview.json`. Aspire's dashboard provides the local resource view and OpenTelemetry log output.
 
 If you're curious about how Phoria works in a production environment you can also check out the [building for production](./building-for-production.md) guide.

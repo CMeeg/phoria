@@ -83,7 +83,7 @@ These are the `scripts` that you will need to preview the production build of ou
 ```json
 {
   "scripts": {
-    "preview": "aspire start"
+    "preview": "aspire start --environment Preview"
   }
 }
 ```
@@ -102,7 +102,7 @@ pnpm run preview
 
 ### Aspire preview
 
-The `preview` script starts the Aspire AppHost. The AppHost starts the Web App, the compiled Phoria Server as a sibling process, and the Aspire dashboard. It reads the Phoria Server command and arguments from `appsettings.Preview.json`, so those values remain shared with the Web App configuration.
+The `preview` script starts the Aspire AppHost. The AppHost starts the Web App, the compiled Phoria Server as a sibling process, and the Aspire dashboard. The AppHost runs the WebApp package's `preview:server` script, so the Node command and arguments are defined with the example's package scripts rather than duplicated in `appsettings.Preview.json`.
 
 Install the [Aspire CLI](https://aspire.dev/get-started/install-cli/) and run the build before starting the preview:
 

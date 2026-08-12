@@ -1,6 +1,6 @@
 # Memory
 
-Dated log of decisions made while shaping the project. One line each, with the why.
+Dated log of durable decisions made while shaping the project. Later entries supersede earlier exploratory choices where noted; implementation details belong in the architecture and milestone docs.
 
 ## 2026-07-26 — v1 milestone scoping
 
@@ -8,8 +8,8 @@ Dated log of decisions made while shaping the project. One line each, with the w
 - Tests are Phase 0 (first) — for long-term health, to de-risk dep updates, and to re-familiarize with the codebase.
 - Test stack chosen: Vitest (JS), xUnit (.NET), Playwright (e2e) — mainstream, well-supported fits for each layer.
 - Dependency/platform updates (Phase 1) reordered *before* server robustness (Phase 2) — because new deps/.NET 10 APIs may provide cleaner primitives for the robustness fixes, avoiding double work.
-- Target .NET 8/9/10 for now (not 10-only) — 8/9 reach end of support Nov 2026, retire later; keeping them widens adoption.
-- Platform stance: bleeding edge (Vite 7, latest React/Svelte/Vue, .NET 10 incl. memory pools).
+- Target .NET 8/10, not 10-only — .NET 8 remains the supported LTS consumer target while .NET 9 was dropped as STS with no distinct support window.
+- Platform stance: current Vite 8, latest React/Svelte/Vue, and .NET 10; the .NET 10 memory-pool API remains deferred because it does not match the existing `Phoria.IO` stream and buffer-writer contract.
 - "Vite bundling of .NET-referenced static assets" committed as the one new v1 feature; goal = route the whole app's assets (CSS/images/JS from Razor/MVC views, not just islands) through Vite.
 - Big feature ideas (nested composition, streaming/Suspense, server actions, Deno adapters) handled as timeboxed spikes with go/no-go gates — keeps v1 shippable while still exploring value.
 - Web components library deferred to post-v1 — not worth v1 scope.
@@ -82,12 +82,7 @@ Dated log of decisions made while shaping the project. One line each, with the w
   the .NET side has zero logging configuration today (default `ILogger<T>`
   injection only, nothing to migrate away from); the Node side has only
   `console.log` and framework built-ins.
-- Logging-only for v1; traces/metrics deliberately left as an *open
-  question* (not decided/excluded) rather than committed or ruled out, since
-  cross-runtime log correlation would itself need a tracing decision. Library
-  and exporter choice (`OpenTelemetry.Extensions.Logging` vs raw SDK on
-  .NET; `@opentelemetry/sdk-logs` on Node; OTLP vs console exporter) deferred
-  to a design step (Task 7) rather than decided during scoping.
+- The initial Phase 2 observability scope was logging-only, with traces and metrics left open pending a design. This was superseded by the 2026-08-09 example observability decision, which opted into independently gated logging, tracing, and metrics.
 - Consolidated `docs/deferred-issues-phase-1.md`'s five Phase-2-labeled
   entries into the capture doc's own "Known deferred issues" section and
   trimmed them from the source file (rather than duplicating) — the
@@ -99,16 +94,8 @@ Dated log of decisions made while shaping the project. One line each, with the w
 
 ## 2026-08-01 — Phase 2 Aspire orchestration
 
-- Chose Aspire AppHost, rather than only a standalone dashboard container, for
-  local e2e preview convenience: it starts the .NET WebApp, the sibling Node
-  server, and the Aspire dashboard with one command and owns Ctrl+C propagation.
-- Existing e2e apps will use Aspire for the sibling process model; the AppHost
-  reads the Node command and arguments from `Phoria:Server:Process` so preview
-  configuration has one source of truth.
-- Added a minimal `with-sidecar` e2e app to test the second ownership model:
-  Aspire starts only .NET, and `PhoriaServerProcess` starts/owns Node. This is
-  sequenced after the lifecycle fix and the shared OTel/AppHost pattern because
-  it is an end-to-end consumer of both seams.
+- Chose Aspire AppHost, rather than only a standalone dashboard container, for local preview convenience: it starts the .NET WebApp, the sibling Node server, and the Aspire dashboard with one command and owns resource coordination.
+- Development and Preview examples use `AddJavaScriptApp` with the WebApp package's `dev:server` or `preview:server` script; Production can instead use `PhoriaServerProcess` to own Node from the .NET host.
 - Narrowed the `run-p` replacement to parallel build scripts. Aspire supersedes
   the old `run-p preview:*` orchestration instead of adding a second preview
   runner.
@@ -128,8 +115,7 @@ Dated log of decisions made while shaping the project. One line each, with the w
   package.
 - Centralized full numeric logger event IDs in nested `EventId` feature groups,
   preserving emitted IDs while removing composite `EventFeature` expressions.
-- Sibling Aspire AppHosts now support `dev` and Preview orchestration;
-  the with-sidecar app remains the explicit .NET-owned Node-process model.
+- The maintained examples use sibling Aspire AppHosts for Development and Preview orchestration; the .NET-owned Node-process model remains documented and covered by the production configuration.
 - Deferred `IMemoryPoolFactory<byte>` post-1.0 because it lacks the stream and
   buffer-writer semantics required by current consumers. Aspire 13.4.6 SIGINT
   cleanup remains an environmental limitation, and Node shutdown OTel delivery
@@ -137,13 +123,11 @@ Dated log of decisions made while shaping the project. One line each, with the w
 
 ## 2026-08-04 — E2E app polish
 
-- with-sidecar Development Node is developer-owned via `pnpm dev:server`, with the WebApp monitor-only and no `Phoria:Server:Process`; Preview/Production Node is WebApp-owned.
-- The framework-multiple and with-workspace AppHosts always use `AddJavaScriptApp` via `dev:server`/`preview:server`, keeping the Node command in package scripts; with-sidecar retains its WebApp-owned Preview/Production model.
 - Dropped the unused `Cwd` option rather than retaining configuration with no effect.
 - Removing the production `root = "."` override fixes Docker production asset resolution by preserving the content-root-relative UI path.
 - Dropped explicit `--apphost` arguments in favour of committed `aspire.config.json` files and `aspire stop --all` for non-interactive teardown.
 - Renamed the E2E smoke test to `test:e2e` to describe the full end-to-end test command.
-- Split CI into a `test-e2e` job covering all three E2E apps so each ownership model is exercised.
+- Split CI into a `test-e2e` job covering the maintained example apps.
 
 ## 2026-08-09 — Example OpenTelemetry observability
 

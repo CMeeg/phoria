@@ -56,7 +56,7 @@ flowchart LR
     TH --> MAN
 ```
 
-The production build emits three bundles in dependency order (client → SSR → Phoria Server). The client build produces the `manifest.json` and `ssr-manifest.json` consumed by the SSR build and the .NET integration.
+The production build emits three bundles in dependency order (client → SSR → Phoria Server). The client build produces the `manifest.json` consumed by the .NET entry TagHelpers and the `ssr-manifest.json` consumed by the .NET preload TagHelper; the SSR build does not read either manifest.
 
 The Phoria Server is a Node process that must run alongside the .NET web app host; Phoria itself does not mandate how it is started. A developer can run it manually in a local environment, an orchestrator such as Aspire can manage it (the recommended approach for local development), or the web app can spawn and supervise it itself by configuring `Phoria:Server:Process` (the approach used in Production). See [Running the Phoria Server](#running-the-phoria-server).
 
@@ -119,13 +119,13 @@ All options live in `PhoriaOptions` (`PhoriaOptions.cs`), bound from the `"phori
 
 `UsePhoria` adds exactly one middleware, `PhoriaServerMiddleware`, which the examples place **last** in the pipeline. On a request it proxies only when: no endpoint matched (the request fell through routing, static files, and Razor Pages), the path is non-empty, it's a GET, and the server is healthy. Under `Fail`, unclaimed GETs return 503 when the server is unavailable, and a proxy failure mid-request also returns 503; under `Degrade`, requests fall through to normal 404 handling.
 
-- Ordinary unclaimed GETs are forwarded to the Phoria Server (`GET {serverUrl}{path}`), and the upstream body/status/content-type are echoed. This is how the browser fetches client assets and `/@vite/client` in development.
+- Ordinary unclaimed GETs are forwarded to the Phoria Server (`GET {serverUrl}{path}`). Successful upstream responses copy the response body and media type; non-success responses fall through to the next .NET middleware. This is how the browser fetches client assets and `/@vite/client` in development.
 - WebSocket requests with the `vite-hmr` subprotocol (`ViteDevServerHmrProxy.IsHmrRequest`) are forwarded to the Vite dev server via a two-way socket pump, which is what makes HMR work through the .NET app in dev (requires `app.UseWebSockets()` before `UsePhoria()`).
 
 #### Server process & monitor (`Server/`)
 
 - **`PhoriaServerMonitor`** polls `GET /hc` (`HealthCheckUrl = "/hc"`) against the Phoria Server URL every `HealthCheckInterval` seconds with a `HealthCheckTimeout` per request. The response JSON — `{ mode, frameworks }`, where `mode` is `NODE_ENV` and `frameworks` is the list of registered framework names — is deserialized into a `PhoriaHealthCheckResult` and exposed on the shared `PhoriaServerStatus` record (`PhoriaServerStatus.cs`), which also carries `Health` (`Unknown`/`Healthy`/`Unhealthy`) and `Mode` (`Unknown`/`Development`/`Production`). `StartMonitoring` **blocks until the first healthy check**, or fails after `Server.StartupTimeout` seconds when set (a `firstHealthy` `TaskCompletionSource`), so the .NET app won't serve SSR-enabled islands before the sidecar is up; `MonitorAsync` then refreshes health on a timer while preserving the last-known healthy `Mode`/`Frameworks` through downtime. The `PhoriaServerMonitorService` hosted service drives this lifecycle.
-- **`PhoriaServerProcess`** starts the Node sidecar only when `Phoria:Server:Process` is configured (production). It uses `CliWrap` to run `{Command} {Arguments}` (e.g. `node ui/dist/server/server.js`) from the .NET content root, and a periodic supervision loop (`Process.HealthCheckInterval`, default 10 s) restarts the process if it exits while the monitor reports unhealthy, at most `Process.MaxRestartAttempts` times (0 = indefinitely). Shutdown is graceful: SIGTERM (SIGKILL on Windows), a 6-second grace period, then a force-kill of the process tree (`StopGracePeriod`). `PhoriaServerProcessService` is the hosted service that runs `StartServer` and ensures `StopServer` runs on host shutdown.
+- **`PhoriaServerProcess`** starts the Node sidecar only when `Phoria:Server:Process` is configured (production). It uses `CliWrap` to run `{Command} {Arguments}` (e.g. `node ui/dist/server/server.js`) from the .NET content root, and a periodic supervision loop (`Process.HealthCheckInterval`, default 10 s) restarts the process if it exits while the monitor reports unhealthy. A positive `Process.MaxRestartAttempts` bounds the restart counter; `0` restarts indefinitely. Shutdown is graceful: SIGTERM (SIGKILL on Windows), a 6-second grace period, then a force-kill of the process tree (`StopGracePeriod`). `PhoriaServerProcessService` is the hosted service that runs `StartServer` and ensures `StopServer` runs on host shutdown.
 
 #### The islands layer (`Islands/`)
 
@@ -135,7 +135,7 @@ All options live in `PhoriaOptions` (`PhoriaOptions.cs`), bound from the `"phori
   - `Isomorphic` + unhealthy server → **degrades to `ClientOnly`** (renders the web component with no SSR markup) and logs a warning;
   - `ServerOnly` + unhealthy server → **throws `PhoriaIslandComponentException`** (logged, then suppressed by the tag helper);
   - `ClientOnly` is unaffected.
-  For non-`ClientOnly` modes it calls `PhoriaIslandSsr.RenderIsland`, adds the island to the scoped context (so `<phoria-island-preload>` can see every island on the page), and wraps the result in `PhoriaIslandHtmlContent`.
+  It adds every island to the scoped context (so `<phoria-island-preload>` can see every island on the page). For non-`ClientOnly` modes it calls `PhoriaIslandSsr.RenderIsland` and wraps the result in `PhoriaIslandHtmlContent`.
 - **`PhoriaIslandSsr`** is the SSR HTTP client. It serializes `island.Props` (via `Islands.PropsSerializer`) to a pooled stream and `POST`s it as JSON to `{SsrBase}/render/{ComponentName}` on the Phoria Server URL. The response body (the rendered HTML) is pooled, and the `x-phoria-island-framework` / `x-phoria-island-path` response headers are copied into `island.Framework` / `island.ComponentPath`. The SSR call is a plain server-to-server POST — cookies, headers, and auth from the original browser request are **not** forwarded; props are the only request input, HTML plus the two headers the only output.
 - **`PhoriaIslandHtmlContent`** writes the emitted markup. For `ServerOnly` islands it writes only the SSR HTML. Otherwise it writes the `<phoria-island>` custom element wrapper:
 
@@ -425,7 +425,7 @@ In dev, the browser's requests for Vite-served assets and `/@vite/client` hit th
 
 ### Health, startup, and degradation
 
-The `PhoriaServerMonitorService` starts on host startup and blocks until the first successful `GET /hc` — or, when `Server.StartupTimeout` is set, fails startup after that many seconds. `PhoriaServerProcess` (when configured) supervises Node in production, restarting it at most `Server.Process.MaxRestartAttempts` times (0 = indefinitely) while unhealthy. After startup the monitor refreshes `PhoriaServerStatus` every `HealthCheckInterval` seconds, preserving the last-known healthy `Mode`/`Frameworks` through a downtime. If the server goes unhealthy, behavior is a consumer choice:
+The `PhoriaServerMonitorService` starts on host startup and blocks until the first successful `GET /hc` — or, when `Server.StartupTimeout` is set, fails startup after that many seconds. `PhoriaServerProcess` (when configured) supervises Node in production, bounding its restart counter with `Server.Process.MaxRestartAttempts` when positive (0 = indefinitely) while unhealthy. After startup the monitor refreshes `PhoriaServerStatus` every `HealthCheckInterval` seconds, preserving the last-known healthy `Mode`/`Frameworks` through a downtime. If the server goes unhealthy, behavior is a consumer choice:
 
 - **`Degrade`** (default): `Isomorphic` islands degrade to `ClientOnly` and resume SSR once healthy; `ServerOnly` islands throw `PhoriaIslandComponentException` (logged, then suppressed by the tag helper); entry tags are suppressed so no dev URLs leak into production; unclaimed GETs fall through to normal 404 handling.
 - **`Fail`**: `Isomorphic` and `ServerOnly` islands throw (page 500s), unclaimed GETs return 503, and a proxy failure mid-request returns 503.

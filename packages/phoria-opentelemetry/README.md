@@ -8,18 +8,17 @@ Owns the Node-side OpenTelemetry setup for Phoria Server sidecars: configuration
 import {
 	createPhoriaLogger,
 	createPhoriaObservability,
-	createPhoriaRequestSpanHook,
-	parsePhoriaObservabilityAppSettings
+	withPhoriaOtelInstrumentation
 } from "@phoria/opentelemetry"
+import { parsePhoriaAppSettings, type PhoriaOtelAppSettings } from "@phoria/phoria/server"
 import { createApp, toNodeListener } from "h3"
 import { listen } from "listhen"
 
-const appsettings = { base: "/ui", ssrBase: "/ssr" }
-const settings = parsePhoriaObservabilityAppSettings({ cwd: __dirname })
-const logger = createPhoriaLogger(settings)
-const observability = createPhoriaObservability(settings)
+const appsettings = await parsePhoriaAppSettings<PhoriaOtelAppSettings>({ cwd: __dirname })
+const logger = createPhoriaLogger(appsettings)
+const observability = createPhoriaObservability(appsettings)
 
-const app = createApp({ ...createPhoriaRequestSpanHook(appsettings) })
+const app = createApp(withPhoriaOtelInstrumentation(appsettings))
 
 const listener = await listen(toNodeListener(app))
 

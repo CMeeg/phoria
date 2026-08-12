@@ -91,7 +91,7 @@ RUN mv /app/WebApp /app/WebAppCmd
 COPY --from=uibuild /app .
 
 # Install node for Phoria Server
-ENV NODE_VERSION=24.18.0
+ENV NODE_VERSION=24
 RUN apt-get -y update \
   && apt-get install -y curl \
   && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} -o nodesource_setup.sh | bash \
