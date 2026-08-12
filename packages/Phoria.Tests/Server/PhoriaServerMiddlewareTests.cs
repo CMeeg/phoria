@@ -1,8 +1,10 @@
 using System.Net;
 using System.Text;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Phoria;
 using Phoria.Server;
 using Xunit;
 
@@ -14,41 +16,57 @@ public class PhoriaServerMiddlewareTests
 	public async Task InvokeAsync_FailPolicyUnhealthy_Returns503ForUnclaimedGet()
 	{
 		bool nextCalled = false;
-		PhoriaServerMiddleware middleware = CreateMiddleware(
+		var (pipeline, services) = CreatePipeline(
 			new StubServerMonitor(PhoriaServerHealth.Unhealthy),
 			new StubHttpClientFactory(),
 			Options.Create(FailOptions()),
 			_ => { nextCalled = true; return Task.CompletedTask; });
 
-		DefaultHttpContext context = CreateGetContext("/unknown");
+		try
+		{
+			DefaultHttpContext context = CreateGetContext("/unknown");
+			context.RequestServices = services;
 
-		await middleware.InvokeAsync(context, new StubHmrProxy());
+			await pipeline(context);
 
-		Assert.Equal(StatusCodes.Status503ServiceUnavailable, context.Response.StatusCode);
-		Assert.False(nextCalled);
+			Assert.Equal(StatusCodes.Status503ServiceUnavailable, context.Response.StatusCode);
+			Assert.False(nextCalled);
+		}
+		finally
+		{
+			(services as IDisposable)?.Dispose();
+		}
 	}
 
 	[Fact]
 	public async Task InvokeAsync_DegradePolicyUnhealthy_FallsThroughForUnclaimedGet()
 	{
 		bool nextCalled = false;
-		PhoriaServerMiddleware middleware = CreateMiddleware(
+		var (pipeline, services) = CreatePipeline(
 			new StubServerMonitor(PhoriaServerHealth.Unhealthy),
 			new StubHttpClientFactory(),
 			Options.Create(new PhoriaOptions()),
 			_ => { nextCalled = true; return Task.CompletedTask; });
 
-		DefaultHttpContext context = CreateGetContext("/unknown");
+		try
+		{
+			DefaultHttpContext context = CreateGetContext("/unknown");
+			context.RequestServices = services;
 
-		await middleware.InvokeAsync(context, new StubHmrProxy());
+			await pipeline(context);
 
-		Assert.True(nextCalled);
+			Assert.True(nextCalled);
+		}
+		finally
+		{
+			(services as IDisposable)?.Dispose();
+		}
 	}
 
 	[Fact]
 	public async Task InvokeAsync_FailPolicyHealthy_ProxiesRequestAndDoesNotFallThrough()
 	{
-		PhoriaServerMiddleware middleware = CreateMiddleware(
+		var (pipeline, services) = CreatePipeline(
 			new StubServerMonitor(PhoriaServerHealth.Healthy),
 			new StubHttpClientFactory(new HttpResponseMessage(HttpStatusCode.OK)
 			{
@@ -57,45 +75,69 @@ public class PhoriaServerMiddlewareTests
 			Options.Create(FailOptions()),
 			_ => throw new InvalidOperationException("next must not be called on the healthy proxy path."));
 
-		DefaultHttpContext context = CreateGetContext("/ui/assets/app.js");
-		context.Response.Body = new MemoryStream();
+		try
+		{
+			DefaultHttpContext context = CreateGetContext("/ui/assets/app.js");
+			context.RequestServices = services;
+			context.Response.Body = new MemoryStream();
 
-		await middleware.InvokeAsync(context, new StubHmrProxy());
+			await pipeline(context);
 
-		Assert.Equal("app-body", Encoding.UTF8.GetString(((MemoryStream)context.Response.Body).ToArray()));
+			Assert.Equal("app-body", Encoding.UTF8.GetString(((MemoryStream)context.Response.Body).ToArray()));
+		}
+		finally
+		{
+			(services as IDisposable)?.Dispose();
+		}
 	}
 
 	[Fact]
 	public async Task InvokeAsync_FailPolicyMidProxyException_Returns503()
 	{
-		PhoriaServerMiddleware middleware = CreateMiddleware(
+		var (pipeline, services) = CreatePipeline(
 			new StubServerMonitor(PhoriaServerHealth.Healthy),
 			new StubHttpClientFactory(_ => throw new HttpRequestException("Connection refused (localhost)")),
 			Options.Create(FailOptions()),
 			_ => throw new InvalidOperationException("next must not be called in Fail mode."));
 
-		DefaultHttpContext context = CreateGetContext("/ui/assets/app.js");
+		try
+		{
+			DefaultHttpContext context = CreateGetContext("/ui/assets/app.js");
+			context.RequestServices = services;
 
-		await middleware.InvokeAsync(context, new StubHmrProxy());
+			await pipeline(context);
 
-		Assert.Equal(StatusCodes.Status503ServiceUnavailable, context.Response.StatusCode);
+			Assert.Equal(StatusCodes.Status503ServiceUnavailable, context.Response.StatusCode);
+		}
+		finally
+		{
+			(services as IDisposable)?.Dispose();
+		}
 	}
 
 	[Fact]
 	public async Task InvokeAsync_DegradePolicyMidProxyException_FallsThrough()
 	{
 		bool nextCalled = false;
-		PhoriaServerMiddleware middleware = CreateMiddleware(
+		var (pipeline, services) = CreatePipeline(
 			new StubServerMonitor(PhoriaServerHealth.Healthy),
 			new StubHttpClientFactory(_ => throw new HttpRequestException("Connection refused (localhost)")),
 			Options.Create(new PhoriaOptions()),
 			_ => { nextCalled = true; return Task.CompletedTask; });
 
-		DefaultHttpContext context = CreateGetContext("/ui/assets/app.js");
+		try
+		{
+			DefaultHttpContext context = CreateGetContext("/ui/assets/app.js");
+			context.RequestServices = services;
 
-		await middleware.InvokeAsync(context, new StubHmrProxy());
+			await pipeline(context);
 
-		Assert.True(nextCalled);
+			Assert.True(nextCalled);
+		}
+		finally
+		{
+			(services as IDisposable)?.Dispose();
+		}
 	}
 
 	private static PhoriaOptions FailOptions() => new()
@@ -103,17 +145,27 @@ public class PhoriaServerMiddlewareTests
 		Server = new PhoriaServerOptions { UnavailableBehavior = PhoriaServerUnavailableBehavior.Fail }
 	};
 
-	private static PhoriaServerMiddleware CreateMiddleware(
+	private static (RequestDelegate Pipeline, IServiceProvider Services) CreatePipeline(
 		IPhoriaServerMonitor serverMonitor,
 		IPhoriaServerHttpClientFactory httpClientFactory,
 		IOptions<PhoriaOptions> options,
-		RequestDelegate? next = null) =>
-		new(
-			NullLogger<PhoriaServerMiddleware>.Instance,
-			serverMonitor,
-			httpClientFactory,
-			options,
-			next ?? (_ => Task.CompletedTask));
+		RequestDelegate? next = null,
+		IViteDevServerHmrProxy? hmrProxy = null)
+	{
+		var services = new ServiceCollection();
+		services.AddLogging();
+		services.AddSingleton(serverMonitor);
+		services.AddSingleton(httpClientFactory);
+		services.AddSingleton(options);
+		services.AddSingleton(hmrProxy ?? new StubHmrProxy());
+
+		ServiceProvider serviceProvider = services.BuildServiceProvider();
+		var application = new ApplicationBuilder(serviceProvider);
+		application.UsePhoria();
+		application.Run(next ?? (_ => Task.CompletedTask));
+
+		return (application.Build(), serviceProvider);
+	}
 
 	private static DefaultHttpContext CreateGetContext(string path)
 	{
