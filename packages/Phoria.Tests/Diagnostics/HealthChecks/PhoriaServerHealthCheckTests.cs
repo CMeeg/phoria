@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
-using Phoria.Health;
+using Phoria.Diagnostics.HealthChecks;
 using Phoria.Server;
 using Xunit;
 
-namespace Phoria.Tests.Health;
+namespace Phoria.Tests.Diagnostics.HealthChecks;
 
 public class PhoriaServerHealthCheckTests
 {

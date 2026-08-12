@@ -1,10 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Phoria.Health;
+using Phoria.Diagnostics.HealthChecks;
 
 namespace Phoria;
 
-public static class PhoriaHealthChecksBuilderExtensions
+public static class HealthChecksBuilderExtensions
 {
 	public static IHealthChecksBuilder AddPhoriaServerHealthCheck(
 		this IHealthChecksBuilder builder,

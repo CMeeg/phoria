@@ -2,7 +2,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Phoria.Server;
 
-namespace Phoria.Health;
+namespace Phoria.Diagnostics.HealthChecks;
 
 public sealed class PhoriaServerHealthCheck(
 	IPhoriaServerMonitor serverMonitor,
