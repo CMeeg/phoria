@@ -1,6 +1,6 @@
 # Memory
 
-Dated log of decisions made while shaping the project. One line each, with the why.
+Dated log of durable decisions made while shaping the project. Later entries supersede earlier exploratory choices where noted; implementation details belong in the architecture and milestone docs.
 
 ## 2026-07-26 — v1 milestone scoping
 
@@ -8,8 +8,8 @@ Dated log of decisions made while shaping the project. One line each, with the w
 - Tests are Phase 0 (first) — for long-term health, to de-risk dep updates, and to re-familiarize with the codebase.
 - Test stack chosen: Vitest (JS), xUnit (.NET), Playwright (e2e) — mainstream, well-supported fits for each layer.
 - Dependency/platform updates (Phase 1) reordered *before* server robustness (Phase 2) — because new deps/.NET 10 APIs may provide cleaner primitives for the robustness fixes, avoiding double work.
-- Target .NET 8/9/10 for now (not 10-only) — 8/9 reach end of support Nov 2026, retire later; keeping them widens adoption.
-- Platform stance: bleeding edge (Vite 7, latest React/Svelte/Vue, .NET 10 incl. memory pools).
+- Target .NET 8/10, not 10-only — .NET 8 remains the supported LTS consumer target while .NET 9 was dropped as STS with no distinct support window.
+- Platform stance: current Vite 8, latest React/Svelte/Vue, and .NET 10; the .NET 10 memory-pool API remains deferred because it does not match the existing `Phoria.IO` stream and buffer-writer contract.
 - "Vite bundling of .NET-referenced static assets" committed as the one new v1 feature; goal = route the whole app's assets (CSS/images/JS from Razor/MVC views, not just islands) through Vite.
 - Big feature ideas (nested composition, streaming/Suspense, server actions, Deno adapters) handled as timeboxed spikes with go/no-go gates — keeps v1 shippable while still exploring value.
 - Web components library deferred to post-v1 — not worth v1 scope.
@@ -62,3 +62,85 @@ Dated log of decisions made while shaping the project. One line each, with the w
 - **`dotnet dev-certs https --trust` hangs on a sudo prompt in this environment** (no passwordless sudo). Non-interactive workaround that still yields a browser-verifiable cert: export the per-user OpenSSL trust via `SUDO_ASKPASS=/tmp/.../askpass.sh timeout 30 dotnet dev-certs https --trust` — `dotnet` imports the cert into `~/.aspnet/dev-certs/trust` and sets `SSL_CERT_DIR="$HOME/.aspnet/dev-certs/trust"` for curl, so the HTTPS dev server is trusted per-user without system trust.
 - **Task 8's `node:22-slim` → `node:24-slim` pin uncovered a pre-existing, unrelated Docker build failure**: `pnpm --filter=<app> deploy --prod /app` fails with `ERR_PNPM_DEPLOY_NONINJECTED_WORKSPACE` on pnpm ≥10 unless the workspace opts into `injectWorkspacePackages: true` (or the deploy command passes `--legacy`) — broken since `c716413` pinned pnpm 11, `node:22-slim` would have failed identically. Chose `injectWorkspacePackages: true` over `--legacy`: pnpm's own documented Docker recipe uses the non-legacy (injected) path because it produces a self-contained, non-symlinked deploy directory — required once the deploy dir is copied into an isolated Docker stage, where symlinks back into the monorepo source tree wouldn't resolve. It's a workspace-wide setting, not deploy-scoped, but `dedupeInjectedDeps` (default `true`) keeps local workspace linking symlinked whenever peer deps match across consumers (true here, thanks to catalog-pinned versions), confirmed empirically (`node_modules/@phoria/*` still symlinks after `pnpm install`, full `pnpm build`/`lint`/`check`/`test` unaffected). Watch item if this ever regresses: injected (hard-linked) deps are frozen at install time and don't auto-update on rebuild — would need `syncInjectedDepsAfterScripts` configured with the relevant build script names, or a `pnpm install` re-run.
 - **`@meeg/vite-plugin-inspect-config@0.3.0` was published after the Phase 1.5 pause.** Its Vite peer range now includes 6/7/8, so the temporary `pnpm-workspace.yaml` `peerDependencyRules.allowedVersions` exception was removed and the catalog/lockfile advanced from `~0.2.0` to `~0.3.0`. `pnpm --filter framework-multiple check` and `build` pass with no peer warnings; existing Svelte and CA1873 warnings are unrelated. The active 24-hour pnpm supply-chain policy rejected the fresh package during clean Docker `--frozen-lockfile` installs, so the intentionally approved package is listed under `minimumReleaseAgeExclude`; both no-cache Docker builds pass with that narrow exception.
+
+## 2026-08-01 — Phase 2 scope refinement
+
+- Folded the Phase 2 capture doc's concrete findings (CA1873 warning, node
+  shutdown hardening via `closeIdleConnections()`, `run-p` replacement with a
+  signal-forwarding orchestrator, a designed SIGTERM→grace-period→kill-tree
+  `StopServer()` sequence, and the debugger-stop TODO) into `PROJECT.md`'s
+  Phase 2 scope bullet, Phases list, and Riskiest unknowns — the capture doc
+  (`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`) remains
+  the task-by-task implementation plan; `PROJECT.md` now links to it.
+- Added OpenTelemetry logging as the concrete delivery mechanism for the
+  already-scoped "health/observability" Phase 2 bullet — not a new, separate
+  scope line — because it's the *how*, not new scope.
+- OTel scope covers **both** runtimes: the .NET host (`PhoriaServerProcess`/
+  `PhoriaServerProcessService`) and the Node/Vite sidecar — because the
+  sidecar model means production failures can originate in either process,
+  and a .NET-only view would miss half the picture. Confirmed starting point:
+  the .NET side has zero logging configuration today (default `ILogger<T>`
+  injection only, nothing to migrate away from); the Node side has only
+  `console.log` and framework built-ins.
+- The initial Phase 2 observability scope was logging-only, with traces and metrics left open pending a design. This was superseded by the 2026-08-09 example observability decision, which opted into independently gated logging, tracing, and metrics.
+- Consolidated `docs/deferred-issues-phase-1.md`'s five Phase-2-labeled
+  entries into the capture doc's own "Known deferred issues" section and
+  trimmed them from the source file (rather than duplicating) — the
+  remaining entries there (dependency tracker, phase-1/phase-3 code-quality
+  follow-ups) are unrelated to Phase 2 and were deliberately left in place,
+  not pulled forward just because Phase 2 is starting next. `gh` remains
+  unavailable in this environment, same as at Phase 1 close-out, so none of
+  these are filed as real GitHub issues yet.
+
+## 2026-08-01 — Phase 2 Aspire orchestration
+
+- Chose Aspire AppHost, rather than only a standalone dashboard container, for local preview convenience: it starts the .NET WebApp, the sibling Node server, and the Aspire dashboard with one command and owns resource coordination.
+- Development and Preview examples use `AddJavaScriptApp` with the WebApp package's `dev:server` or `preview:server` script; Production can instead use `PhoriaServerProcess` to own Node from the .NET host.
+- Narrowed the `run-p` replacement to parallel build scripts. Aspire supersedes
+  the old `run-p preview:*` orchestration instead of adding a second preview
+  runner.
+
+## 2026-08-03 — Phase 2 server-robustness close-out
+
+- Hardened `PhoriaServerProcess` around timer capture, spawn-window shutdown,
+  shared stop tasks, process-tree termination, and semaphore ownership.
+- Made SSR stream-pool disposal deterministic across successful, failed, and
+  abandoned renders; production certificate validation uses the system trust
+  store while development retains dangerous local-cert acceptance.
+- Isomorphic islands degrade to client-only when the server is unhealthy and
+  return to SSR after monitor recovery. The monitor waits for its first healthy
+  check before startup proceeds.
+- Added the optional OTel-independent `PhoriaLogger` seam to Node handlers;
+  e2e servers adapt their OTel loggers without adding OTel to the published
+  package.
+- Centralized full numeric logger event IDs in nested `EventId` feature groups,
+  preserving emitted IDs while removing composite `EventFeature` expressions.
+- The maintained examples use sibling Aspire AppHosts for Development and Preview orchestration; the .NET-owned Node-process model remains documented and covered by the production configuration.
+- Deferred `IMemoryPoolFactory<byte>` post-1.0 because it lacks the stream and
+  buffer-writer semantics required by current consumers. Aspire 13.4.6 SIGINT
+  cleanup remains an environmental limitation, and Node shutdown OTel delivery
+  remains an observability gap requiring collector-backed testing.
+
+## 2026-08-04 — E2E app polish
+
+- Dropped the unused `Cwd` option rather than retaining configuration with no effect.
+- Removing the production `root = "."` override fixes Docker production asset resolution by preserving the content-root-relative UI path.
+- Dropped explicit `--apphost` arguments in favour of committed `aspire.config.json` files and `aspire stop --all` for non-interactive teardown.
+- Renamed the E2E smoke test to `test:e2e` to describe the full end-to-end test command.
+- Split CI into a `test-e2e` job covering the maintained example apps.
+
+## 2026-08-09 — Example OpenTelemetry observability
+
+- Adopted a shared `phoria:observability` configuration for the .NET WebApp and Node/Vite sidecar, with independent opt-in gates for logging, tracing, and metrics; tracing uses the `Phoria` ActivitySource and a `phoria.ssr.render` span around each SSR call.
+- The Node `@phoria/opentelemetry` package parses the shared appsettings files, configures NodeSDK instrumentation, enriches h3 spans for SSR and CSR requests, falls back to console logging when OTel logging is disabled, and flushes providers during shutdown.
+- `/hc` is filtered from Node spans and metrics and from .NET spans; the .NET host's `/hc` client metrics remain a residual limitation because OpenTelemetry .NET 1.17.0 exposes no per-request filter for the runtime-built `System.Net.Http` metrics. `logHealthChecks` controls periodic health logging so the monitor logs status changes without repeating a stable result.
+- Examples use local package linking during development before publication; release sync restores registry ranges and must update the new package references after publication.
+
+## 2026-08-11 — Configurable Phoria Server unavailable policy
+
+- New `PhoriaServerUnavailableBehavior` (`Degrade`/`Fail`) plus `Server.StartupTimeout` (seconds, 0 = wait indefinitely) and `Server.Process.MaxRestartAttempts` (0 = unlimited), all defaulting to today's behavior and all .NET-only (the Node appsettings parser ignores unknown keys).
+- `Fail` makes unavailability explicit: islands throw (page 500), unclaimed GETs return 503, and the process supervisor gives up after the restart limit; `Degrade` keeps best-effort serving with the server-only suppression now logged instead of silent.
+- Startup fail-fast is a monitor concern (a `WaitAsync` timeout on `firstHealthy`); the monitor service stops the monitor cleanly then rethrows, so the host stops under `BackgroundServiceExceptionBehavior.StopHost`.
+- The monitor preserves the last-known healthy `Mode`/`Frameworks` through downtime, and the entry tag helpers suppress asset output while unhealthy (fixes dev URLs leaking into production when status defaults to `Development`).
+- New opt-in `AddPhoriaServerHealthCheck` (`IHealthCheck` reporting `Healthy`/`Degraded`/`Unhealthy` per policy) wired into both examples alongside `/health`, with a `Fail` + `startupTimeout: 60` production/preview policy so orchestrators can restart the app when recovery has failed.
+- The restart counter is a plain count reset on healthy; a time-window bound was considered and rejected for v1.

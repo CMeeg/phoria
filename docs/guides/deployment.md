@@ -91,7 +91,7 @@ RUN mv /app/WebApp /app/WebAppCmd
 COPY --from=uibuild /app .
 
 # Install node for Phoria Server
-ENV NODE_VERSION=24.18.0
+ENV NODE_VERSION=24
 RUN apt-get -y update \
   && apt-get install -y curl \
   && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} -o nodesource_setup.sh | bash \
@@ -142,6 +142,26 @@ You can configure the Phoria Web App to start and monitor the Phoria Server `nod
   }
 }
 ```
+
+For a fail-fast deployment you can also set the startup timeout, the unavailable behavior, and a restart limit alongside the process config:
+
+```json
+{
+  "phoria": {
+    "server": {
+      "startupTimeout": 60,
+      "unavailableBehavior": "Fail",
+      "process": {
+        "command": "node",
+        "arguments": ["WebApp/ui/dist/server/server.js"],
+        "maxRestartAttempts": 5
+      }
+    }
+  }
+}
+```
+
+With `unavailableBehavior: "Fail"` the WebApp reports the server status through the opt-in `/health` check, so an orchestrator (Kubernetes, Azure Container Apps, Docker) can restart the container when recovery has failed.
 
 Now you can build and run the container image using Docker from the root of your repo:
 

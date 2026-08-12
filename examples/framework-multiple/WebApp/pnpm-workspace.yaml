@@ -1,0 +1,10 @@
+# Standalone workspace for the framework-multiple example.
+#
+# This file shadows the repository-root pnpm-workspace.yaml (pnpm uses the
+# nearest one), so the example installs in isolation with its own lockfile
+# instead of joining the phoria monorepo. It also carries the build-script
+# allowlist that pnpm 11 previously read from package.json.
+allowBuilds:
+  "@biomejs/biome": true
+  esbuild: true
+  protobufjs: true

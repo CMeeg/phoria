@@ -11,11 +11,11 @@ detailed task breakdown belong in the spec/plan that follows.
 ## Problem
 
 Phoria has been dormant for a while and sits at `0.4.x` (with package version
-drift). It works, but it can't be confidently described as production-ready:
-there are **no automated tests**, a **known server-process shutdown bug**, rough
-edges in production error handling, and dependencies/platform targets that have
-fallen behind (Vite 6, .NET 8/9). Without a safety net, dependency updates and
-refactors are risky, and the public API can't be committed to.
+drift). The v1 work began with no automated tests, a known server-process
+shutdown bug, rough edges in production error handling, and dependencies/platform
+targets that had fallen behind. The test foundation, dependency updates, and
+Phase 2 server-robustness close-out have now addressed those baseline risks;
+remaining milestone work is tracked below.
 
 The goal is to bring the project up to date, harden it, and reach a
 **`1.0.0` release the author is happy to talk about publicly**.
@@ -33,7 +33,7 @@ The goal is to bring the project up to date, harden it, and reach a
 
 - Ship a **stable, tested, production-ready `1.0.0`** of the existing feature
   set.
-- Establish a **test foundation** (unit + e2e) as the base for everything else.
+- Establish a **test foundation** (unit + integration) as the base for everything else.
 - **Modernize** dependencies and platform (Vite 8, latest React/Svelte/Vue,
   .NET 10).
 - **Harden the server** for production robustness (top author concern).
@@ -46,9 +46,10 @@ The goal is to bring the project up to date, harden it, and reach a
 
 v1 is successful when:
 
-- Unit tests (Vitest for JS, xUnit for .NET) and Playwright e2e tests exist and
-  run in CI; the root `test` script is real (currently a stub).
+- Unit tests (Vitest for JS, xUnit for .NET) and Playwright browser tests exist and
+  run in CI; the root `test` script is real.
 - The known vite-process shutdown bug is fixed and no longer reproducible.
+- Server-process lifecycle events and errors — when the observability logging signal is enabled — emit structured logs via OpenTelemetry in both the .NET host and the Node/Vite sidecar, while opt-in tracing and metrics provide production operators cross-runtime visibility into requests, start/stop/crash behavior, and health.
 - Production error handling degrades gracefully when the SSR server is
   unhealthy (no raw attribute/vite-client leakage).
 - All packages are on current deps and target .NET 8/10.
@@ -60,14 +61,12 @@ v1 is successful when:
 
 ### In
 
-- Test foundation: Vitest (JS packages), xUnit (.NET), Playwright (e2e apps).
+- Test foundation: Vitest (JS packages), xUnit (.NET), Playwright (browser tests).
 - Dependency/platform updates: Vite 8, latest React/Svelte/Vue, .NET 10;
   `net8.0;net10.0` (net9.0 dropped — see Open questions).
-- Server robustness: process shutdown bug, production error handling, lifecycle
-  hardening (in-process start, monitor/reconnect, graceful degradation),
-  health/observability, `.NET 10` memory pools (`IMemoryPoolFactory<byte>`
-  adoption in `Phoria.IO` — a public-API refactor, not a dependency bump; see
-  Phase 2 in Phases below).
+- Server robustness: process shutdown bug (`Process.Kill()` process-tree, `StartServer`/`StopServer` semaphore race), production error handling, lifecycle hardening (in-process start, monitor/reconnect, graceful degradation, SIGTERM→grace-period→kill-tree stop sequence), hardened shutdown paths for the Node/Vite sidecar (signal handling, `run-p` replacement with a signal-forwarding orchestrator), and opt-in OpenTelemetry logging, tracing, and metrics across the .NET host and Node/Vite sidecar. Each signal is independently gated; the scope also includes an assessment of `.NET 10` memory pools. `IMemoryPoolFactory<byte>` adoption is explicitly deferred post-1.0 because it does not provide the stream and buffer-writer semantics used by `Phoria.IO`. Task-by-task detail is split between the main plan and its close-out:
+  [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md)
+  and [`docs/superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md`](superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md).
 - Vite bundling of .NET-referenced static assets (committed feature).
 - Timeboxed exploration spikes (go/no-go): nested component composition,
   streaming/Suspense, server actions, Deno/other adapters.
@@ -112,12 +111,9 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
    unavailable). `ViteChunk.Name` is the one item *not* included here — it
    stays deferred to Phase 3. Task-by-task detail:
    [`docs/superpowers/plans/2026-08-01-phase-1.5-close-out-deferred-issues.md`](superpowers/plans/2026-08-01-phase-1.5-close-out-deferred-issues.md).
-2. **Server robustness & production-readiness** — shutdown bug (including the
-   `Process.Kill()` process-tree bug), the `StartServer`/`StopServer` semaphore
-   race, undisposed `StreamPool`s, the unconditional
-   `DangerousAcceptAnyServerCertificateValidator`, prod error handling,
-   lifecycle hardening, health/observability, and `.NET 10` memory pools
-   (`IMemoryPoolFactory<byte>` adoption).
+2. **Server robustness & production-readiness** — **complete.** The shutdown bug (including the `Process.Kill()` process-tree bug), the `StartServer`/`StopServer` semaphore race, undisposed `StreamPool`s, the unconditional `DangerousAcceptAnyServerCertificateValidator`, prod error handling, lifecycle hardening, hardened shutdown paths for the Node/Vite sidecar (signal handling, `run-p` replacement), opt-in OpenTelemetry logging, tracing, and metrics across the .NET host and Node/Vite sidecar, `.NET 10` memory-pool assessment, and deferred-issue close-out are complete. The memory-pool replacement remains deferred post-1.0. Task-by-task detail:
+   [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md)
+   and [`docs/superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md`](superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md).
 3. **Vite bundling of .NET-referenced static assets** — includes a design spike
    first (riskiest unknown).
 4. **Exploration spikes** — composition, streaming/Suspense, server actions,
@@ -134,8 +130,12 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   mechanism is unproven and could force more fundamental design changes across
   the Vite plugin and .NET manifest/TagHelper layers. Gated behind a design
   spike before implementation.
-- **Server-process shutdown bug** — root cause unknown; reproduces mainly when
-  stopping the debugger. Tied to the author's top worry (server robustness).
+- **Server-process shutdown bug** — likely root cause narrowed to
+  `Process.Kill()` missing `entireProcessTree` plus a `StartServer`/
+  `StopServer` semaphore race; a debugger-stop-specific TODO in
+  `PhoriaServerProcessService` still needs confirming after the fix lands.
+  Tied to the author's top worry (server robustness).
+- **Dual-runtime OpenTelemetry observability** — the .NET host and Node/Vite sidecar are separate runtimes, so the examples use a shared `phoria:observability` contract with independent opt-in logging, tracing, and metrics gates; tracing propagates across the SSR HTTP boundary; `/hc` is excluded from spans on the .NET host and from both spans and metrics on the Node sidecar, though the .NET host's `/hc` client metrics remain a residual limitation (OpenTelemetry .NET 1.17.0 exposes no per-request filter for the runtime's built-in HTTP client metrics).
 - **.NET 10 adoption** — memory-pool and lifecycle API changes may interact
   with the server process/monitor design.
 - **Dependency upgrade breakage** — Vite 6→8 (Rolldown/Oxc) and framework
@@ -147,6 +147,10 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   .NET-referenced assets (resolve in the Phase 3 spike).
 - TODO: Decide go/no-go outcomes for each exploration spike (composition,
   streaming, server actions, Deno).
+- TODO: Filter the .NET host's `/hc` client metrics once OpenTelemetry .NET (or the runtime) supports per-request metric filtering; the runtime-built `System.Net.Http` metrics cannot currently be filtered per request.
 - RESOLVED (Phase 1): `net9.0` is dropped now — it is STS and reaches EOL the
   same day as `net8.0` (2026-11-10), so keeping it cost a TFM leg for zero
   extra coverage. `net8.0` is retained until its Nov 2026 EOL, then revisited.
+- Aspire AppHosts in the examples use an OTLP HTTP exporter for dashboard
+  visibility; decide later whether a production exporter/target and .NET↔Node
+  log correlation across the sidecar boundary are required for v1.

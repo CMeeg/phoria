@@ -1,18 +1,17 @@
 .azure/
 .nuget/
-.nx/cache
-.nx/workspace-data
+.superpowers/
 .turbo/
 .vite-config/
 .vite-inspect/
+.worktrees/
 bin/
-dist/
+**/dist/**
 node_modules/
 obj/
+!**/wwwroot/lib/**/dist/**
 
 *.tmp
 *.tsbuildinfo
-lerna-debug.log
-.worktrees/
 TODO.md
 vite.config.ts.*

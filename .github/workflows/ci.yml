@@ -44,6 +44,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Check examples reference published versions
+        run: pnpm examples:check
+
       - name: Build packages
         run: pnpm build
 
@@ -60,7 +63,7 @@ jobs:
         run: dotnet test --solution Phoria.sln --configuration Release
 
   test-browser:
-    name: Browser & smoke tests
+    name: Browser tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -94,17 +97,3 @@ jobs:
 
       - name: Browser-mode component tests
         run: pnpm test:browser
-
-      - name: Build e2e app
-        run: pnpm --filter framework-multiple build
-
-      - name: Start preview and run smoke test
-        run: |
-          pnpm --filter framework-multiple preview &
-          PREVIEW_PID=$!
-          for i in $(seq 1 60); do
-            curl -sf http://localhost:5247 > /dev/null 2>&1 && break
-            sleep 1
-          done
-          pnpm --filter framework-multiple test:smoke
-          kill $PREVIEW_PID

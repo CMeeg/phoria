@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Phoria.Logging;
+using EventId = Phoria.Logging.EventId;
 using Phoria.Server;
 using Phoria.Vite;
 
@@ -60,6 +60,10 @@ public partial class PhoriaIslandEntryTagHelper(
 	private readonly PhoriaOptions options = options.Value;
 	private readonly IUrlHelperFactory urlHelperFactory = urlHelperFactory;
 
+	// Optional styles elements (like <phoria-island-styles/>) render nothing when the entry has no CSS, so a
+	// missing stylesheet is expected rather than something worth warning about
+	protected virtual bool WarnWhenCssChunksMissing => true;
+
 	/// <summary>
 	/// The path to your Phoria client entry file.
 	/// </summary>
@@ -101,6 +105,16 @@ public partial class PhoriaIslandEntryTagHelper(
 		if (string.IsNullOrWhiteSpace(value))
 		{
 			logger.LogEntryAttributeMissing(attribute, ViewContext.View.Path);
+			return;
+		}
+
+		// While the server is unhealthy its status can't be trusted (an unknown status defaults to
+		// Development), which would otherwise emit dev URLs in production. Suppress the element instead.
+
+		if (serverMonitor.ServerStatus.Health != PhoriaServerHealth.Healthy)
+		{
+			logger.LogEntryTagsSuppressedWhileUnhealthy(ViewContext.View.Path);
+			output.SuppressOutput();
 			return;
 		}
 
@@ -217,7 +231,11 @@ public partial class PhoriaIslandEntryTagHelper(
 
 				if (count == 0)
 				{
-					logger.LogManifestEntryDoesntHaveCssChunks(value);
+					if (WarnWhenCssChunksMissing)
+					{
+						logger.LogManifestEntryDoesntHaveCssChunks(value);
+					}
+
 					output.SuppressOutput();
 					return;
 				}
@@ -292,7 +310,7 @@ public class PhoriaIslandEntryTagHelperMonitor
 internal static partial class PhoriaIslandEntryTagHelperLogMessages
 {
 	[LoggerMessage(
-		EventId = EventFeature.Islands + 1,
+		EventId = EventId.Islands.EntryAttributeMissing,
 		Message = "entry-{Attribute} value missing (check {View})",
 		Level = LogLevel.Warning)]
 	internal static partial void LogEntryAttributeMissing(
@@ -301,7 +319,7 @@ internal static partial class PhoriaIslandEntryTagHelperLogMessages
 		string view);
 
 	[LoggerMessage(
-		EventId = EventFeature.Islands + 2,
+		EventId = EventId.Islands.ViteManifestKeyNotFound,
 		Message = "'{Key}' was not found in Vite manifest file (check {View})",
 		Level = LogLevel.Error)]
 	internal static partial void LogViteManifestKeyNotFound(
@@ -310,8 +328,16 @@ internal static partial class PhoriaIslandEntryTagHelperLogMessages
 		string view);
 
 	[LoggerMessage(
-		EventId = EventFeature.Islands + 3,
+		EventId = EventId.Islands.ManifestEntryDoesntHaveCssChunks,
 		Message = "The entry '{Entry}' doesn't have CSS chunks",
 		Level = LogLevel.Warning)]
 	internal static partial void LogManifestEntryDoesntHaveCssChunks(this ILogger logger, string entry);
+
+	[LoggerMessage(
+		EventId = EventId.Islands.EntryTagsSuppressedWhileUnhealthy,
+		Message = "Phoria server is unhealthy; suppressing entry tags (check {View}).",
+		Level = LogLevel.Warning)]
+	internal static partial void LogEntryTagsSuppressedWhileUnhealthy(
+		this ILogger logger,
+		string view);
 }

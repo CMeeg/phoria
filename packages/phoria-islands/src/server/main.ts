@@ -1,4 +1,5 @@
 import { getPhoriaAppSettings, type PhoriaAppSettings, parsePhoriaAppSettings } from "./appsettings"
+import { type PhoriaLogger, phoriaConsoleLogger } from "./logger"
 import { PhoriaIsland, type PhoriaIslandRequest } from "./phoria-island"
 import {
 	createPhoriaCsrRequestHandler,
@@ -15,15 +16,18 @@ import type {
 	RenderPhoriaIslandComponent,
 	RenderPhoriaIslandComponentOptions
 } from "./ssr"
+import { createPhoriaViteDevServer, type PhoriaViteDevServer } from "./vite"
 
 export type {
 	PhoriaAppSettings,
 	PhoriaIslandComponentSsrService,
 	PhoriaIslandRequest,
 	PhoriaIslandSsrResult,
+	PhoriaLogger,
 	PhoriaRequestHandler,
 	PhoriaServerEntry,
 	PhoriaServerEntryLoader,
+	PhoriaViteDevServer,
 	RenderPhoriaIslandComponent,
 	RenderPhoriaIslandComponentOptions
 }
@@ -32,7 +36,9 @@ export {
 	createPhoriaDevCsrRequestHandler,
 	createPhoriaDevSsrRequestHandler,
 	createPhoriaSsrRequestHandler,
+	createPhoriaViteDevServer,
 	getPhoriaAppSettings,
 	PhoriaIsland,
-	parsePhoriaAppSettings
+	parsePhoriaAppSettings,
+	phoriaConsoleLogger
 }

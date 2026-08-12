@@ -18,4 +18,19 @@ describe("parsePhoriaAppSettings", () => {
 		expect(settings.base).toBe("/ui")
 		expect(settings.server.port).toBe(5173)
 	})
+
+	it("retains generic extension settings", async () => {
+		type Extension = { observability?: { logging: boolean } }
+		const settings = await parsePhoriaAppSettings<Extension>({
+			cwd: "/nonexistent-path-for-test",
+			inlineSettings: {
+				entry: "entry.ts",
+				ssrEntry: "ssr.ts",
+				observability: { logging: true }
+			}
+		})
+
+		expect(settings.observability?.logging).toBe(true)
+		expect(settings.root).toBe("ui")
+	})
 })

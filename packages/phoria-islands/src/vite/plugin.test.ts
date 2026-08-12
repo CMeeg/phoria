@@ -22,4 +22,19 @@ describe("phoria plugin", () => {
 		expect(options.build?.rolldownOptions?.output).toEqual({ entryFileNames: "custom-[name].js" })
 		expect(options.build?.rolldownOptions?.input).toBeDefined()
 	})
+
+	it("sets the entry input relative to root instead of double-prefixing it with root", async () => {
+		const plugin = phoria({
+			appsettings: { root: "ui", entry: "src/entry-client.ts", ssrEntry: "src/entry-server.ts" }
+		}) as {
+			config: (config: object, env: object) => Promise<void> | void
+			configEnvironment: (name: string, options: EnvironmentOptions, env: object) => void
+		}
+		const options: EnvironmentOptions = {}
+
+		await plugin.config({}, { command: "serve", mode: "development" })
+		plugin.configEnvironment("client", options, { command: "serve", mode: "development" })
+
+		expect(options.build?.rolldownOptions?.input).toBe("src/entry-client.ts")
+	})
 })

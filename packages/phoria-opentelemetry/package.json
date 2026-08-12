@@ -1,0 +1,74 @@
+{
+	"name": "@phoria/opentelemetry",
+	"version": "0.1.0",
+	"description": "OpenTelemetry instrumentation for Phoria Server.",
+	"keywords": [
+		"phoria",
+		"opentelemetry"
+	],
+	"author": "Chris Meagher",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/CMeeg/phoria.git",
+		"directory": "packages/phoria-opentelemetry"
+	},
+	"bugs": {
+		"url": "https://github.com/CMeeg/phoria/issues"
+	},
+	"homepage": "https://github.com/CMeeg/phoria#readme",
+	"type": "module",
+	"files": [
+		"dist",
+		"LICENSE",
+		"README.md"
+	],
+	"main": "./dist/main.cjs",
+	"module": "./dist/main.js",
+	"types": "./dist/main.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/main.d.ts",
+			"import": "./dist/main.js",
+			"require": "./dist/main.cjs"
+		}
+	},
+	"scripts": {
+		"build": "vite build",
+		"lint": "biome check",
+		"check": "tsc",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@opentelemetry/api": "catalog:",
+		"@opentelemetry/api-logs": "catalog:",
+		"@opentelemetry/exporter-logs-otlp-http": "catalog:",
+		"@opentelemetry/exporter-metrics-otlp-http": "catalog:",
+		"@opentelemetry/exporter-trace-otlp-http": "catalog:",
+		"@opentelemetry/instrumentation": "catalog:",
+		"@opentelemetry/instrumentation-http": "catalog:",
+		"@opentelemetry/sdk-logs": "catalog:",
+		"@opentelemetry/sdk-metrics": "catalog:",
+		"@opentelemetry/sdk-node": "catalog:",
+		"@opentelemetry/sdk-trace-base": "catalog:",
+		"defu": "catalog:",
+		"destr": "catalog:",
+		"empathic": "catalog:",
+		"h3": "catalog:"
+	},
+	"devDependencies": {
+		"@phoria/phoria": "workspace:*",
+		"@types/node": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vite-plugin-dts": "catalog:",
+		"vite-plugin-externalize-deps": "catalog:",
+		"vitest": "catalog:"
+	},
+	"engines": {
+		"node": "^20.19.0 || ^22.12.0 || >=24.0.0"
+	},
+	"peerDependencies": {
+		"@phoria/phoria": ">=0.4.0 <1.0.0"
+	}
+}

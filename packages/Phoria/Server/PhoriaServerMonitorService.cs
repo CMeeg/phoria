@@ -9,15 +9,23 @@ public sealed class PhoriaServerMonitorService(IPhoriaServerMonitor serverMonito
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		// TODO: If process is set to run in-process, then we should block until the server is started
+		// StartMonitoring blocks until the server passes its first health check.
 
 		try
 		{
 			await serverMonitor.StartMonitoring(stoppingToken);
+			await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
 		}
-		catch (OperationCanceledException)
+		catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
 		{
 			await serverMonitor.StopMonitoring();
+		}
+		catch
+		{
+			// e.g. the startup timeout: stop the monitor cleanly (cancels the poll loop and
+			// disposes the timer/semaphore), then let the exception stop the host.
+			await serverMonitor.StopMonitoring();
+			throw;
 		}
 	}
 }

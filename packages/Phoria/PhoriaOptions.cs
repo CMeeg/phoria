@@ -2,6 +2,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Phoria.Islands;
+using Phoria.Server;
 
 namespace Phoria;
 
@@ -47,6 +48,19 @@ public record PhoriaServerOptions
 	/// Default is 5 seconds. Setting this to null or a negative number disables the server monitor.
 	/// </summary>
 	public int HealthCheckInterval { get; set; } = 5;
+
+	/// <summary>
+	/// The maximum number of seconds to wait for the Phoria server to become healthy at startup.
+	/// Default is 0, which waits indefinitely.
+	/// </summary>
+	public int StartupTimeout { get; set; }
+
+	/// <summary>
+	/// The behavior to apply when the Phoria server is unavailable.
+	/// Default is <see cref="PhoriaServerUnavailableBehavior.Degrade"/>.
+	/// </summary>
+	public PhoriaServerUnavailableBehavior UnavailableBehavior { get; set; } = PhoriaServerUnavailableBehavior.Degrade;
+
 	public ProcessOptions? Process { get; set; }
 
 	public record ProcessOptions
@@ -60,6 +74,12 @@ public record PhoriaServerOptions
 		/// </summary>
 		public string[]? Arguments { get; set; }
 		public int HealthCheckInterval { get; set; } = 10;
+
+		/// <summary>
+		/// The maximum number of times the server process is restarted when it exits while unhealthy.
+		/// Default is 0, which restarts indefinitely.
+		/// </summary>
+		public int MaxRestartAttempts { get; set; }
 	}
 }
 

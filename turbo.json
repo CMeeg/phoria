@@ -1,15 +1,14 @@
 {
 	"$schema": "https://turbo.build/schema.json",
+	"globalPassThroughEnv": ["NUGET_API_KEY", "FORCE_COLOR", "NO_COLOR"],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
 			"cache": true,
 			"outputs": ["dist/**"]
 		},
-		"build:islands": {
-			"dependsOn": ["^build"],
-			"cache": true,
-			"outputs": ["WebApp/ui/dist/**", "ui/dist/**"]
+		"phoria-dotnet#build": {
+			"outputs": []
 		},
 		"check": {
 			"dependsOn": ["^build"],
@@ -17,10 +16,6 @@
 		},
 		"lint": {
 			"cache": true
-		},
-		"preview": {
-			"dependsOn": ["build"],
-			"persistent": true
 		},
 		"test": {
 			"dependsOn": ["^build"],

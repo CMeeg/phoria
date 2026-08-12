@@ -1,11 +1,16 @@
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.Extensions.Options;
+using Phoria.Server;
 
 namespace Phoria.Islands;
 
-public class PhoriaIslandTagHelper(IPhoriaIslandComponentFactory phoriaIslandComponentFactory)
+public class PhoriaIslandTagHelper(
+	IPhoriaIslandComponentFactory phoriaIslandComponentFactory,
+	IOptions<PhoriaOptions> options)
 	: TagHelper
 {
 	private readonly IPhoriaIslandComponentFactory phoriaIslandComponentFactory = phoriaIslandComponentFactory;
+	private readonly PhoriaOptions options = options.Value;
 
 	public required string Component { get; set; }
 	public object? Props { get; set; }
@@ -27,7 +32,13 @@ public class PhoriaIslandTagHelper(IPhoriaIslandComponentFactory phoriaIslandCom
 		}
 		catch (PhoriaIslandComponentException)
 		{
-			// TODO: Log or throw exception?
+			// Under the Fail policy the page 500s instead of silently dropping the island; under
+			// Degrade the factory has already logged, so suppressing the element is intentional.
+
+			if (options.Server.UnavailableBehavior == PhoriaServerUnavailableBehavior.Fail)
+			{
+				throw;
+			}
 
 			output.SuppressOutput();
 
