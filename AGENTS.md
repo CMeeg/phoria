@@ -110,6 +110,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - Central package management via `Directory.Packages.props`
 - The `Phoria.csproj` targets `net8.0;net10.0` (net9.0 dropped — see `docs/PROJECT.md`)
 - **Comments are opt-in, not expected**: only add them when they explain a non-obvious decision (e.g. the `process.cwd()` constraint comment in the example AppHost `Program.cs`) — never to restate what the code already says
+- **`InternalsVisibleTo` is a code smell**: avoid it, including for test assemblies, unless there is no other good alternative
 
 ### Markdown & prose
 
