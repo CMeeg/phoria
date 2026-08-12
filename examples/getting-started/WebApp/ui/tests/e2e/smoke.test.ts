@@ -20,4 +20,11 @@ describe("getting-started e2e", () => {
 
     expect(html).toMatch(/<link\s+rel="modulepreload"\s+crossorigin\s+href="\/ui\/assets\/[^"]+\.js">/)
   })
+
+  it("reports the Phoria server healthy via the health check", async () => {
+    const response = await fetch(`${webAppUrl}/health`)
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toContain("Healthy")
+  })
 })

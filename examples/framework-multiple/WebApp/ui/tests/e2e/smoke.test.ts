@@ -38,4 +38,11 @@ describe("framework-multiple e2e", () => {
     expect(html).not.toContain("vue-counter")
     expect(html).not.toContain("svelte-counter")
   })
+
+  it("reports the Phoria server healthy via the health check", async () => {
+    const response = await fetch(`${webAppUrl}/health`)
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toContain("Healthy")
+  })
 })

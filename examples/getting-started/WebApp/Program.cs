@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -77,6 +78,7 @@ else
 }
 
 builder.Services.AddPhoria();
+builder.Services.AddHealthChecks().AddPhoriaServerHealthCheck();
 
 WebApplication app = builder.Build();
 
@@ -96,6 +98,7 @@ else
 app.UseHttpsRedirection();
 
 app.UseRouting();
+app.MapHealthChecks("/health");
 app.UseAuthorization();
 app.MapStaticAssets();
 app.MapRazorPages().WithStaticAssets();
