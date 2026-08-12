@@ -282,7 +282,9 @@ public class PhoriaServerMonitorTests
 			() => monitor.StartMonitoring(cancellation.Token)
 				.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
 
-		Assert.Contains(logger.Entries, e => e.Level == LogLevel.Error && e.Message.Contains("startup timeout", StringComparison.OrdinalIgnoreCase));
+		Assert.True(
+			logger.Entries.Any(e => e.Level == LogLevel.Error && e.Message.Contains("startup timeout", StringComparison.OrdinalIgnoreCase)),
+			"The inner startup timeout did not occur before the outer test guard.");
 		await monitor.StopMonitoring();
 	}
 

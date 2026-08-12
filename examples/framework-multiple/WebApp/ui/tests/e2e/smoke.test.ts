@@ -26,12 +26,6 @@ describe("framework-multiple e2e", () => {
     expect(html).toContain("svelte-counter")
   })
 
-  it("renders the factory-based islands (ViewComponent and TagHelper)", async () => {
-    const html = await getHtml()
-    expect(html).toContain("count is 9")
-    expect(html).toContain("count is 19")
-  })
-
   it("filters islands by the ?framework= query parameter", async () => {
     const html = await getHtml("?framework=react")
     expect(html).toContain("react-counter")

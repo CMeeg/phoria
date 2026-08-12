@@ -13,18 +13,19 @@ public class PhoriaServerMiddlewareTests
 	[Fact]
 	public async Task InvokeAsync_FailPolicyUnhealthy_Returns503ForUnclaimedGet()
 	{
+		bool nextCalled = false;
 		PhoriaServerMiddleware middleware = CreateMiddleware(
 			new StubServerMonitor(PhoriaServerHealth.Unhealthy),
 			new StubHttpClientFactory(),
-			Options.Create(FailOptions()));
+			Options.Create(FailOptions()),
+			_ => { nextCalled = true; return Task.CompletedTask; });
 
 		DefaultHttpContext context = CreateGetContext("/unknown");
-		bool nextCalled = false;
 
 		await middleware.InvokeAsync(context, new StubHmrProxy());
-		_ = nextCalled;
 
 		Assert.Equal(StatusCodes.Status503ServiceUnavailable, context.Response.StatusCode);
+		Assert.False(nextCalled);
 	}
 
 	[Fact]

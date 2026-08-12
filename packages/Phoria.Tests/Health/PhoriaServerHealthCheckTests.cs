@@ -15,7 +15,7 @@ public class PhoriaServerHealthCheckTests
 			new StubServerMonitor(PhoriaServerHealth.Healthy),
 			Options.Create(new PhoriaOptions()));
 
-		HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext());
+		HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
 
 		Assert.Equal(HealthStatus.Healthy, result.Status);
 	}
@@ -27,7 +27,7 @@ public class PhoriaServerHealthCheckTests
 			new StubServerMonitor(PhoriaServerHealth.Unhealthy),
 			Options.Create(new PhoriaOptions()));
 
-		HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext());
+		HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
 
 		Assert.Equal(HealthStatus.Degraded, result.Status);
 	}
@@ -42,7 +42,7 @@ public class PhoriaServerHealthCheckTests
 				Server = new PhoriaServerOptions { UnavailableBehavior = PhoriaServerUnavailableBehavior.Fail }
 			}));
 
-		HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext());
+		HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
 
 		Assert.Equal(HealthStatus.Unhealthy, result.Status);
 	}
@@ -57,7 +57,7 @@ public class PhoriaServerHealthCheckTests
 				Server = new PhoriaServerOptions { UnavailableBehavior = PhoriaServerUnavailableBehavior.Fail }
 			}));
 
-		HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext());
+		HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
 
 		Assert.Equal(HealthStatus.Unhealthy, result.Status);
 	}
