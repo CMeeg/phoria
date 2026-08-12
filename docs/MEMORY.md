@@ -151,3 +151,12 @@ Dated log of decisions made while shaping the project. One line each, with the w
 - The Node `@phoria/opentelemetry` package parses the shared appsettings files, configures NodeSDK instrumentation, enriches h3 spans for SSR and CSR requests, falls back to console logging when OTel logging is disabled, and flushes providers during shutdown.
 - `/hc` is filtered from Node spans and metrics and from .NET spans; the .NET host's `/hc` client metrics remain a residual limitation because OpenTelemetry .NET 1.17.0 exposes no per-request filter for the runtime-built `System.Net.Http` metrics. `logHealthChecks` controls periodic health logging so the monitor logs status changes without repeating a stable result.
 - Examples use local package linking during development before publication; release sync restores registry ranges and must update the new package references after publication.
+
+## 2026-08-11 — Configurable Phoria Server unavailable policy
+
+- New `PhoriaServerUnavailableBehavior` (`Degrade`/`Fail`) plus `Server.StartupTimeout` (seconds, 0 = wait indefinitely) and `Server.Process.MaxRestartAttempts` (0 = unlimited), all defaulting to today's behavior and all .NET-only (the Node appsettings parser ignores unknown keys).
+- `Fail` makes unavailability explicit: islands throw (page 500), unclaimed GETs return 503, and the process supervisor gives up after the restart limit; `Degrade` keeps best-effort serving with the server-only suppression now logged instead of silent.
+- Startup fail-fast is a monitor concern (a `WaitAsync` timeout on `firstHealthy`); the monitor service stops the monitor cleanly then rethrows, so the host stops under `BackgroundServiceExceptionBehavior.StopHost`.
+- The monitor preserves the last-known healthy `Mode`/`Frameworks` through downtime, and the entry tag helpers suppress asset output while unhealthy (fixes dev URLs leaking into production when status defaults to `Development`).
+- New opt-in `AddPhoriaServerHealthCheck` (`IHealthCheck` reporting `Healthy`/`Degraded`/`Unhealthy` per policy) wired into both examples alongside `/health`, with a `Fail` + `startupTimeout: 60` production/preview policy so orchestrators can restart the app when recovery has failed.
+- The restart counter is a plain count reset on healthy; a time-window bound was considered and rejected for v1.

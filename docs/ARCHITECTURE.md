@@ -85,8 +85,11 @@ All options live in `PhoriaOptions` (`PhoriaOptions.cs`), bound from the `"phori
 | `Server.Https` | `false` | Scheme the .NET side uses to reach the Phoria Server |
 | `Server.HealthCheckInterval` | `5` | Seconds between health polls |
 | `Server.HealthCheckTimeout` | `5` | Per-request health-check timeout |
+| `Server.StartupTimeout` | `0` | Seconds to wait for the first healthy check before failing startup; `0` waits indefinitely |
+| `Server.UnavailableBehavior` | `Degrade` | `Degrade` or `Fail` — behavior when the Phoria Server is unavailable |
 | `Server.Process` | `null` | `{ Command, Arguments }` — spawns Node (production); `null` in dev |
 | `Server.Process.HealthCheckInterval` | `10` | Process-supervision loop interval |
+| `Server.Process.MaxRestartAttempts` | `0` | Max process restarts while unhealthy; `0` restarts indefinitely |
 | `Build.OutDir` | `"dist"` | Vite build output dir relative to the Vite root |
 | `Islands.PropsSerializer` | camelCase, nulls omitted | See [Props serialization](#props-serialization) |
 
@@ -114,15 +117,15 @@ All options live in `PhoriaOptions` (`PhoriaOptions.cs`), bound from the `"phori
 
 #### Middleware (`ApplicationBuilderExtensions.cs`, `Server/PhoriaServerMiddleware.cs`)
 
-`UsePhoria` adds exactly one middleware, `PhoriaServerMiddleware`, which the examples place **last** in the pipeline. On a request it proxies only when: no endpoint matched (the request fell through routing, static files, and Razor Pages), the path is non-empty, it's a GET, and the server is healthy.
+`UsePhoria` adds exactly one middleware, `PhoriaServerMiddleware`, which the examples place **last** in the pipeline. On a request it proxies only when: no endpoint matched (the request fell through routing, static files, and Razor Pages), the path is non-empty, it's a GET, and the server is healthy. Under `Fail`, unclaimed GETs return 503 when the server is unavailable, and a proxy failure mid-request also returns 503; under `Degrade`, requests fall through to normal 404 handling.
 
 - Ordinary unclaimed GETs are forwarded to the Phoria Server (`GET {serverUrl}{path}`), and the upstream body/status/content-type are echoed. This is how the browser fetches client assets and `/@vite/client` in development.
 - WebSocket requests with the `vite-hmr` subprotocol (`ViteDevServerHmrProxy.IsHmrRequest`) are forwarded to the Vite dev server via a two-way socket pump, which is what makes HMR work through the .NET app in dev (requires `app.UseWebSockets()` before `UsePhoria()`).
 
 #### Server process & monitor (`Server/`)
 
-- **`PhoriaServerMonitor`** polls `GET /hc` (`HealthCheckUrl = "/hc"`) against the Phoria Server URL every `HealthCheckInterval` seconds with a `HealthCheckTimeout` per request. The response JSON — `{ mode, frameworks }`, where `mode` is `NODE_ENV` and `frameworks` is the list of registered framework names — is deserialized into a `PhoriaHealthCheckResult` and exposed on the shared `PhoriaServerStatus` record (`PhoriaServerStatus.cs`), which also carries `Health` (`Unknown`/`Healthy`/`Unhealthy`) and `Mode` (`Unknown`/`Development`/`Production`). `StartMonitoring` **blocks until the first healthy check** (a `firstHealthy` `TaskCompletionSource`), so the .NET app won't serve SSR-enabled islands before the sidecar is up; `MonitorAsync` then refreshes health on a timer. The `PhoriaServerMonitorService` hosted service drives this lifecycle.
-- **`PhoriaServerProcess`** starts the Node sidecar only when `Phoria:Server:Process` is configured (production). It uses `CliWrap` to run `{Command} {Arguments}` (e.g. `node ui/dist/server/server.js`) from the .NET content root, and a periodic supervision loop (`Process.HealthCheckInterval`, default 10 s) restarts the process if it exits while the monitor reports unhealthy. Shutdown is graceful: SIGTERM (SIGKILL on Windows), a 6-second grace period, then a force-kill of the process tree (`StopGracePeriod`). `PhoriaServerProcessService` is the hosted service that runs `StartServer` and ensures `StopServer` runs on host shutdown.
+- **`PhoriaServerMonitor`** polls `GET /hc` (`HealthCheckUrl = "/hc"`) against the Phoria Server URL every `HealthCheckInterval` seconds with a `HealthCheckTimeout` per request. The response JSON — `{ mode, frameworks }`, where `mode` is `NODE_ENV` and `frameworks` is the list of registered framework names — is deserialized into a `PhoriaHealthCheckResult` and exposed on the shared `PhoriaServerStatus` record (`PhoriaServerStatus.cs`), which also carries `Health` (`Unknown`/`Healthy`/`Unhealthy`) and `Mode` (`Unknown`/`Development`/`Production`). `StartMonitoring` **blocks until the first healthy check**, or fails after `Server.StartupTimeout` seconds when set (a `firstHealthy` `TaskCompletionSource`), so the .NET app won't serve SSR-enabled islands before the sidecar is up; `MonitorAsync` then refreshes health on a timer while preserving the last-known healthy `Mode`/`Frameworks` through downtime. The `PhoriaServerMonitorService` hosted service drives this lifecycle.
+- **`PhoriaServerProcess`** starts the Node sidecar only when `Phoria:Server:Process` is configured (production). It uses `CliWrap` to run `{Command} {Arguments}` (e.g. `node ui/dist/server/server.js`) from the .NET content root, and a periodic supervision loop (`Process.HealthCheckInterval`, default 10 s) restarts the process if it exits while the monitor reports unhealthy, at most `Process.MaxRestartAttempts` times (0 = indefinitely). Shutdown is graceful: SIGTERM (SIGKILL on Windows), a 6-second grace period, then a force-kill of the process tree (`StopGracePeriod`). `PhoriaServerProcessService` is the hosted service that runs `StartServer` and ensures `StopServer` runs on host shutdown.
 
 #### The islands layer (`Islands/`)
 
@@ -130,7 +133,7 @@ All options live in `PhoriaOptions` (`PhoriaOptions.cs`), bound from the `"phori
 - **`PhoriaIslandTagHelper`** is the core `<phoria-island component props client>` tag. It delegates to `PhoriaIslandComponentFactory.CreateAsync` and replaces itself with a `PhoriaIslandHtmlContent`.
 - **`PhoriaIslandComponentFactory`** (scoped) derives the render mode from the directive: no `client` attribute → `ServerOnly`; `client:only` → `ClientOnly`; any other directive → `Isomorphic`. It consults the monitor and:
   - `Isomorphic` + unhealthy server → **degrades to `ClientOnly`** (renders the web component with no SSR markup) and logs a warning;
-  - `ServerOnly` + unhealthy server → **throws `PhoriaIslandComponentException`** (the tag helper swallows it and suppresses the element);
+  - `ServerOnly` + unhealthy server → **throws `PhoriaIslandComponentException`** (logged, then suppressed by the tag helper);
   - `ClientOnly` is unaffected.
   For non-`ClientOnly` modes it calls `PhoriaIslandSsr.RenderIsland`, adds the island to the scoped context (so `<phoria-island-preload>` can see every island on the page), and wraps the result in `PhoriaIslandHtmlContent`.
 - **`PhoriaIslandSsr`** is the SSR HTTP client. It serializes `island.Props` (via `Islands.PropsSerializer`) to a pooled stream and `POST`s it as JSON to `{SsrBase}/render/{ComponentName}` on the Phoria Server URL. The response body (the rendered HTML) is pooled, and the `x-phoria-island-framework` / `x-phoria-island-path` response headers are copied into `island.Framework` / `island.ComponentPath`. The SSR call is a plain server-to-server POST — cookies, headers, and auth from the original browser request are **not** forwarded; props are the only request input, HTML plus the two headers the only output.
@@ -422,10 +425,12 @@ In dev, the browser's requests for Vite-served assets and `/@vite/client` hit th
 
 ### Health, startup, and degradation
 
-The `PhoriaServerMonitorService` starts on host startup and blocks until the first successful `GET /hc`. `PhoriaServerProcess` (when configured) supervises Node in production. After startup the monitor refreshes `PhoriaServerStatus` every `HealthCheckInterval` seconds. If the server goes unhealthy:
+The `PhoriaServerMonitorService` starts on host startup and blocks until the first successful `GET /hc` — or, when `Server.StartupTimeout` is set, fails startup after that many seconds. `PhoriaServerProcess` (when configured) supervises Node in production, restarting it at most `Server.Process.MaxRestartAttempts` times (0 = indefinitely) while unhealthy. After startup the monitor refreshes `PhoriaServerStatus` every `HealthCheckInterval` seconds, preserving the last-known healthy `Mode`/`Frameworks` through a downtime. If the server goes unhealthy, behavior is a consumer choice:
 
-- `Isomorphic` islands degrade to `ClientOnly` (rendered as a client-only element, no SSR HTML) and resume SSR automatically once the monitor reports healthy again;
-- `ServerOnly` islands throw `PhoriaIslandComponentException` (suppressed by the tag helper), so pages containing only server-rendered islands fail soft rather than emitting broken markup.
+- **`Degrade`** (default): `Isomorphic` islands degrade to `ClientOnly` and resume SSR once healthy; `ServerOnly` islands throw `PhoriaIslandComponentException` (logged, then suppressed by the tag helper); entry tags are suppressed so no dev URLs leak into production; unclaimed GETs fall through to normal 404 handling.
+- **`Fail`**: `Isomorphic` and `ServerOnly` islands throw (page 500s), unclaimed GETs return 503, and a proxy failure mid-request returns 503.
+
+Consumers can opt in to an orchestrator-facing health check with `AddHealthChecks().AddPhoriaServerHealthCheck()` and `MapHealthChecks("/health")` — it reports `Healthy`, `Degraded` (under `Degrade`), or `Unhealthy` (under `Fail`) based on the monitor status.
 
 ---
 
