@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Phoria.Diagnostics;
@@ -166,6 +167,40 @@ public class PhoriaIslandSsrLifecycleTests
 		await Assert.ThrowsAsync<PhoriaIslandComponentException>(() => factory.CreateAsync("Example", null, null));
 	}
 
+	[Fact]
+	public async Task ComponentFactory_FailPolicy_ThrowsForIsomorphicIslandWhenServerIsUnhealthy()
+	{
+		var factory = new PhoriaIslandComponentFactory(
+			new UnhealthyServerMonitor(),
+			new PhoriaIslandScopedContext(),
+			new TrackingSsr(),
+			Options.Create(new PhoriaOptions
+			{
+				Server = new PhoriaServerOptions { UnavailableBehavior = PhoriaServerUnavailableBehavior.Fail }
+			}),
+			NullLogger<PhoriaIslandComponentFactory>.Instance);
+
+		await Assert.ThrowsAsync<PhoriaIslandComponentException>(
+			() => factory.CreateAsync("Example", null, new PhoriaIslandClientLoadDirective()));
+	}
+
+	[Fact]
+	public async Task ComponentFactory_DegradePolicy_LogsWarningBeforeThrowingForServerOnlyIsland()
+	{
+		var logger = new ListLogger<PhoriaIslandComponentFactory>();
+		var factory = new PhoriaIslandComponentFactory(
+			new UnhealthyServerMonitor(),
+			new PhoriaIslandScopedContext(),
+			new TrackingSsr(),
+			Options.Create(new PhoriaOptions()),
+			logger);
+
+		await Assert.ThrowsAsync<PhoriaIslandComponentException>(
+			() => factory.CreateAsync("Example", null, null));
+
+		Assert.Contains(logger.Messages, message => message.Contains("suppressing", StringComparison.Ordinal));
+	}
+
 	private static void AssertDisposed(StreamPool pool) => Assert.Throws<ObjectDisposedException>(() => _ = pool.Stream.Length);
 
 	private sealed class ThrowingPropsSerializer : IPhoriaIslandPropsSerializer
@@ -239,6 +274,27 @@ public class PhoriaIslandSsrLifecycleTests
 				Headers = new HttpResponseMessage().Headers,
 				Content = new StreamPool()
 			});
+		}
+	}
+
+	private sealed class ListLogger<T> : ILogger<T>
+	{
+		private readonly List<string> messages = [];
+
+		public IReadOnlyList<string> Messages => messages;
+
+		public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+		public bool IsEnabled(LogLevel logLevel) => true;
+
+		public void Log<TState>(
+			LogLevel logLevel,
+			EventId eventId,
+			TState state,
+			Exception? exception,
+			Func<TState, Exception?, string> formatter)
+		{
+			messages.Add(formatter(state, exception));
 		}
 	}
 
