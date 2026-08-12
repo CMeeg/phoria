@@ -257,17 +257,92 @@ public class PhoriaServerProcessTests
 		Assert.True(child.HasExited);
 	}
 
+	[Fact]
+	public async Task StartServer_RestartLimitExceeded_StopsSpawningAndEndsSupervisionLoop()
+	{
+		var hookCalls = 0;
+		using var cts = new CancellationTokenSource();
+		using PhoriaServerProcess serverProcess = CreateServerProcess(
+			script: "process.exit(0);",
+			beforeProcessIdAssignment: _ => Interlocked.Increment(ref hookCalls),
+			maxRestartAttempts: 1);
+
+		// Give-up returns normally (no throw) once the limit is exceeded.
+		await serverProcess.StartServer(cts.Token).WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
+
+		// Initial spawn + 1 restart, then the supervision loop gives up.
+		Assert.Equal(2, hookCalls);
+	}
+
+	[Fact]
+	public async Task StartServer_RestartLimit_ResetsAttemptsWhenServerBecomesHealthy()
+	{
+		var monitor = new SettableServerMonitor();
+		var hookCalls = 0;
+		using var cts = new CancellationTokenSource();
+		using PhoriaServerProcess serverProcess = CreateServerProcess(
+			monitor: monitor,
+			script: "process.exit(0);",
+			beforeProcessIdAssignment: _ => Interlocked.Increment(ref hookCalls),
+			maxRestartAttempts: 1);
+
+		Task startTask = serverProcess.StartServer(cts.Token);
+
+		await WaitUntilAsync(() => hookCalls >= 1, TimeSpan.FromSeconds(10));
+
+		// Becoming healthy must reset the restart counter: with max=1 and a single healthy blip the
+		// supervision loop can spawn at least one more process than the raw limit would allow.
+		monitor.ServerStatus = monitor.ServerStatus with { Health = PhoriaServerHealth.Healthy };
+		await Task.Delay(TimeSpan.FromSeconds(1.5), TestContext.Current.CancellationToken);
+		monitor.ServerStatus = monitor.ServerStatus with { Health = PhoriaServerHealth.Unhealthy };
+
+		await startTask.WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
+
+		Assert.True(hookCalls >= 3, $"Expected at least 3 spawns after a healthy reset, got {hookCalls}.");
+	}
+
+	[Fact]
+	public async Task StartServer_SupervisionLoop_DoesNotKillRunningProcess()
+	{
+		if (OperatingSystem.IsWindows())
+		{
+			Assert.Skip("Graceful SIGTERM-based stop is Unix-only.");
+		}
+
+		string markerPath = CreateMarkerPath(nameof(StartServer_SupervisionLoop_DoesNotKillRunningProcess));
+		using var child = StartNode(LongLivedNodeScript(markerPath));
+		await WaitForMarker(markerPath, "ready");
+
+		// Seed the live process as the supervised process; while it runs, the loop must never terminate it.
+		using PhoriaServerProcess serverProcess = CreateServerProcess(
+			processId: child.Id,
+			maxRestartAttempts: 1);
+		using var cts = new CancellationTokenSource();
+		Task startTask = serverProcess.StartServer(cts.Token);
+
+		await Task.Delay(TimeSpan.FromSeconds(1.5), TestContext.Current.CancellationToken);
+		Assert.False(child.HasExited, "The supervision loop must not terminate a running process.");
+
+		cts.Cancel();
+		await Assert.ThrowsAnyAsync<OperationCanceledException>(
+			() => startTask.WaitAsync(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken));
+
+		Assert.True(child.HasExited);
+	}
+
 	private static PhoriaServerProcess CreateServerProcess(
 		int? processId = null,
 		TimeSpan? stopGracePeriod = null,
 		string? script = null,
-		Action<int>? beforeProcessIdAssignment = null)
+		Action<int>? beforeProcessIdAssignment = null,
+		IPhoriaServerMonitor? monitor = null,
+		int maxRestartAttempts = 0)
 	{
 		return new PhoriaServerProcess(
 			NullLogger<PhoriaServerProcess>.Instance,
-			new StubServerMonitor(),
+			monitor ?? new StubServerMonitor(),
 			new StubHostEnvironment(),
-			Options.Create(CreateProcessOptions(script ?? "setInterval(() => {}, 1000);")),
+			Options.Create(CreateProcessOptions(script ?? "setInterval(() => {}, 1000);", maxRestartAttempts)),
 			processId,
 			stopGracePeriod ?? TimeSpan.FromSeconds(6),
 			beforeProcessIdAssignment);
@@ -282,7 +357,7 @@ public class PhoriaServerProcessTests
 			Options.Create(CreateProcessOptions(script)));
 	}
 
-	private static PhoriaOptions CreateProcessOptions(string script)
+	private static PhoriaOptions CreateProcessOptions(string script, int maxRestartAttempts = 0)
 	{
 		return new PhoriaOptions
 		{
@@ -291,7 +366,9 @@ public class PhoriaServerProcessTests
 				Process = new PhoriaServerOptions.ProcessOptions
 				{
 					Command = "node",
-					Arguments = ["-e", script]
+					Arguments = ["-e", script],
+					HealthCheckInterval = 1,
+					MaxRestartAttempts = maxRestartAttempts
 				}
 			}
 		};
@@ -362,6 +439,26 @@ public class PhoriaServerProcessTests
 		setTimeout(() => {}, 10000);
 		""";
 
+	private static string LongLivedNodeScript(string markerPath) =>
+		$$"""
+		require('fs').writeFileSync("{{markerPath}}", 'ready');
+		setInterval(() => {}, 1000);
+		""";
+
+	private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout)
+	{
+		var deadline = DateTime.UtcNow.Add(timeout);
+		while (!condition())
+		{
+			if (DateTime.UtcNow >= deadline)
+			{
+				throw new TimeoutException($"Condition was not met within {timeout}.");
+			}
+
+			await Task.Delay(25);
+		}
+	}
+
 	private static async Task WaitForMarker(string markerPath, string expectedContents)
 	{
 		var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
@@ -397,6 +494,19 @@ public class PhoriaServerProcessTests
 	private sealed class StubServerMonitor : IPhoriaServerMonitor
 	{
 		public PhoriaServerStatus ServerStatus { get; } = new()
+		{
+			Health = PhoriaServerHealth.Unhealthy,
+			Url = "http://localhost:5173"
+		};
+
+		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
+
+		public Task StopMonitoring() => Task.CompletedTask;
+	}
+
+	private sealed class SettableServerMonitor : IPhoriaServerMonitor
+	{
+		public PhoriaServerStatus ServerStatus { get; set; } = new()
 		{
 			Health = PhoriaServerHealth.Unhealthy,
 			Url = "http://localhost:5173"

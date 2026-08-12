@@ -30,6 +30,7 @@ public sealed class PhoriaServerProcess
 	private SemaphoreSlim? semaphore;
 	private PeriodicTimer? periodicTimer;
 	private int? processId;
+	private int restartAttempts;
 	private TaskCompletionSource<int?>? processStartCompletion;
 	private Task? stopTask;
 	private CancellationTokenSource? stopSignal;
@@ -99,33 +100,45 @@ public sealed class PhoriaServerProcess
 		using CancellationTokenRegistration stopRegistration = stoppingToken.Register(() => _ = StopServer());
 
 		PeriodicTimer? timer = null;
+		bool restartLimitReached = false;
 
 		try
 		{
 			// Start the process
 
-			await EnsureProcessIsRunning(options.Server.Process, serverSemaphore, linkedStopping.Token);
+			restartLimitReached = !await EnsureProcessIsRunning(options.Server.Process, serverSemaphore, linkedStopping.Token);
 
-			lock (sync)
+			if (!restartLimitReached)
 			{
-				if (stopping)
+				lock (sync)
 				{
-					linkedStopping.Token.ThrowIfCancellationRequested();
-					return;
+					if (stopping)
+					{
+						linkedStopping.Token.ThrowIfCancellationRequested();
+						return;
+					}
+
+					periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.Process.HealthCheckInterval));
+					timer = periodicTimer;
 				}
 
-				periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.Process.HealthCheckInterval));
-				timer = periodicTimer;
-			}
+				while (await timer.WaitForNextTickAsync(linkedStopping.Token))
+				{
+					restartLimitReached = !await EnsureProcessIsRunning(options.Server.Process, serverSemaphore, linkedStopping.Token);
 
-			while (await timer.WaitForNextTickAsync(linkedStopping.Token))
-			{
-				await EnsureProcessIsRunning(options.Server.Process, serverSemaphore, linkedStopping.Token);
+					if (restartLimitReached)
+					{
+						break;
+					}
+				}
 			}
 		}
 		finally
 		{
-			await StopServer();
+			if (!restartLimitReached)
+			{
+				await StopServer();
+			}
 
 			lock (sync)
 			{
@@ -150,16 +163,17 @@ public sealed class PhoriaServerProcess
 		}
 	}
 
-	private async Task EnsureProcessIsRunning(
+	private async Task<bool> EnsureProcessIsRunning(
 		PhoriaServerOptions.ProcessOptions processOptions,
 		SemaphoreSlim serverSemaphore,
 		CancellationToken cancellationToken)
 	{
 		if (serverMonitor.ServerStatus.Health == PhoriaServerHealth.Healthy)
 		{
+			restartAttempts = 0;
 			logger.LogServerProcessIsHealthy();
 
-			return;
+			return true;
 		}
 
 		int? currentProcessId;
@@ -183,8 +197,16 @@ public sealed class PhoriaServerProcess
 			{
 				logger.LogServerProcessIsRunning(currentProcessId.Value);
 
-				return;
+				return true;
 			}
+		}
+
+		if (processOptions.MaxRestartAttempts > 0
+			&& restartAttempts > processOptions.MaxRestartAttempts)
+		{
+			logger.LogServerRestartLimitExceeded(processOptions.MaxRestartAttempts);
+
+			return false;
 		}
 
 		if (await serverSemaphore.WaitAsync(0, cancellationToken))
@@ -202,7 +224,7 @@ public sealed class PhoriaServerProcess
 				{
 					if (stopping)
 					{
-						return;
+						return true;
 					}
 
 					startCompletion = new TaskCompletionSource<int?>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -244,6 +266,10 @@ public sealed class PhoriaServerProcess
 							{
 								processId = null;
 								startCompletion.TrySetResult(null);
+								if (serverMonitor.ServerStatus.Health != PhoriaServerHealth.Healthy)
+								{
+									restartAttempts++;
+								}
 							}
 
 							logger.LogServerProcessExited(exited.ExitCode);
@@ -269,6 +295,8 @@ public sealed class PhoriaServerProcess
 				}
 			}
 		}
+
+		return true;
 	}
 
 	private const int TermSignal = 15;
@@ -422,6 +450,14 @@ internal static partial class PhoriaServerProcessLogMessages
 	internal static partial void LogServerProcessExited(
 		this ILogger logger,
 		int exitCode);
+
+	[LoggerMessage(
+		EventId = EventId.Server.ServerRestartLimitExceeded,
+		Message = "Phoria server process restart limit of {MaxRestartAttempts} exceeded; stopping supervision.",
+		Level = LogLevel.Error)]
+	internal static partial void LogServerRestartLimitExceeded(
+		this ILogger logger,
+		int maxRestartAttempts);
 
 	[LoggerMessage(
 		EventId = EventId.Server.ProcessTerminationSignalSent,
