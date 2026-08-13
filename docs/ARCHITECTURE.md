@@ -476,6 +476,22 @@ framework plugin `transform` → module export → `importComponent` → SSR res
 
 ---
 
+## Testing strategy
+
+Three test layers: **node-env unit tests** (Vitest `src/**/*.test.ts` per JS package; xUnit v3 on Microsoft.Testing.Platform for `Phoria.Tests`), **browser-mode component tests** (Vitest browser mode via `@vitest/browser-playwright`, one `vitest.browser.config.ts` + `test:browser` script per framework package — framework CSR services are the only browser-mode surface), and **e2e smoke** (examples' `test:e2e`). See `docs/superpowers/specs/2026-08-13-phase-3-test-consolidation-design.md` for the Phase 3 design and task detail.
+
+Coverage is **reporting-only** (no enforced thresholds): Vitest `v8` provider with `all: true` per package, and `coverlet.MTP` for the .NET package. JS coverage runs the node-env suite via per-package `test:coverage` scripts; CSR-only modules (`csr.tsx`/`csr.ts`) show ~0% because they run only in the browser config — intended, not a gap to chase.
+
+Test quality is governed by the **signal-to-noise criteria**: regression-catching (a test must fail on a real behavior regression of the code it claims to cover), value-per-task (re-evaluated against the task that introduced it), ratio-with-size/cost (value vs. flakiness/brittleness/duplication), with delete-unless-real-else-rewrite as the default disposition. Because Phoria is pre-1.0 there is no public contract, so the criteria are reapplied at the end of every phase.
+
+### File layout
+
+JS test files are co-located with the system under test (`.test.ts` beside `.ts`); shared or multi-consumer test utilities live in `<pkg>/tests/utilities/`, sibling to `src/`, one concern per file with specific names — no generic `test-utils` dump. .NET test seams consolidate in `Phoria.Tests/TestUtilities/` as `internal` classes (no `InternalsVisibleTo`). Framework plugin tests stay parallel copies across packages because the packages publish independently.
+
+### Coverage triage bar
+
+Coverage holes are triaged at the public-contract bar: fix what consumers hit (routing/`/hc`/CSR paths, manifest readers, HMR proxy, tag helpers, dev-certs behavior), and document deep internals as accepted gaps. The current fix list and accepted gaps live in PROJECT.md Phase 3.
+
 ## Agent cheat-sheet
 
 Quick pointers for common tasks and failure investigations:

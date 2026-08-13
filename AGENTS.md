@@ -74,6 +74,13 @@ pnpm test:browser    # Vitest browser-mode component tests (Playwright provider)
 dotnet test --solution Phoria.sln --configuration Release  # xUnit v3 tests for the Phoria .NET package
 ```
 
+Code coverage is **reporting-only** (no enforced thresholds); tooling lands in Phase 3:
+
+```bash
+pnpm --filter <package> exec vitest run --coverage   # Vitest v8 coverage for a JS package
+dotnet test --solution Phoria.sln --configuration Release --coverlet --coverlet-output-format cobertura  # coverlet.MTP for the Phoria .NET package
+```
+
 `global.json` sets `test.runner: Microsoft.Testing.Platform`, so `dotnet test` runs in MTP mode — pass `--solution <path>` (not a bare path) to run every project's test executable across both target frameworks.
 
 Example e2e test (requires a preview build running):
@@ -111,6 +118,13 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - The `Phoria.csproj` targets `net8.0;net10.0` (net9.0 dropped — see `docs/PROJECT.md`)
 - **Comments are opt-in, not expected**: only add them when they explain a non-obvious decision (e.g. the `process.cwd()` constraint comment in the example AppHost `Program.cs`) — never to restate what the code already says
 - **`InternalsVisibleTo` is a code smell**: avoid it, including for test assemblies, unless there is no other good alternative
+
+### Tests (JS and .NET)
+
+- **JS test files are co-located** with the system under test (`.test.ts` beside `.ts`); shared or multi-consumer test utilities live in `<pkg>/tests/utilities/`, sibling to `src/` — one concern per file, specific names, no generic `test-utils` dump.
+- **.NET test seams live in `Phoria.Tests/TestUtilities/`** as `internal` classes — never `InternalsVisibleTo`.
+- **Framework plugin tests are parallel copies** across the framework packages (they publish independently) — cross-package test sharing is not a goal.
+- Coverage is **reporting-only**; suite layout and coverage approach are in `docs/ARCHITECTURE.md` (`## Testing strategy`).
 
 ### Markdown & prose
 
