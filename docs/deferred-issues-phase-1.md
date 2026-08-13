@@ -6,10 +6,10 @@ Compiled at Phase 1 close-out (Task 12 of
 as real GitHub issues. Rather than wait for `gh` access, every entry except
 the one below has since been fixed directly and migrated out of this file
 (Phase 2's five items → the Phase 2 capture doc; everything else → Phase 1.5).
-The one remaining entry is deliberately deferred to Phase 3, not blocked on
+The one remaining entry is deliberately deferred to Phase 6, not blocked on
 `gh`.
 
-This file remains until the deferred Phase 2 and Phase 3 items are either
+This file remains until the deferred Phase 2 and Phase 6 items are either
 resolved or moved into their owning phase documentation. The Phase 1.5 items
 were completed directly and are documented in the Phase 1.5 close-out plan.
 
@@ -45,11 +45,11 @@ See that document instead.
 
 **Body:** Vite (since at least v7/v8/Rolldown) emits a `"name"` field in
 manifest chunks that the .NET `ViteChunk` POCO does not currently model.
-Harmless to omit today, but Phase 3 ("Vite bundling of .NET-referenced
+Harmless to omit today, but Phase 6 ("Vite bundling of .NET-referenced
 static assets") will likely want name-based chunk lookup — add
 `public string? Name { get; init; }` when that work starts. Flagged as
 Task 7's hazard #2 in the original plan; deliberately deferred, not an
 oversight.
 
-**Labels:** `phase-3`, `enhancement`
-**Milestone:** v1 (or re-scope to Phase 3 milestone if one exists)
+**Labels:** `phase-6`, `enhancement`
+**Milestone:** v1 (or re-scope to Phase 6 milestone if one exists)

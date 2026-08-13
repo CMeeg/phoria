@@ -124,7 +124,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - **The .NET solution (`Phoria.sln`) only contains the `Phoria` NuGet package**, not the example apps. Build .NET projects via their individual `.csproj` or the example `package.json` scripts.
 - **Each JS package has 4 entry points**: `.` (main), `./client`, `./server`, `./vite`. Changes to one entry don't affect others.
 - **Workspace dependencies** use `workspace:*` protocol and are resolved by pnpm.
-- **Peer dependencies matter**: framework packages peer-depend on `@phoria/phoria` at `>=0.4.0 <1.0.0` (widened from `~0.4.0` to prevent premature `1.0.0` releases via the changesets peer cascade) — version bumps need care. This must be reconciled when all packages reach `1.0.0` (Phase 5).
+- **Peer dependencies matter**: framework packages peer-depend on `@phoria/phoria` at `>=0.4.0 <1.0.0` (widened from `~0.4.0` to prevent premature `1.0.0` releases via the changesets peer cascade) — version bumps need care. This must be reconciled when all packages reach `1.0.0` (Phase 10).
 - **Vite 8 uses Rolldown/Oxc** — `rollupOptions` is deprecated in favour of `rolldownOptions` in build config.
 - **`resolve.tsconfigPaths: true`** (built into Vite 8) replaces the separate `vite-tsconfig-paths` plugin — do not reintroduce the plugin.
 - **All pnpm settings live in `pnpm-workspace.yaml`**, not `package.json`/`.npmrc` (e.g. `packageExtensions`, `peerDependencyRules`, catalogs).
@@ -136,6 +136,10 @@ Uses **Changesets** (`pnpm changeset` to create). Release flow:
 1. `pnpm changeset` — create a changeset describing the change
 2. Merge to `main` — CI runs `changesets/action` which opens a "Release" PR
 3. Merge the Release PR — publishes to npm (JS packages) and NuGet (Phoria .NET)
+
+Pre-1.0, the planned Phase 4 work adds a **canary branch** producing `beta` builds
+(changesets prereleases) so integration/production testing runs against real
+published packages — see `docs/PROJECT.md`.
 
 NuGet publishing uses the `scripts/dotnet/publish.js` script via `pnpm --filter phoria-dotnet run publish`.
 

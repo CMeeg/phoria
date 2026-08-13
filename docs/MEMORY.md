@@ -144,3 +144,14 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 - The monitor preserves the last-known healthy `Mode`/`Frameworks` through downtime, and the entry tag helpers suppress asset output while unhealthy (fixes dev URLs leaking into production when status defaults to `Development`).
 - New opt-in `AddPhoriaServerHealthCheck` (`IHealthCheck` reporting `Healthy`/`Degraded`/`Unhealthy` per policy) wired into both examples alongside `/health`, with a `Fail` + `startupTimeout: 60` production/preview policy so orchestrators can restart the app when recovery has failed.
 - The restart counter is a plain count reset on healthy; a time-window bound was considered and rejected for v1.
+
+## 2026-08-13 — v1 milestone scope expansion (TODO.md review)
+
+- Reviewed the `TODO.md` backlog and expanded the v1 milestone from the original Phase 3-5 plan into new Phases 3-10: Test consolidation, Canary & release workflow, Docs & guides, Vite assets, DX & tooling, Exploration spikes (incl. props generator), Examples, Release prep.
+- Test consolidation sequenced first (before the asset-bundling feature) so feature work lands on the strongest possible regression net.
+- Canary/beta publishing is a pre-v1 requirement: beta packages on npm/NuGet unblock example/CI/docker-compose integration testing (the unpublished `@phoria/opentelemetry` blocker). Changesets prereleases are the riskiest unknown here.
+- Docs phase sequenced before the remaining feature work so docs stay current as features land; a final pass remains in Release prep.
+- Props generator (TypeScript types → C# POCOs) is an exploration spike (go/no-go), not a committed v1 feature.
+- Examples catalog triage deferred to Examples-phase start; docs website deferred post-v1 (would itself be a Phoria app on Render).
+- ARCHITECTURE's `<outDir>/server` (no `phoria/` prefix) confirmed deliberate — the Docs phase adds the rationale, no code change.
+- `develop` is only 3 commits ahead of `main`, each very large; the canary branch absorbs the integration rather than a single big-bang merge.

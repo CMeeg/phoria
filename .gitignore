@@ -13,5 +13,6 @@ obj/
 
 *.tmp
 *.tsbuildinfo
+NOTES.md
 TODO.md
 vite.config.ts.*
