@@ -164,7 +164,7 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
 3. **Test consolidation & review** — (a) coverage tooling: Vitest `v8`
    provider (`@vitest/coverage-v8`) per JS package and `coverlet.MTP` for
    `Phoria.Tests`, both reporting-only with no enforced thresholds, wired into
-   CI as a reporting-only job; (b) full Svelte/Vue ↔ React test parity — CSR
+   CI as reporting-only steps; (b) full Svelte/Vue ↔ React test parity — CSR
    browser tests (Svelte/Vue gain a `vitest.browser.config.ts` +
    `test:browser` script mirroring React), `server/ssr` unit tests,
    `main.ts` framework-registration tests, and plugin-test parity (incl.

@@ -158,7 +158,7 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 
 ## 2026-08-13 — Phase 3 (test consolidation & review) scope
 
-- Coverage tooling is in scope, thresholds are not: Vitest `v8` provider (`@vitest/coverage-v8`) per JS package and `coverlet.MTP` for `Phoria.Tests` (MIT, native MTP extension via `dotnet test --coverlet` — consistent with the FluentAssertions licensing stance that rejected Microsoft's closed-source CodeCoverage extension); coverage runs in CI as a reporting-only job.
+- Coverage tooling is in scope, thresholds are not: Vitest `v8` provider (`@vitest/coverage-v8`) per JS package and `coverlet.MTP` for `Phoria.Tests` (MIT, native MTP extension via `dotnet test --coverlet` — consistent with the FluentAssertions licensing stance that rejected Microsoft's closed-source CodeCoverage extension); coverage runs in CI as reporting-only steps.
 - "High signal-to-noise" is defined by three criteria applied together — regression-catching, value-per-task, ratio-with-size/cost — with delete-unless-real-else-rewrite as the default disposition for the survey's 13 low-signal candidates.
 - The signal-to-noise review is a standing end-of-phase practice, not a Phase-3 one-off: pre-1.0 there is no public contract, so behavior is still being shaped and tests must be kept current with development changes.
 - The Svelte/Vue gap means full parity with React, not "some more tests": CSR browser tests (both packages gain `vitest.browser.config.ts` + `test:browser`), `server/ssr` unit tests, `main.ts` registration tests, and plugin-test parity (Vue's missing `setSsrEnvironment` test, React's untested `hydrate` path).
