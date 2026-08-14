@@ -151,22 +151,27 @@ describe("dotnetDevCerts plugin", () => {
 	it("uses the non-Linux certificate location when APPDATA is absent", async () => {
 		vi.resetModules()
 		vi.doMock("std-env", () => ({ isLinux: false }))
-		const { dotnetDevCerts: dotnetDevCertsWithoutLinux } = await import("./plugin")
-		const home = await mkdtemp(join(tmpdir(), "dotnet-home-"))
-		const basePath = join(home, ".aspnet", "dev-certs", "https")
-		directories.push(home)
-		await mkdir(basePath, { recursive: true })
-		await writeFile(join(basePath, "app.pem"), "cert")
-		await writeFile(join(basePath, "app.key"), "key")
-		vi.stubEnv("APPDATA", "")
-		vi.stubEnv("HOME", home)
+		try {
+			const { dotnetDevCerts: dotnetDevCertsWithoutLinux } = await import("./plugin")
+			const home = await mkdtemp(join(tmpdir(), "dotnet-home-"))
+			const basePath = join(home, ".aspnet", "dev-certs", "https")
+			directories.push(home)
+			await mkdir(basePath, { recursive: true })
+			await writeFile(join(basePath, "app.pem"), "cert")
+			await writeFile(join(basePath, "app.key"), "key")
+			vi.stubEnv("APPDATA", "")
+			vi.stubEnv("HOME", home)
 
-		const config: UserConfig = {}
-		await asTestPlugin(dotnetDevCertsWithoutLinux({ certificateName: "app" }) as Plugin).config?.(config, {
-			mode: "development",
-			command: "serve"
-		})
+			const config: UserConfig = {}
+			await asTestPlugin(dotnetDevCertsWithoutLinux({ certificateName: "app" }) as Plugin).config?.(config, {
+				mode: "development",
+				command: "serve"
+			})
 
-		expect(config.server?.https).toEqual({ cert: join(basePath, "app.pem"), key: join(basePath, "app.key") })
+			expect(config.server?.https).toEqual({ cert: join(basePath, "app.pem"), key: join(basePath, "app.key") })
+		} finally {
+			vi.doUnmock("std-env")
+			vi.resetModules()
+		}
 	})
 })

@@ -84,7 +84,11 @@ describe("PhoriaIsland", () => {
 
 			expect(mount).toHaveBeenCalledTimes(1)
 		} finally {
-			window.requestIdleCallback = originalRequestIdleCallback
+			if (originalRequestIdleCallback) {
+				window.requestIdleCallback = originalRequestIdleCallback
+			} else {
+				Reflect.deleteProperty(window, "requestIdleCallback")
+			}
 		}
 	})
 })

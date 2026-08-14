@@ -1,7 +1,21 @@
 import { context, trace } from "@opentelemetry/api"
 import { createApp, createRouter, type H3Event, setResponseHeader, toWebHandler } from "h3"
-import { describe, expect, it, vi } from "vitest"
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
+import { createPhoriaOtelAppSettings } from "../tests/utilities/otel-appsettings-fixture"
 import { createPhoriaRequestSpanHook, withPhoriaOtelInstrumentation } from "./request-spans"
+
+let observability: { shutdown: () => Promise<void> }
+
+beforeAll(async () => {
+	const { createPhoriaObservability } = await import("./observability")
+	observability = createPhoriaObservability(
+		createPhoriaOtelAppSettings({ observability: { tracing: { enabled: true, samplingRatio: 1 } } })
+	)
+})
+
+afterAll(async () => {
+	await observability.shutdown()
+})
 
 describe("createPhoriaRequestSpanHook", () => {
 	it("returns onRequest and onBeforeResponse hooks", () => {
@@ -48,60 +62,53 @@ describe("createPhoriaRequestSpanHook", () => {
 	it("records SSR request attributes from a real H3 request", async () => {
 		const hook = createPhoriaRequestSpanHook({ base: "/ui", ssrBase: "/ssr" })
 		const span = { updateName: vi.fn(), setAttribute: vi.fn() }
-		vi.spyOn(trace, "getActiveSpan").mockReturnValue(span as never)
 		const app = createApp({ onRequest: hook.onRequest, onBeforeResponse: hook.onBeforeResponse })
 		const router = createRouter()
 		router.post("/ssr/render/Counter", async (event) => {
-			context.with(trace.setSpan(context.active(), span as never), () => {
-				hook.onRequest(event)
-				setResponseHeader(event, "x-phoria-island-framework", "react")
-				hook.onBeforeResponse(event)
-			})
+			setResponseHeader(event, "x-phoria-island-framework", "react")
 			return "ok"
 		})
 		app.use(router.handler)
 
-		await toWebHandler(app)(new Request("http://localhost/ssr/render/Counter", { method: "POST" }), {})
+		await context.with(trace.setSpan(context.active(), span as never), () =>
+			toWebHandler(app)(new Request("http://localhost/ssr/render/Counter", { method: "POST" }), {})
+		)
 
 		expect(span.updateName).toHaveBeenCalledWith("phoria-server.ssr.render")
 		expect(span.setAttribute).toHaveBeenCalledWith("phoria.component", "Counter")
 		expect(span.setAttribute).toHaveBeenCalledWith("phoria.framework", "react")
-		vi.restoreAllMocks()
 	})
 
 	it("records CSR asset requests from a real H3 request", async () => {
 		const hook = createPhoriaRequestSpanHook({ base: "/ui", ssrBase: "/ssr" })
 		const span = { updateName: vi.fn(), setAttribute: vi.fn() }
-		vi.spyOn(trace, "getActiveSpan").mockReturnValue(span as never)
 		const app = createApp({ onRequest: hook.onRequest, onBeforeResponse: hook.onBeforeResponse })
 		const router = createRouter()
-		router.get("/ui/assets/app.js", async (event) => {
-			context.with(trace.setSpan(context.active(), span as never), () => {
-				hook.onRequest(event)
-				hook.onBeforeResponse(event)
-			})
+		router.get("/ui/assets/app.js", async (_event) => {
 			return "ok"
 		})
 		app.use(router.handler)
 
-		await toWebHandler(app)(new Request("http://localhost/ui/assets/app.js"), {})
+		await context.with(trace.setSpan(context.active(), span as never), () =>
+			toWebHandler(app)(new Request("http://localhost/ui/assets/app.js"), {})
+		)
 
 		expect(span.updateName).toHaveBeenCalledWith("phoria-server.csr.asset")
-		vi.restoreAllMocks()
 	})
 
 	it("does not touch a span when no active span exists", async () => {
 		const hook = createPhoriaRequestSpanHook({ base: "/ui", ssrBase: "/ssr" })
+		let eventContext: H3Event["context"] | undefined
 		const app = createApp({ onRequest: hook.onRequest, onBeforeResponse: hook.onBeforeResponse })
 		const router = createRouter()
 		router.get("/ui/assets/app.js", async (event) => {
-			hook.onRequest(event)
-			expect(event.context.phoriaSpan).toBeUndefined()
-			hook.onBeforeResponse(event)
+			eventContext = event.context
 			return "ok"
 		})
 		app.use(router.handler)
 
 		await toWebHandler(app)(new Request("http://localhost/ui/assets/app.js"), {})
+
+		expect(eventContext?.phoriaSpan).toBeUndefined()
 	})
 })
