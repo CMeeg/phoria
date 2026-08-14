@@ -49,6 +49,7 @@ public class PhoriaServerMiddlewareTests
 	[Theory]
 	[InlineData(false, "vite-hmr")]
 	[InlineData(true, "other")]
+	[InlineData(true, "")]
 	public async Task InvokeAsync_NonHmrWebSocket_FallsThrough(bool isWebSocket, string protocol)
 	{
 		var proxy = new RecordingHmrProxy();

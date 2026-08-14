@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { x } from "tinyexec"
@@ -18,6 +18,7 @@ const asTestPlugin = (plugin: Plugin) => plugin as unknown as TestPlugin
 
 afterEach(async () => {
 	vi.clearAllMocks()
+	vi.unstubAllEnvs()
 	for (const directory of directories.splice(0)) await rm(directory, { recursive: true, force: true })
 })
 
@@ -127,5 +128,45 @@ describe("dotnetDevCerts plugin", () => {
 		await expect(plugin.config?.({}, { mode: "development", command: "serve" })).rejects.toThrow(
 			"does not contain a name"
 		)
+	})
+
+	it("uses the APPDATA certificate location when present", async () => {
+		const appData = await mkdtemp(join(tmpdir(), "dotnet-appdata-"))
+		const basePath = join(appData, "ASP.NET", "https")
+		directories.push(appData)
+		await mkdir(basePath, { recursive: true })
+		await writeFile(join(basePath, "app.pem"), "cert")
+		await writeFile(join(basePath, "app.key"), "key")
+		vi.stubEnv("APPDATA", appData)
+
+		const config: UserConfig = {}
+		await asTestPlugin(dotnetDevCerts({ certificateName: "app" }) as Plugin).config?.(config, {
+			mode: "development",
+			command: "serve"
+		})
+
+		expect(config.server?.https).toEqual({ cert: join(basePath, "app.pem"), key: join(basePath, "app.key") })
+	})
+
+	it("uses the non-Linux certificate location when APPDATA is absent", async () => {
+		vi.resetModules()
+		vi.doMock("std-env", () => ({ isLinux: false }))
+		const { dotnetDevCerts: dotnetDevCertsWithoutLinux } = await import("./plugin")
+		const home = await mkdtemp(join(tmpdir(), "dotnet-home-"))
+		const basePath = join(home, ".aspnet", "dev-certs", "https")
+		directories.push(home)
+		await mkdir(basePath, { recursive: true })
+		await writeFile(join(basePath, "app.pem"), "cert")
+		await writeFile(join(basePath, "app.key"), "key")
+		vi.stubEnv("APPDATA", "")
+		vi.stubEnv("HOME", home)
+
+		const config: UserConfig = {}
+		await asTestPlugin(dotnetDevCertsWithoutLinux({ certificateName: "app" }) as Plugin).config?.(config, {
+			mode: "development",
+			command: "serve"
+		})
+
+		expect(config.server?.https).toEqual({ cert: join(basePath, "app.pem"), key: join(basePath, "app.key") })
 	})
 })

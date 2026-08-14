@@ -48,44 +48,46 @@ describe("createPhoriaRequestSpanHook", () => {
 	it("records SSR request attributes from a real H3 request", async () => {
 		const hook = createPhoriaRequestSpanHook({ base: "/ui", ssrBase: "/ssr" })
 		const span = { updateName: vi.fn(), setAttribute: vi.fn() }
+		vi.spyOn(trace, "getActiveSpan").mockReturnValue(span as never)
 		const app = createApp({ onRequest: hook.onRequest, onBeforeResponse: hook.onBeforeResponse })
 		const router = createRouter()
 		router.post("/ssr/render/Counter", async (event) => {
-			hook.onRequest(event)
-			event.context.phoriaSpan = span
-			setResponseHeader(event, "x-phoria-island-framework", "react")
-			hook.onBeforeResponse(event)
+			context.with(trace.setSpan(context.active(), span as never), () => {
+				hook.onRequest(event)
+				setResponseHeader(event, "x-phoria-island-framework", "react")
+				hook.onBeforeResponse(event)
+			})
 			return "ok"
 		})
-		app.use(router)
+		app.use(router.handler)
 
-		await context.with(trace.setSpan(context.active(), span as never), () =>
-			toWebHandler(app)(new Request("http://localhost/ssr/render/Counter", { method: "POST" }), {})
-		)
+		await toWebHandler(app)(new Request("http://localhost/ssr/render/Counter", { method: "POST" }), {})
 
 		expect(span.updateName).toHaveBeenCalledWith("phoria-server.ssr.render")
 		expect(span.setAttribute).toHaveBeenCalledWith("phoria.component", "Counter")
 		expect(span.setAttribute).toHaveBeenCalledWith("phoria.framework", "react")
+		vi.restoreAllMocks()
 	})
 
 	it("records CSR asset requests from a real H3 request", async () => {
 		const hook = createPhoriaRequestSpanHook({ base: "/ui", ssrBase: "/ssr" })
 		const span = { updateName: vi.fn(), setAttribute: vi.fn() }
+		vi.spyOn(trace, "getActiveSpan").mockReturnValue(span as never)
 		const app = createApp({ onRequest: hook.onRequest, onBeforeResponse: hook.onBeforeResponse })
 		const router = createRouter()
 		router.get("/ui/assets/app.js", async (event) => {
-			hook.onRequest(event)
-			event.context.phoriaSpan = span
-			hook.onBeforeResponse(event)
+			context.with(trace.setSpan(context.active(), span as never), () => {
+				hook.onRequest(event)
+				hook.onBeforeResponse(event)
+			})
 			return "ok"
 		})
-		app.use(router)
+		app.use(router.handler)
 
-		await context.with(trace.setSpan(context.active(), span as never), () =>
-			toWebHandler(app)(new Request("http://localhost/ui/assets/app.js"), {})
-		)
+		await toWebHandler(app)(new Request("http://localhost/ui/assets/app.js"), {})
 
 		expect(span.updateName).toHaveBeenCalledWith("phoria-server.csr.asset")
+		vi.restoreAllMocks()
 	})
 
 	it("does not touch a span when no active span exists", async () => {
@@ -94,13 +96,12 @@ describe("createPhoriaRequestSpanHook", () => {
 		const router = createRouter()
 		router.get("/ui/assets/app.js", async (event) => {
 			hook.onRequest(event)
+			expect(event.context.phoriaSpan).toBeUndefined()
 			hook.onBeforeResponse(event)
 			return "ok"
 		})
-		app.use(router)
+		app.use(router.handler)
 
 		await toWebHandler(app)(new Request("http://localhost/ui/assets/app.js"), {})
-
-		expect(true).toBe(true)
 	})
 })

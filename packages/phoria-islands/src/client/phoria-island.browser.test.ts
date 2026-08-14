@@ -72,12 +72,19 @@ describe("PhoriaIsland", () => {
 
 	it("falls back to the timeout for client:idle", async () => {
 		vi.useFakeTimers()
-		const { element, mount } = await createIsland({ component: "Widget", "client:idle": "100" })
+		const originalRequestIdleCallback = window.requestIdleCallback
+		Reflect.deleteProperty(window, "requestIdleCallback")
 
-		await element.connectedCallback()
-		expect(mount).not.toHaveBeenCalled()
-		await vi.advanceTimersByTimeAsync(100)
+		try {
+			const { element, mount } = await createIsland({ component: "Widget", "client:idle": "100" })
 
-		expect(mount).toHaveBeenCalledTimes(1)
+			await element.connectedCallback()
+			expect(mount).not.toHaveBeenCalled()
+			await vi.advanceTimersByTimeAsync(100)
+
+			expect(mount).toHaveBeenCalledTimes(1)
+		} finally {
+			window.requestIdleCallback = originalRequestIdleCallback
+		}
 	})
 })
