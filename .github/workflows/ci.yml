@@ -20,7 +20,7 @@ jobs:
   build-and-test:
     name: Build and test
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -61,6 +61,20 @@ jobs:
 
       - name: Test dotnet
         run: dotnet test --solution Phoria.sln --configuration Release
+
+      - name: Test packages (coverage)
+        run: pnpm test:coverage
+
+      - name: Test dotnet (coverage)
+        run: dotnet test --solution Phoria.sln --configuration Release --coverlet --coverlet-output-format cobertura --coverlet-file-prefix ""
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v5
+        with:
+          name: coverage-reports
+          path: |
+            **/coverage/**
+            **/TestResults/*cobertura*.xml
 
   test-browser:
     name: Browser tests

@@ -24,6 +24,10 @@
 		"test:browser": {
 			"dependsOn": ["^build"],
 			"cache": true
+		},
+		"test:coverage": {
+			"dependsOn": ["^build"],
+			"outputs": ["coverage/**"]
 		}
 	}
 }

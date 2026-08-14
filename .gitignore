@@ -6,6 +6,7 @@
 .vite-inspect/
 .worktrees/
 bin/
+coverage/
 **/dist/**
 node_modules/
 obj/

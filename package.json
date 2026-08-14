@@ -21,6 +21,7 @@
 		"publish": "changeset publish && pnpm --filter phoria-dotnet run publish",
 		"test": "turbo run test",
 		"test:browser": "turbo run test:browser",
+		"test:coverage": "turbo run test:coverage",
 		"version": "changeset version && pnpm install --no-frozen-lockfile"
 	},
 	"devDependencies": {

@@ -59,7 +59,8 @@
 		"lint": "biome check",
 		"check": "tsc",
 		"test": "vitest run",
-		"test:browser": "vitest run --config vitest.browser.config.ts"
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"test:coverage": "vitest run --coverage"
 	},
 	"dependencies": {
 		"@rollup/pluginutils": "catalog:",
