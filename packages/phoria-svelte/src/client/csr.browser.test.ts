@@ -23,6 +23,7 @@ describe("svelte csr service", () => {
 	it("hydrates the existing island content", async () => {
 		const island = document.createElement("div")
 		island.innerHTML = "<span>Hello World</span>"
+		const existingContent = island.firstElementChild
 		document.body.appendChild(island)
 
 		await service.mount(
@@ -34,7 +35,10 @@ describe("svelte csr service", () => {
 			}
 		)
 
-		await vi.waitFor(() => expect(island.textContent).toBe("Hello World"))
+		await vi.waitFor(() => {
+			expect(island.textContent).toBe("Hello World")
+			expect(island.firstElementChild).toBe(existingContent)
+		})
 		island.remove()
 	})
 })

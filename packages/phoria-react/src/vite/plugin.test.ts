@@ -1,3 +1,4 @@
+import { normalizePath } from "@rollup/pluginutils"
 import { describe, expect, it } from "vitest"
 import { phoriaReact } from "./plugin"
 
@@ -26,7 +27,10 @@ describe("phoria-react plugin", () => {
 		const plugins = phoriaReact() as { transform: (code: string, id: string) => { code: string } | undefined }[]
 		const plugin = plugins[plugins.length - 1]
 
-		const transformed = plugin.transform("export default function Hello() {}", `${process.cwd()}/src/Hello.tsx`)
+		const transformed = plugin.transform(
+			"export default function Hello() {}",
+			normalizePath(`${process.cwd()}/src/Hello.tsx`)
+		)
 
 		expect(transformed?.code).toContain('export const __phoriaComponentPath = "/src/Hello.tsx";')
 	})
@@ -36,7 +40,10 @@ describe("phoria-react plugin", () => {
 		const plugin = plugins[plugins.length - 1]
 
 		expect(
-			plugin.transform("export default function Hello() {}", `${process.cwd()}/node_modules/hello/Hello.tsx`)
+			plugin.transform(
+				"export default function Hello() {}",
+				normalizePath(`${process.cwd()}/node_modules/hello/Hello.tsx`)
+			)
 		).toBeUndefined()
 	})
 

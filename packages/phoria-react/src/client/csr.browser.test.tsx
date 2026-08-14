@@ -21,6 +21,7 @@ describe("react csr service", () => {
 	it("hydrates the existing island content", async () => {
 		const island = document.createElement("div")
 		island.innerHTML = "<span>Hello World</span>"
+		const existingContent = island.firstElementChild
 		document.body.appendChild(island)
 
 		const Hello = () => createElement("span", null, "Hello World")
@@ -29,7 +30,10 @@ describe("react csr service", () => {
 			mode: "hydrate"
 		})
 
-		await vi.waitFor(() => expect(island.textContent).toBe("Hello World"))
+		await vi.waitFor(() => {
+			expect(island.textContent).toBe("Hello World")
+			expect(island.firstElementChild).toBe(existingContent)
+		})
 
 		island.remove()
 	})
