@@ -1,7 +1,9 @@
 using System.Net;
+using System.Net.WebSockets;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Phoria;
@@ -13,6 +15,67 @@ namespace Phoria.Tests.Server;
 
 public class PhoriaServerMiddlewareTests
 {
+	[Fact]
+	public async Task InvokeAsync_HmrRequest_UsesHmrProxyAndSkipsNext()
+	{
+		var proxy = new RecordingHmrProxy();
+		bool nextCalled = false;
+		var (pipeline, services) = CreatePipeline(
+			new StubServerMonitor(PhoriaServerHealth.Healthy),
+			new StubHttpClientFactory(),
+			Options.Create(new PhoriaOptions()),
+			_ => { nextCalled = true; return Task.CompletedTask; },
+			proxy);
+
+		try
+		{
+			DefaultHttpContext context = CreateGetContext("/@vite/client");
+			context.Request.Headers.Upgrade = "websocket";
+			context.Request.Headers["Sec-WebSocket-Protocol"] = "vite-hmr";
+			context.Features.Set<IHttpWebSocketFeature>(new StubWebSocketFeature(true, ["vite-hmr"]));
+			context.RequestServices = services;
+
+			await pipeline(context);
+
+			Assert.True(proxy.Called);
+			Assert.False(nextCalled);
+		}
+		finally
+		{
+			(services as IDisposable)?.Dispose();
+		}
+	}
+
+	[Theory]
+	[InlineData(false, "vite-hmr")]
+	[InlineData(true, "other")]
+	public async Task InvokeAsync_NonHmrWebSocket_FallsThrough(bool isWebSocket, string protocol)
+	{
+		var proxy = new RecordingHmrProxy();
+		bool nextCalled = false;
+		var (pipeline, services) = CreatePipeline(
+			new StubServerMonitor(PhoriaServerHealth.Healthy),
+			new StubHttpClientFactory(),
+			Options.Create(new PhoriaOptions()),
+			_ => { nextCalled = true; return Task.CompletedTask; },
+			proxy);
+
+		try
+		{
+			DefaultHttpContext context = CreateGetContext("/@vite/client");
+			context.Features.Set<IHttpWebSocketFeature>(new StubWebSocketFeature(isWebSocket, [protocol]));
+			context.RequestServices = services;
+
+			await pipeline(context);
+
+			Assert.True(nextCalled);
+			Assert.False(proxy.Called);
+		}
+		finally
+		{
+			(services as IDisposable)?.Dispose();
+		}
+	}
 	[Fact]
 	public async Task InvokeAsync_FailPolicyUnhealthy_Returns503ForUnclaimedGet()
 	{
@@ -174,5 +237,25 @@ public class PhoriaServerMiddlewareTests
 		context.Request.Method = "GET";
 		context.Request.Path = path;
 		return context;
+	}
+
+	private sealed class RecordingHmrProxy : IViteDevServerHmrProxy
+	{
+		public bool Called { get; private set; }
+
+		public Task ProxyAsync(HttpContext context, CancellationToken cancellationToken)
+		{
+			Called = true;
+			return Task.CompletedTask;
+		}
+	}
+
+	private sealed class StubWebSocketFeature(bool isWebSocket, IList<string> protocols) : IHttpWebSocketFeature
+	{
+		public bool IsWebSocketRequest { get; } = isWebSocket;
+		public IList<string> WebSocketRequestedProtocols { get; } = protocols;
+
+		public Task<WebSocket> AcceptAsync(WebSocketAcceptContext context) =>
+			throw new NotSupportedException();
 	}
 }

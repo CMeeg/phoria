@@ -34,4 +34,16 @@ describe("register", () => {
 
 		expect(getFrameworks()).toContain("vue")
 	})
+
+	it("throws when looking up an unregistered SSR framework", async () => {
+		const { getSsrService } = await import("./register")
+
+		expect(() => getSsrService("missing")).toThrow('Framework "missing" has not been registered.')
+	})
+
+	it("throws when looking up an unregistered CSR framework", async () => {
+		const { getCsrService } = await import("./register")
+
+		expect(() => getCsrService("missing")).toThrow('Framework "missing" has not been registered.')
+	})
 })

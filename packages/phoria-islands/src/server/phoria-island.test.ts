@@ -37,4 +37,24 @@ describe("PhoriaIsland.create", () => {
 
 		expect(island.props).toBeNull()
 	})
+
+	it("throws for an unknown component", async () => {
+		const { PhoriaIsland } = await import("./phoria-island")
+
+		await expect(
+			PhoriaIsland.create({ params: { component: "Missing" }, readProps: async () => undefined })
+		).rejects.toThrow('Component "Missing" not found in registry.')
+	})
+
+	it("throws when a registered component has no SSR service", async () => {
+		const { registerComponent, registerCsrService } = await import("~/register")
+		const { PhoriaIsland } = await import("./phoria-island")
+
+		registerCsrService("no-ssr", { mount: async () => {} })
+		registerComponent("NoSsr", { framework: "no-ssr", loader: async () => ({ default: {} }) })
+
+		await expect(
+			PhoriaIsland.create({ params: { component: "NoSsr" }, readProps: async () => undefined })
+		).rejects.toThrow('No SSR service could be found for framework "no-ssr".')
+	})
 })

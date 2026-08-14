@@ -32,3 +32,10 @@ Commit: `18fe649` (`test: add framework test parity`)
 - Confirm hydration retains pre-rendered React and Svelte content.
 - Confirm exact wrong-framework guard messages and Vue SSR externalization.
 - Confirm browser configs run only browser tests and do not alter root `package.json` or `turbo.json`.
+
+## Review Follow-up
+
+- Commit `dd7396a` strengthens React and Svelte hydration assertions by requiring the pre-existing child node to remain.
+- The React plugin test now normalizes Windows paths with `normalizePath`.
+- Registration tests restore the temporary `HTMLElement` global after dynamic imports.
+- Follow-up verification passed: targeted React/Svelte/Vue tests (19 tests), `pnpm test:browser`, `pnpm lint`, `pnpm check`, and `git diff --check`.

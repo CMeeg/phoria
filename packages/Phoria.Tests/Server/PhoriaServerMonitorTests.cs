@@ -12,6 +12,23 @@ namespace Phoria.Tests.Server;
 
 public class PhoriaServerMonitorTests
 {
+	[Theory]
+	[InlineData(false, "localhost", null, "http://localhost")]
+	[InlineData(false, "localhost", (ushort)80, "http://localhost:80")]
+	[InlineData(true, "example.test", null, "https://example.test")]
+	[InlineData(true, "example.test", (ushort)443, "https://example.test:443")]
+	public void ServerStatus_UsesConfiguredServerUrl(bool https, string host, ushort? port, string expectedUrl)
+	{
+		var options = new PhoriaOptions { Server = new PhoriaServerOptions { Https = https, Host = host, Port = port } };
+		var monitor = new PhoriaServerMonitor(
+			NullLogger<PhoriaServerMonitor>.Instance,
+			Options.Create(options),
+			new StubHttpClientFactory(HttpStatusCode.OK),
+			Options.Create(new PhoriaObservabilityOptions()));
+
+		Assert.Equal(expectedUrl, monitor.ServerStatus.Url);
+	}
+
 	[Fact]
 	public async Task StartMonitoring_CompletesAfterFirstHealthyCheck()
 	{

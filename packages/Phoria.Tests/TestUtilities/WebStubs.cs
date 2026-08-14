@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.AspNetCore.Routing;
@@ -91,4 +92,14 @@ internal static class TagHelperTestFactory
 			tagName,
 			new TagHelperAttributeList(attributes),
 			(childContent, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
+}
+
+internal sealed class StubWebHostEnvironment(string contentRootPath) : IWebHostEnvironment
+{
+	public string ApplicationName { get; set; } = "Phoria.Tests";
+	public string EnvironmentName { get; set; } = "Production";
+	public string ContentRootPath { get; set; } = contentRootPath;
+	public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } = null!;
+	public string WebRootPath { get; set; } = contentRootPath;
+	public Microsoft.Extensions.FileProviders.IFileProvider WebRootFileProvider { get; set; } = null!;
 }

@@ -1,5 +1,16 @@
-import { describe, expect, it } from "vitest"
-import { parsePhoriaAppSettings } from "./appsettings"
+import { mkdtemp, rm, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { afterEach, describe, expect, it } from "vitest"
+import { getPhoriaAppSettings, parsePhoriaAppSettings } from "./appsettings"
+
+const tempDirectories: string[] = []
+
+afterEach(async () => {
+	for (const directory of tempDirectories.splice(0)) {
+		await rm(directory, { recursive: true, force: true })
+	}
+})
 
 describe("parsePhoriaAppSettings", () => {
 	it("throws when `entry` is missing", async () => {
@@ -32,5 +43,34 @@ describe("parsePhoriaAppSettings", () => {
 
 		expect(settings.observability?.logging).toBe(true)
 		expect(settings.root).toBe("ui")
+	})
+
+	it("merges the explicitly selected environment appsettings file", async () => {
+		const cwd = await mkdtemp(join(tmpdir(), "phoria-appsettings-"))
+		tempDirectories.push(cwd)
+		await writeFile(
+			join(cwd, "appsettings.json"),
+			JSON.stringify({ phoria: { entry: "base.ts", ssrEntry: "base-ssr.ts", server: { port: 5000 } } })
+		)
+		await writeFile(
+			join(cwd, "appsettings.Development.json"),
+			JSON.stringify({ phoria: { entry: "development.ts", ssrEntry: "development-ssr.ts", server: { https: true } } })
+		)
+
+		const settings = await parsePhoriaAppSettings({ cwd, environment: "Development" })
+
+		expect(settings.entry).toBe("development.ts")
+		expect(settings.server).toMatchObject({ port: 5000, https: true })
+	})
+
+	it("uses an explicitly supplied environment for getPhoriaAppSettings", async () => {
+		const cwd = await mkdtemp(join(tmpdir(), "phoria-appsettings-"))
+		tempDirectories.push(cwd)
+		await writeFile(join(cwd, "appsettings.json"), JSON.stringify({ phoria: { entry: "base.ts" } }))
+		await writeFile(join(cwd, "appsettings.Development.json"), JSON.stringify({ phoria: { entry: "development.ts" } }))
+
+		const settings = await getPhoriaAppSettings({ cwd, environment: "Development" })
+
+		expect(settings.entry).toBe("development.ts")
 	})
 })
