@@ -1,13 +1,13 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Phoria.Diagnostics;
 using Phoria.IO;
 using Phoria.Islands;
 using Phoria.Server;
+using Phoria.Tests.TestUtilities;
 using Xunit;
 
 namespace Phoria.Tests.Islands;
@@ -124,7 +124,7 @@ public class PhoriaIslandSsrLifecycleTests
 			Content = contentPool
 		};
 		var factory = new PhoriaIslandComponentFactory(
-			new HealthyServerMonitor(),
+			new StubServerMonitor(PhoriaServerHealth.Healthy, "http://localhost"),
 			new PhoriaIslandScopedContext(),
 			new StubSsr(result),
 			Options.Create(new PhoriaOptions()),
@@ -141,7 +141,7 @@ public class PhoriaIslandSsrLifecycleTests
 	{
 		var ssr = new TrackingSsr();
 		var factory = new PhoriaIslandComponentFactory(
-			new UnhealthyServerMonitor(),
+			new StubServerMonitor(PhoriaServerHealth.Unhealthy, "http://localhost"),
 			new PhoriaIslandScopedContext(),
 			ssr,
 			Options.Create(new PhoriaOptions()),
@@ -158,7 +158,7 @@ public class PhoriaIslandSsrLifecycleTests
 	public async Task ComponentFactory_StillThrowsForServerOnlyIslandWhenServerIsUnhealthy()
 	{
 		var factory = new PhoriaIslandComponentFactory(
-			new UnhealthyServerMonitor(),
+			new StubServerMonitor(PhoriaServerHealth.Unhealthy, "http://localhost"),
 			new PhoriaIslandScopedContext(),
 			new TrackingSsr(),
 			Options.Create(new PhoriaOptions()),
@@ -171,7 +171,7 @@ public class PhoriaIslandSsrLifecycleTests
 	public async Task ComponentFactory_FailPolicy_ThrowsForIsomorphicIslandWhenServerIsUnhealthy()
 	{
 		var factory = new PhoriaIslandComponentFactory(
-			new UnhealthyServerMonitor(),
+			new StubServerMonitor(PhoriaServerHealth.Unhealthy, "http://localhost"),
 			new PhoriaIslandScopedContext(),
 			new TrackingSsr(),
 			Options.Create(new PhoriaOptions
@@ -189,7 +189,7 @@ public class PhoriaIslandSsrLifecycleTests
 	{
 		var logger = new ListLogger<PhoriaIslandComponentFactory>();
 		var factory = new PhoriaIslandComponentFactory(
-			new UnhealthyServerMonitor(),
+			new StubServerMonitor(PhoriaServerHealth.Unhealthy, "http://localhost"),
 			new PhoriaIslandScopedContext(),
 			new TrackingSsr(),
 			Options.Create(new PhoriaOptions()),
@@ -230,22 +230,6 @@ public class PhoriaIslandSsrLifecycleTests
 		}
 	}
 
-	private sealed class StubHttpClientFactory(Func<HttpRequestMessage, HttpResponseMessage> send)
-		: IPhoriaServerHttpClientFactory
-	{
-		public HttpClient CreateClient() => new(new StubHttpMessageHandler(send))
-		{
-			BaseAddress = new Uri("http://localhost")
-		};
-	}
-
-	private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> send)
-		: HttpMessageHandler
-	{
-		protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
-			Task.FromResult(send(request));
-	}
-
 	private sealed class ThrowingHttpContent : HttpContent
 	{
 		protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) => throw new InvalidOperationException();
@@ -260,67 +244,5 @@ public class PhoriaIslandSsrLifecycleTests
 	private sealed class StubSsr(PhoriaIslandSsrResult result) : IPhoriaIslandSsr
 	{
 		public Task<PhoriaIslandSsrResult> RenderIsland(PhoriaIsland island, CancellationToken cancellationToken = default) => Task.FromResult(result);
-	}
-
-	private sealed class TrackingSsr : IPhoriaIslandSsr
-	{
-		public int CallCount { get; private set; }
-
-		public Task<PhoriaIslandSsrResult> RenderIsland(PhoriaIsland island, CancellationToken cancellationToken = default)
-		{
-			CallCount++;
-			return Task.FromResult(new PhoriaIslandSsrResult
-			{
-				Headers = new HttpResponseMessage().Headers,
-				Content = new StreamPool()
-			});
-		}
-	}
-
-	private sealed class ListLogger<T> : ILogger<T>
-	{
-		private readonly List<string> messages = [];
-
-		public IReadOnlyList<string> Messages => messages;
-
-		public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-
-		public bool IsEnabled(LogLevel logLevel) => true;
-
-		public void Log<TState>(
-			LogLevel logLevel,
-			EventId eventId,
-			TState state,
-			Exception? exception,
-			Func<TState, Exception?, string> formatter)
-		{
-			messages.Add(formatter(state, exception));
-		}
-	}
-
-	private sealed class HealthyServerMonitor : IPhoriaServerMonitor
-	{
-		public PhoriaServerStatus ServerStatus { get; } = new()
-		{
-			Health = PhoriaServerHealth.Healthy,
-			Url = "http://localhost"
-		};
-
-		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
-
-		public Task StopMonitoring() => Task.CompletedTask;
-	}
-
-	private sealed class UnhealthyServerMonitor : IPhoriaServerMonitor
-	{
-		public PhoriaServerStatus ServerStatus { get; } = new()
-		{
-			Health = PhoriaServerHealth.Unhealthy,
-			Url = "http://localhost"
-		};
-
-		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
-
-		public Task StopMonitoring() => Task.CompletedTask;
 	}
 }

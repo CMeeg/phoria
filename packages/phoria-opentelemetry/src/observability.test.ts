@@ -1,17 +1,10 @@
 import { describe, expect, it } from "vitest"
-import type { PhoriaOtelAppSettings } from "./appsettings"
+import { createPhoriaOtelAppSettings } from "../tests/utilities/otel-appsettings-fixture"
 import { createPhoriaObservability } from "./observability"
 
-const disabledSettings: PhoriaOtelAppSettings = {
-	root: "ui",
-	base: "/ui",
-	entry: "entry.ts",
-	ssrBase: "/ssr",
-	ssrEntry: "ssr.ts",
-	server: { host: "localhost", https: false },
-	build: { outDir: "dist" },
+const disabledSettings = createPhoriaOtelAppSettings({
 	observability: { logging: false, tracing: { enabled: false, samplingRatio: 0.1 }, metrics: false }
-}
+})
 
 describe("createPhoriaObservability", () => {
 	it("returns an object whose shutdown resolves when no signals are enabled", async () => {

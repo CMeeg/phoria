@@ -4,7 +4,7 @@ import { externalizeDeps } from "vite-plugin-externalize-deps"
 
 // https://vite.dev/config/
 export default defineConfig({
-	plugins: [externalizeDeps(), dts()],
+	plugins: [externalizeDeps(), dts({ entryRoot: "src", exclude: ["tests/**/*"] })],
 	resolve: {
 		tsconfigPaths: true
 	},

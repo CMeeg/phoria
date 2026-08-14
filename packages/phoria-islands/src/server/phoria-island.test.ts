@@ -14,17 +14,10 @@ describe("PhoriaIsland.create", () => {
 	})
 
 	it("throws when the body is an array rather than an object", async () => {
-		const { registerComponent, registerSsrService } = await import("~/register")
+		const { registerSsrComponentFramework } = await import("../../tests/utilities/register-fakes")
 		const { PhoriaIsland } = await import("./phoria-island")
 
-		registerSsrService("react", {
-			render: async () => ({ framework: "react", html: "<div></div>" })
-		})
-
-		registerComponent("Counter", {
-			framework: "react",
-			loader: async () => ({ default: {} })
-		})
+		registerSsrComponentFramework()
 
 		await expect(
 			PhoriaIsland.create({ params: { component: "Counter" }, readProps: async () => [1, 2] })
@@ -32,17 +25,10 @@ describe("PhoriaIsland.create", () => {
 	})
 
 	it("treats an absent body as null props", async () => {
-		const { registerComponent, registerSsrService } = await import("~/register")
+		const { registerSsrComponentFramework } = await import("../../tests/utilities/register-fakes")
 		const { PhoriaIsland } = await import("./phoria-island")
 
-		registerSsrService("react", {
-			render: async () => ({ framework: "react", html: "<div></div>" })
-		})
-
-		registerComponent("Counter", {
-			framework: "react",
-			loader: async () => ({ default: {} })
-		})
+		registerSsrComponentFramework()
 
 		const island = await PhoriaIsland.create({
 			params: { component: "Counter" },

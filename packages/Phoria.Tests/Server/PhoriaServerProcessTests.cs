@@ -5,7 +5,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Phoria.Server;
+using Phoria.Tests.TestUtilities;
 using Xunit;
+using static Phoria.Tests.TestUtilities.AsyncTestWaits;
 
 namespace Phoria.Tests.Server;
 
@@ -445,20 +447,6 @@ public class PhoriaServerProcessTests
 		setInterval(() => {}, 1000);
 		""";
 
-	private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout)
-	{
-		var deadline = DateTime.UtcNow.Add(timeout);
-		while (!condition())
-		{
-			if (DateTime.UtcNow >= deadline)
-			{
-				throw new TimeoutException($"Condition was not met within {timeout}.");
-			}
-
-			await Task.Delay(25);
-		}
-	}
-
 	private static async Task WaitForMarker(string markerPath, string expectedContents)
 	{
 		var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
@@ -489,32 +477,6 @@ public class PhoriaServerProcessTests
 		{
 			return false;
 		}
-	}
-
-	private sealed class StubServerMonitor : IPhoriaServerMonitor
-	{
-		public PhoriaServerStatus ServerStatus { get; } = new()
-		{
-			Health = PhoriaServerHealth.Unhealthy,
-			Url = "http://localhost:5173"
-		};
-
-		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
-
-		public Task StopMonitoring() => Task.CompletedTask;
-	}
-
-	private sealed class SettableServerMonitor : IPhoriaServerMonitor
-	{
-		public PhoriaServerStatus ServerStatus { get; set; } = new()
-		{
-			Health = PhoriaServerHealth.Unhealthy,
-			Url = "http://localhost:5173"
-		};
-
-		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
-
-		public Task StopMonitoring() => Task.CompletedTask;
 	}
 
 	private sealed class StubHostEnvironment : IHostEnvironment

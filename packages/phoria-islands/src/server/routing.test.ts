@@ -1,16 +1,7 @@
 import { createApp, toWebHandler } from "h3"
 import { describe, expect, it } from "vitest"
+import { createPhoriaAppSettings } from "../../tests/utilities/appsettings-fixture"
 import { createPhoriaCsrRequestHandler, createPhoriaSsrRequestHandler, type PhoriaLogger } from "./routing"
-
-const appsettings = {
-	root: "ui",
-	base: "/ui",
-	entry: "entry.ts",
-	ssrBase: "/ssr",
-	ssrEntry: "entry.ts",
-	server: { host: "localhost", https: false },
-	build: { outDir: "dist" }
-}
 
 describe("createPhoriaSsrRequestHandler", () => {
 	it("logs SSR entry load failures through the configured logger", async () => {
@@ -22,18 +13,10 @@ describe("createPhoriaSsrRequestHandler", () => {
 		}
 		const app = createApp({ onError: () => {} })
 		app.use(
-			createPhoriaSsrRequestHandler(
-				{
-					root: "ui",
-					base: "/ui",
-					entry: "entry.ts",
-					ssrBase: "/ssr",
-					ssrEntry: "missing.ts",
-					server: { host: "localhost", https: false },
-					build: { outDir: "dist" }
-				},
-				{ cwd: "/nonexistent-path-for-test", logger }
-			)
+			createPhoriaSsrRequestHandler(createPhoriaAppSettings({ ssrEntry: "missing.ts" }), {
+				cwd: "/nonexistent-path-for-test",
+				logger
+			})
 		)
 		const handler = toWebHandler(app)
 
@@ -52,7 +35,7 @@ describe("createPhoriaSsrRequestHandler", () => {
 			error: (message, data) => entries.push({ message, data })
 		}
 		const app = createApp({ onError: () => {} })
-		app.use(createPhoriaCsrRequestHandler(appsettings, { cwd: "/nonexistent-path-for-test", logger }))
+		app.use(createPhoriaCsrRequestHandler(createPhoriaAppSettings(), { cwd: "/nonexistent-path-for-test", logger }))
 
 		await toWebHandler(app)(new Request("http://localhost/ui/missing.js"), {})
 

@@ -2,10 +2,11 @@ using System.Net;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Phoria.IO;
 using Phoria.Islands;
 using Phoria.Server;
+using Phoria.Tests.TestUtilities;
 using Xunit;
+using static Phoria.Tests.TestUtilities.AsyncTestWaits;
 
 namespace Phoria.Tests.Server;
 
@@ -107,7 +108,7 @@ public class PhoriaServerMonitorTests
 	{
 		var options = new PhoriaOptions();
 		options.Server.HealthCheckInterval = 1;
-		var logger = new ListLogger();
+		var logger = new ListLogger<PhoriaServerMonitor>();
 		var monitor = new PhoriaServerMonitor(
 			logger,
 			Options.Create(options),
@@ -130,7 +131,7 @@ public class PhoriaServerMonitorTests
 	{
 		var options = new PhoriaOptions();
 		options.Server.HealthCheckInterval = 1;
-		var logger = new ListLogger();
+		var logger = new ListLogger<PhoriaServerMonitor>();
 		var monitor = new PhoriaServerMonitor(
 			logger,
 			Options.Create(options),
@@ -153,7 +154,7 @@ public class PhoriaServerMonitorTests
 	{
 		var options = new PhoriaOptions();
 		options.Server.HealthCheckInterval = 1;
-		var logger = new ListLogger();
+		var logger = new ListLogger<PhoriaServerMonitor>();
 		var observability = new PhoriaObservabilityOptions { LogHealthChecks = true };
 		var monitor = new PhoriaServerMonitor(
 			logger,
@@ -180,7 +181,7 @@ public class PhoriaServerMonitorTests
 	{
 		var options = new PhoriaOptions();
 		options.Server.HealthCheckInterval = 1;
-		var logger = new ListLogger();
+		var logger = new ListLogger<PhoriaServerMonitor>();
 		var observability = new PhoriaObservabilityOptions { LogHealthChecks = true };
 		var monitor = new PhoriaServerMonitor(
 			logger,
@@ -207,7 +208,7 @@ public class PhoriaServerMonitorTests
 	{
 		var options = new PhoriaOptions();
 		options.Server.HealthCheckInterval = 1;
-		var logger = new ListLogger();
+		var logger = new ListLogger<PhoriaServerMonitor>();
 		var factory = new ScriptedHttpClientFactory(_ => HealthyResponse());
 		var monitor = new PhoriaServerMonitor(
 			logger,
@@ -235,7 +236,7 @@ public class PhoriaServerMonitorTests
 	{
 		var options = new PhoriaOptions();
 		options.Server.HealthCheckInterval = 1;
-		var logger = new ListLogger();
+		var logger = new ListLogger<PhoriaServerMonitor>();
 		var factory = new ScriptedHttpClientFactory(i => i switch
 		{
 			1 or 4 or 5 => UnhealthyResponse(),
@@ -270,7 +271,7 @@ public class PhoriaServerMonitorTests
 		var options = new PhoriaOptions();
 		options.Server.HealthCheckInterval = 1;
 		options.Server.StartupTimeout = 1;
-		var logger = new ListLogger();
+		var logger = new ListLogger<PhoriaServerMonitor>();
 		var monitor = new PhoriaServerMonitor(
 			logger,
 			Options.Create(options),
@@ -316,20 +317,6 @@ public class PhoriaServerMonitorTests
 		await monitor.StopMonitoring();
 	}
 
-	private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout)
-	{
-		var deadline = DateTime.UtcNow.Add(timeout);
-		while (!condition())
-		{
-			if (DateTime.UtcNow >= deadline)
-			{
-				throw new TimeoutException($"Condition was not met within {timeout}.");
-			}
-
-			await Task.Delay(100);
-		}
-	}
-
 	private static HttpResponseMessage HealthyResponse(string mode = "development", string[]? frameworks = null)
 	{
 		string frameworksJson = string.Join(",", (frameworks ?? []).Select(f => $"\"{f}\""));
@@ -342,53 +329,6 @@ public class PhoriaServerMonitorTests
 	private static HttpResponseMessage UnhealthyResponse() => new(HttpStatusCode.ServiceUnavailable);
 
 	private static HttpResponseMessage ThrowResponse() => throw new HttpRequestException("Connection refused (localhost)");
-
-	private sealed class ListLogger : ILogger<PhoriaServerMonitor>
-	{
-		private readonly List<LogEntry> entries = [];
-
-		public IReadOnlyList<LogEntry> Entries => entries;
-
-		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-		{
-			entries.Add(new LogEntry(logLevel, eventId.Id, formatter(state, exception)));
-		}
-
-		public bool IsEnabled(LogLevel logLevel) => true;
-
-		public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-
-		public sealed record LogEntry(LogLevel Level, int EventId, string Message);
-	}
-
-	private sealed class ScriptedHttpClientFactory(Func<int, HttpResponseMessage> responseFor) : IPhoriaServerHttpClientFactory
-	{
-		private readonly Func<int, HttpResponseMessage> responseFor = responseFor;
-		private int requests;
-
-		public int RequestCount => Volatile.Read(ref requests);
-
-		public HttpClient CreateClient() => new(new ScriptedHttpMessageHandler(this))
-		{
-			BaseAddress = new Uri("http://localhost")
-		};
-
-		private sealed class ScriptedHttpMessageHandler(ScriptedHttpClientFactory factory) : HttpMessageHandler
-		{
-			protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-			{
-				return Task.FromResult(factory.responseFor(Interlocked.Increment(ref factory.requests)));
-			}
-		}
-	}
-
-	private sealed class StubHttpClientFactory(HttpStatusCode statusCode) : IPhoriaServerHttpClientFactory
-	{
-		public HttpClient CreateClient() => new(new StubHttpMessageHandler(statusCode))
-		{
-			BaseAddress = new Uri("http://localhost")
-		};
-	}
 
 	private sealed class ThrowingHttpClientFactory(Exception exception) : IPhoriaServerHttpClientFactory
 	{
@@ -418,35 +358,6 @@ public class PhoriaServerMonitorTests
 
 				return Task.FromResult(response);
 			}
-		}
-	}
-
-	private sealed class TrackingSsr : IPhoriaIslandSsr
-	{
-		public int CallCount { get; private set; }
-
-		public Task<PhoriaIslandSsrResult> RenderIsland(PhoriaIsland island, CancellationToken cancellationToken = default)
-		{
-			CallCount++;
-			return Task.FromResult(new PhoriaIslandSsrResult
-			{
-				Headers = new HttpResponseMessage().Headers,
-				Content = new StreamPool()
-			});
-		}
-	}
-
-	private sealed class StubHttpMessageHandler(HttpStatusCode statusCode) : HttpMessageHandler
-	{
-		protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-		{
-			var response = new HttpResponseMessage(statusCode);
-			if (statusCode == HttpStatusCode.OK)
-			{
-				response.Content = new StringContent("{\"mode\":\"development\",\"frameworks\":[]}");
-			}
-
-			return Task.FromResult(response);
 		}
 	}
 }

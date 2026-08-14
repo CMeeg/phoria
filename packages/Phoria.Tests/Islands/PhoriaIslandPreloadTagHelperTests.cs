@@ -1,11 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 using Phoria.Islands;
 using Phoria.Server;
+using Phoria.Tests.TestUtilities;
 using Phoria.Vite;
 using Xunit;
 using static Phoria.Tests.TestUtilities.GoldenManifestFixture;
@@ -273,27 +271,10 @@ public class PhoriaIslandPreloadTagHelperTests
 
 	// --- Stubs ---
 
-	private sealed class StubServerMonitor(PhoriaServerMode mode) : IPhoriaServerMonitor
-	{
-		public PhoriaServerStatus ServerStatus { get; } = new()
-		{
-			Mode = mode,
-			Url = "http://localhost:5173"
-		};
-
-		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
-		public Task StopMonitoring() => Task.CompletedTask;
-	}
-
 	private sealed class StubScopedContext(params PhoriaIsland[] islands) : IPhoriaIslandScopedContext
 	{
 		public IReadOnlyList<PhoriaIsland> Islands { get; } = islands;
 		public void AddIsland(PhoriaIsland island) { }
-	}
-
-	private sealed class StubManifestReader(IViteSsrManifest manifest) : IViteSsrManifestReader
-	{
-		public IViteSsrManifest ReadSsrManifest() => manifest;
 	}
 
 	[Fact]
@@ -302,62 +283,5 @@ public class PhoriaIslandPreloadTagHelperTests
 		var urlHelper = new StubUrlHelper();
 
 		Assert.Throws<NotSupportedException>(() => urlHelper.ActionContext);
-	}
-
-	private sealed class StubUrlHelper : IUrlHelper
-	{
-		public ActionContext ActionContext => throw new NotSupportedException($"{nameof(StubUrlHelper)} does not support {nameof(ActionContext)}.");
-
-		public string? ActionName => null;
-
-		public RouteValueDictionary? RouteValues => null;
-
-		public string? RequestScheme => "http";
-
-		public bool IsLocalUrl(string? path) => true;
-
-		public string? Content(string? contentPath)
-		{
-			// Mimic ASP.NET Core UrlHelper.Content: strip ~/
-			if (contentPath == null) return null;
-			return contentPath.StartsWith("~/") ? contentPath[1..] : contentPath;
-		}
-
-		public string? Action(UrlActionContext context) => null;
-
-		public string? RouteUrl(UrlRouteContext context) => null;
-
-		public string? RouteUrl(object? routeValues) => null;
-
-		public string? RouteUrl(string? routeName, object? routeValues) => null;
-
-		public string? RouteUrl(string? routeName, object? routeValues, string? protocol, string? host, string? fragment) => null;
-
-		public string? Link(string? routeName, object? values) => null;
-
-		public string? PageUrl(string? pageName, object? routeValues) => null;
-
-		public string? Page(string? pageName, object? routeValues) => null;
-
-		public string? Page(string? pageName, string? pageHandler, object? routeValues, string? protocol, string? host, string? fragment) => null;
-
-		public string? Action(string? actionName) => null;
-
-		public string? Action(string? actionName, object? routeValues) => null;
-
-		public string? Action(string? actionName, string? controllerName, object? routeValues, string? protocol, string? host, string? fragment) => null;
-
-		public string? Action(string? actionName, string? controllerName, RouteValueDictionary? routeValues, string? protocol, string? host, string? fragment) => null;
-
-		public bool IsValidRouteValue(object? value) => true;
-
-		public string? GetRouteUrl(string? routeName, object? routeValues) => null;
-
-		public string? GetRouteUrl(string? routeName, object? routeValues, string? protocol, string? host, string? fragment) => null;
-	}
-
-	private sealed class StubUrlHelperFactory(IUrlHelper urlHelper) : IUrlHelperFactory
-	{
-		public IUrlHelper GetUrlHelper(ActionContext context) => urlHelper;
 	}
 }

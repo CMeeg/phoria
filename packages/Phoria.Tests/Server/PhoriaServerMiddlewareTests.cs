@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Phoria;
 using Phoria.Server;
+using Phoria.Tests.TestUtilities;
 using Xunit;
 
 namespace Phoria.Tests.Server;
@@ -173,56 +174,5 @@ public class PhoriaServerMiddlewareTests
 		context.Request.Method = "GET";
 		context.Request.Path = path;
 		return context;
-	}
-
-	private sealed class StubServerMonitor(PhoriaServerHealth health) : IPhoriaServerMonitor
-	{
-		public PhoriaServerStatus ServerStatus { get; } = new()
-		{
-			Health = health,
-			Url = "http://localhost:5173"
-		};
-
-		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
-		public Task StopMonitoring() => Task.CompletedTask;
-	}
-
-	private sealed class StubHttpClientFactory : IPhoriaServerHttpClientFactory
-	{
-		private readonly Func<HttpRequestMessage, HttpResponseMessage> send;
-
-		public StubHttpClientFactory()
-			: this(_ => new HttpResponseMessage(HttpStatusCode.NotFound))
-		{
-		}
-
-		public StubHttpClientFactory(HttpResponseMessage response)
-			: this(_ => response)
-		{
-		}
-
-		public StubHttpClientFactory(Func<HttpRequestMessage, HttpResponseMessage> send)
-		{
-			this.send = send;
-		}
-
-		public HttpClient CreateClient() => new(new StubHttpMessageHandler(send))
-		{
-			BaseAddress = new Uri("http://localhost:5173")
-		};
-
-		private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> send) : HttpMessageHandler
-		{
-			protected override Task<HttpResponseMessage> SendAsync(
-				HttpRequestMessage request,
-				CancellationToken cancellationToken) =>
-				Task.FromResult(send(request));
-		}
-	}
-
-	private sealed class StubHmrProxy : IViteDevServerHmrProxy
-	{
-		public Task ProxyAsync(HttpContext context, CancellationToken cancellationToken) =>
-			throw new InvalidOperationException("The HMR proxy should not be reached in these tests.");
 	}
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { createPhoriaAppSettings } from "../../tests/utilities/appsettings-fixture"
 import { createPhoriaDevSsrRequestHandler } from "./routing"
 import { createPhoriaViteDevServer } from "./vite"
 
@@ -24,16 +25,6 @@ describe("createPhoriaViteDevServer", () => {
 			environments: { ssr: { runner: { import: async () => ({}) } } }
 		} as never
 
-		expect(() =>
-			createPhoriaDevSsrRequestHandler(server, {
-				root: "ui",
-				base: "/ui",
-				entry: "entry.ts",
-				ssrBase: "/ssr",
-				ssrEntry: "entry.ts",
-				server: { host: "localhost", https: false },
-				build: { outDir: "dist" }
-			})
-		).not.toThrow()
+		expect(() => createPhoriaDevSsrRequestHandler(server, createPhoriaAppSettings())).not.toThrow()
 	})
 })
