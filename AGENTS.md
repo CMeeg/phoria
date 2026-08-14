@@ -70,7 +70,8 @@ Runs `tsc` (no emit) on each package.
 
 ```bash
 pnpm test            # Vitest unit tests across JS packages (via Turborepo)
-pnpm test:browser    # Vitest browser-mode component tests (Playwright provider)
+pnpm test:browser    # Vitest browser-mode component tests across islands, React, Svelte, and Vue
+pnpm test:coverage   # Reporting-only v8 coverage across JS packages
 dotnet test --solution Phoria.sln --configuration Release  # xUnit v3 tests for the Phoria .NET package
 ```
 
@@ -78,7 +79,7 @@ Code coverage is **reporting-only** (no enforced thresholds); tooling lands in P
 
 ```bash
 pnpm --filter <package> exec vitest run --coverage   # Vitest v8 coverage for a JS package
-dotnet test --solution Phoria.sln --configuration Release --coverlet --coverlet-output-format cobertura  # coverlet.MTP for the Phoria .NET package
+dotnet test --solution Phoria.sln --configuration Release --coverlet --coverlet-output-format cobertura --coverlet-file-prefix ""  # coverlet.MTP for the Phoria .NET package
 ```
 
 `global.json` sets `test.runner: Microsoft.Testing.Platform`, so `dotnet test` runs in MTP mode — pass `--solution <path>` (not a bare path) to run every project's test executable across both target frameworks.

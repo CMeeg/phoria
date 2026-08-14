@@ -482,6 +482,22 @@ Three test layers: **node-env unit tests** (Vitest `src/**/*.test.ts` per JS pac
 
 Coverage is **reporting-only** (no enforced thresholds): Vitest `v8` provider with `all: true` per package, and `coverlet.MTP` for the .NET package. JS coverage runs the node-env suite via per-package `test:coverage` scripts; CSR-only modules (`csr.tsx`/`csr.ts`) show ~0% because they run only in the browser config — intended, not a gap to chase.
 
+### Coverage Table 4
+
+The latest reporting-only v8 run (Task 5, 2026-08-14) produced these package and notable-file results. Browser-only CSR modules remain intentionally low because browser mode is a separate coverage surface.
+
+| Package or file | Statements | Branches | Notes |
+|---|---:|---:|---|
+| `phoria-islands` | 62.70% | 50.35% | Server routing/appsettings/island paths covered; client custom-element/directive files are browser-only. |
+| `phoria-react` | 54.83% | 25.00% | `server/ssr.tsx` 66.66%; `client/csr.tsx` 5.88% because CSR tests run in Chromium. |
+| `phoria-svelte` | 65.45% | 25.00% | `server/ssr.ts` 100%; `client/csr.ts` 10% because CSR tests run in Chromium. |
+| `phoria-vue` | 67.27% | 33.33% | `server/ssr.ts` 81.25%; `client/csr.ts` 16.66% because CSR tests run in Chromium. |
+| `phoria-opentelemetry` | 93.44% | 79.48% | Real H3 request-span branches and tracing setup covered; singleton-state paths remain accepted gaps. |
+| `vite-plugin-dotnet-dev-certs` | 91.11% | 80.55% | Development, certificate, metadata, APPDATA, and non-Linux path branches covered. |
+| `Phoria.Tests` | 204 tests | 2 TFMs | `net8.0` and `net10.0`; coverlet reports are reporting-only. |
+
+Accepted gaps are the live HMR transceive loop, singleton-state observability paths, browser-only CSR coverage in the v8 reports, and the internal `PhoriaServerHttpClientFactory.BaseAddress` branch (covered indirectly through middleware proxy tests).
+
 Test quality is governed by the **signal-to-noise criteria**: regression-catching (a test must fail on a real behavior regression of the code it claims to cover), value-per-task (re-evaluated against the task that introduced it), ratio-with-size/cost (value vs. flakiness/brittleness/duplication), with delete-unless-real-else-rewrite as the default disposition. Because Phoria is pre-1.0 there is no public contract, so the criteria are reapplied at the end of every phase.
 
 ### File layout
