@@ -15,8 +15,8 @@ Commit: `18fe649` (`test: add framework test parity`)
 - `pnpm build`: passed, 7 tasks.
 - `pnpm lint`: passed, 6 tasks.
 - `pnpm check`: passed, 7 tasks.
-- `pnpm test`: passed, 57 tests across 26 test files.
-- `pnpm test:browser`: passed, 9 Chromium tests across islands, React, Svelte, and Vue.
+- `pnpm test`: passed, 57 tests across 23 test files.
+- `pnpm test:browser`: passed, 9 Chromium tests across 4 files in islands, React, Svelte, and Vue.
 - `git diff --check`: passed.
 
 ## Deviations
