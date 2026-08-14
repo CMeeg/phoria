@@ -5,8 +5,8 @@ import { registerComponent, registerCsrService, registerSsrService } from "../..
 // test. A static top-level import would capture a stale module registry across resets and break the shared
 // registry.
 
-export function registerSsrComponentFramework(name = "react") {
-	registerSsrService(name, { render: async () => ({ framework: name, html: "<div></div>" }) })
+export function registerSsrComponentFramework(name = "react", html = "<div></div>") {
+	registerSsrService(name, { render: async () => ({ framework: name, html }) })
 	registerComponent("Counter", { framework: name, loader: async () => ({ default: {} }) })
 }
 

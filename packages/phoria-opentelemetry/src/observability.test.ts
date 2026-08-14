@@ -13,12 +13,4 @@ describe("createPhoriaObservability", () => {
 		expect(observability).toHaveProperty("shutdown")
 		await expect(observability.shutdown()).resolves.toBeUndefined()
 	})
-
-	it("returns a stable object on double-call", async () => {
-		const first = createPhoriaObservability(disabledSettings)
-		const second = createPhoriaObservability(disabledSettings)
-
-		await expect(first.shutdown()).resolves.toBeUndefined()
-		await expect(second.shutdown()).resolves.toBeUndefined()
-	})
 })

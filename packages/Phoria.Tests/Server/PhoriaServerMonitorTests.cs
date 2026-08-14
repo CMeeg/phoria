@@ -38,15 +38,16 @@ public class PhoriaServerMonitorTests
 	{
 		var options = new PhoriaOptions();
 		options.Server.HealthCheckInterval = 1;
+		var factory = new ScriptedHttpClientFactory(_ => UnhealthyResponse());
 		var monitor = new PhoriaServerMonitor(
 			NullLogger<PhoriaServerMonitor>.Instance,
 			Options.Create(options),
-			new StubHttpClientFactory(HttpStatusCode.ServiceUnavailable),
+			factory,
 			Options.Create(new PhoriaObservabilityOptions()));
 		using var cancellation = new CancellationTokenSource();
 
 		Task startTask = monitor.StartMonitoring(cancellation.Token);
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await WaitUntilAsync(() => factory.RequestCount >= 1, TimeSpan.FromSeconds(3));
 		cancellation.Cancel();
 
 		await Assert.ThrowsAnyAsync<OperationCanceledException>(() => startTask);

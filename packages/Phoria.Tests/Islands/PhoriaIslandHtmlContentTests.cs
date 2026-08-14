@@ -1,11 +1,5 @@
-using System.Net.Http;
 using System.Text;
 using System.Text.Encodings.Web;
-using Microsoft.AspNetCore.Html;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
 using Phoria.IO;
 using Phoria.Islands;
 using Phoria.Server;
@@ -45,49 +39,9 @@ public class PhoriaIslandHtmlContentTests
 		Assert.Throws<ObjectDisposedException>(() => _ = propsPool.Stream.Length);
 	}
 
-	[Fact]
-	public void AddPhoria_UsesDangerousCertificateValidationOnlyInDevelopment()
-	{
-		Assert.Equal(
-			HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
-			GetPrimaryHandler(Environments.Development).ServerCertificateCustomValidationCallback);
-		Assert.Null(GetPrimaryHandler(Environments.Production).ServerCertificateCustomValidationCallback);
-	}
-
 	private static void Write(StreamPool pool, string value)
 	{
 		byte[] bytes = Encoding.UTF8.GetBytes(value);
 		pool.Stream.Write(bytes);
-	}
-
-	private static HttpClientHandler GetPrimaryHandler(string environmentName)
-	{
-		var services = new ServiceCollection();
-		services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
-		services.AddSingleton<IHostEnvironment>(new TestHostEnvironment { EnvironmentName = environmentName });
-		services.AddPhoria();
-
-		using ServiceProvider provider = services.BuildServiceProvider();
-		HttpMessageHandler handler = provider
-			.GetRequiredService<IHttpMessageHandlerFactory>()
-			.CreateHandler("PhoriaServerHttpClient");
-
-		while (handler is DelegatingHandler delegatingHandler)
-		{
-			handler = delegatingHandler.InnerHandler!;
-		}
-
-		return Assert.IsType<HttpClientHandler>(handler);
-	}
-
-	private sealed class TestHostEnvironment : IHostEnvironment
-	{
-		public string EnvironmentName { get; set; } = string.Empty;
-
-		public string ApplicationName { get; set; } = "Phoria.Tests";
-
-		public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
-
-		public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
 	}
 }

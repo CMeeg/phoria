@@ -60,13 +60,11 @@ public class PhoriaIslandPreloadTagHelperTests
 		// Assert
 		string html = output.Content.GetContent();
 
-		// Counter.tsx maps to ["/ui/assets/Counter-D9HeyafA.js", "/ui/assets/Counter-DXes5fBr.css"]
+		// Counter.tsx maps to a hashed .js chunk and a hashed .css chunk
 		// For .js files: <link rel="modulepreload" crossorigin href="...">
 		// For .css files: <link rel="stylesheet" href="...">
-		Assert.Contains("rel=\"modulepreload\"", html);
-		Assert.Contains("Counter-D9HeyafA.js", html);
-		Assert.Contains("Counter-DXes5fBr.css", html);
-		Assert.Contains("rel=\"stylesheet\"", html);
+		Assert.Matches("rel=\"modulepreload\"[^>]*href=\"/ui/assets/Counter-[A-Za-z0-9_-]+\\.js\"", html);
+		Assert.Matches("rel=\"stylesheet\"[^>]*href=\"/ui/assets/Counter-[A-Za-z0-9_-]+\\.css\"", html);
 	}
 
 	[Fact]
@@ -205,8 +203,8 @@ public class PhoriaIslandPreloadTagHelperTests
 		string html = output.Content.GetContent();
 		int modulepreloadCount = CountOccurrences(html, "rel=\"modulepreload\"");
 		int stylesheetCount = CountOccurrences(html, "rel=\"stylesheet\"");
-		Assert.Equal(1, modulepreloadCount); // Counter-D9HeyafA.js
-		Assert.Equal(1, stylesheetCount);    // Counter-DXes5fBr.css
+		Assert.Equal(1, modulepreloadCount); // the Counter .js modulepreload
+		Assert.Equal(1, stylesheetCount);    // the Counter .css stylesheet
 	}
 
 	[Fact]
@@ -253,8 +251,8 @@ public class PhoriaIslandPreloadTagHelperTests
 
 		// Assert
 		string html = output.Content.GetContent();
-		Assert.Contains("Counter-RVJx8xKX.js", html);
-		Assert.Contains("Counter-Bz3VW5_o.css", html);
+		Assert.Matches("rel=\"modulepreload\"[^>]*href=\"/ui/assets/Counter-[A-Za-z0-9_-]+\\.js\"", html);
+		Assert.Matches("rel=\"stylesheet\"[^>]*href=\"/ui/assets/Counter-[A-Za-z0-9_-]+\\.css\"", html);
 	}
 
 	private static int CountOccurrences(string text, string substring)
@@ -275,13 +273,5 @@ public class PhoriaIslandPreloadTagHelperTests
 	{
 		public IReadOnlyList<PhoriaIsland> Islands { get; } = islands;
 		public void AddIsland(PhoriaIsland island) { }
-	}
-
-	[Fact]
-	public void StubUrlHelper_ActionContext_ThrowsNotSupportedException()
-	{
-		var urlHelper = new StubUrlHelper();
-
-		Assert.Throws<NotSupportedException>(() => urlHelper.ActionContext);
 	}
 }

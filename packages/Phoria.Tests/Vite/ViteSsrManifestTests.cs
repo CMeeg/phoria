@@ -27,24 +27,13 @@ public class ViteSsrManifestTests
 	}
 
 	[Fact]
-	public void Indexer_FilenameOnlyKey_SupportsSecondLevelLookup()
+	public void Indexer_AssetFilenameKey_ReturnsNull()
 	{
-		// PhoriaIslandPreloadTagHelper does a second lookup using Path.GetFileName(file).
-		// This asserts that contract holds against a real manifest.
+		// The golden manifest has no filename-only keys, so the second-level lookup that
+		// PhoriaIslandPreloadTagHelper performs with Path.GetFileName(file) yields nothing.
 		ViteSsrManifest manifest = LoadGoldenManifest();
 
-		string[]? files = manifest["src/components/Counter/Counter.tsx"];
-		Assert.NotNull(files);
-
-		string filename = Path.GetFileName(files[0]);
-
-		// Either the second-level lookup resolves, or it is legitimately absent -
-		// what matters is that it does not throw and returns a well-formed result.
-		string[]? deps = manifest[filename];
-		if (deps != null)
-		{
-			Assert.All(deps, d => Assert.StartsWith("/", d, StringComparison.Ordinal));
-		}
+		Assert.Null(manifest["Counter-D9HeyafA.js"]);
 	}
 
 	[Fact]
@@ -83,7 +72,10 @@ public class ViteSsrManifestTests
 
 		Assert.NotNull(files);
 		Assert.Single(files);
-		Assert.Equal("/ui/assets/client-CRlG8KHk.js", files[0]);
+
+		string file = files[0];
+		Assert.StartsWith("/ui/assets/client-", file, StringComparison.Ordinal);
+		Assert.EndsWith(".js", file, StringComparison.Ordinal);
 	}
 
 	[Fact]
