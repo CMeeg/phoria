@@ -59,6 +59,7 @@
 		"lint": "biome check",
 		"check": "tsc",
 		"test": "vitest run",
+		"test:browser": "vitest run --config vitest.browser.config.ts",
 		"test:coverage": "vitest run --coverage"
 	},
 	"dependencies": {
@@ -70,6 +71,8 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
+		"@vitest/browser-playwright": "catalog:",
+		"playwright": "catalog:",
 		"svelte": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",

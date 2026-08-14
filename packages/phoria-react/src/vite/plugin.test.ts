@@ -21,4 +21,31 @@ describe("phoria-react plugin", () => {
 
 		expect(config.optimizeDeps.include).toEqual(["custom-dep", "react", "react-dom/client"])
 	})
+
+	it("injects the component path for a source tsx module", () => {
+		const plugins = phoriaReact() as { transform: (code: string, id: string) => { code: string } | undefined }[]
+		const plugin = plugins[plugins.length - 1]
+
+		const transformed = plugin.transform("export default function Hello() {}", `${process.cwd()}/src/Hello.tsx`)
+
+		expect(transformed?.code).toContain('export const __phoriaComponentPath = "/src/Hello.tsx";')
+	})
+
+	it("does not transform a node_modules module", () => {
+		const plugins = phoriaReact() as { transform: (code: string, id: string) => { code: string } | undefined }[]
+		const plugin = plugins[plugins.length - 1]
+
+		expect(
+			plugin.transform("export default function Hello() {}", `${process.cwd()}/node_modules/hello/Hello.tsx`)
+		).toBeUndefined()
+	})
+
+	it("applies to client and ssr environments but not server", () => {
+		const plugins = phoriaReact() as unknown as { applyToEnvironment: (environment: { name: string }) => boolean }[]
+		const plugin = plugins[plugins.length - 1]
+
+		expect(plugin.applyToEnvironment({ name: "client" })).toBe(true)
+		expect(plugin.applyToEnvironment({ name: "ssr" })).toBe(true)
+		expect(plugin.applyToEnvironment({ name: "server" })).toBe(false)
+	})
 })
