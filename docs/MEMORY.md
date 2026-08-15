@@ -224,6 +224,13 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 - The same review found that deleting a fixed `chore/examples-sync` branch before every publish can orphan an existing maintainer PR and can collide across the independent `main` and `canary` concurrency groups. The examples-sync branch/PR identity needs a design decision before the workflow is finalized.
 - The tag step also needs to use an explicit tag-only push rather than `git push --follow-tags`, which pushes the protected branch ref as well as tags.
 
+## 2026-08-15 — Phase 4 spec reconciliation
+
+- **Runtime branch normalization approved:** `.changeset/config.json.baseBranch` is normalized to `GITHUB_REF_NAME` immediately before Changesets runs. The canary commit remains `canary`; the main release path repairs the value to `main` after the canary→main merge; the stable-cut runbook restores `canary` before re-entering beta mode. This avoids pretending one merged file can retain two branch identities.
+- **Release-specific examples branches approved:** successful publishes use `chore/examples-sync-<branch>-<commit>` and never delete or overwrite a fixed branch. This prevents abandoned maintainer PRs and cross-stream collisions; historical short-lived branches are an accepted cost.
+- **Tags-only publishing approved:** the workflow pushes tags explicitly rather than using `git push --follow-tags`, which can push a protected branch ref.
+- **Failure boundaries:** build failure prevents Changesets; publish failure prevents tag/examples steps; examples-sync failure cannot republish packages and is independently retryable.
+
 ## 2026-08-15 — Phase 4 execution (canary release workflow)
 
 - **GH006 finding:** branch protection rejects the workflow's direct `git push`; the classic "allow specified actors to bypass required pull requests" setting only skips the pull-request requirement, not required status checks.
