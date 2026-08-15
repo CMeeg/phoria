@@ -82,7 +82,15 @@ jobs:
         run: |
           if git ls-remote --exit-code --heads origin "$EXAMPLES_BRANCH" >/dev/null 2>&1; then
             echo "Examples sync branch already exists: $EXAMPLES_BRANCH"
-            exit 1
+            if [[ "$(gh pr list --state open --head "$EXAMPLES_BRANCH" --base "${GITHUB_REF_NAME}" --json number --jq 'length > 0')" == "true" ]]; then
+              echo "Examples sync PR already exists for $EXAMPLES_BRANCH"
+              exit 0
+            fi
+
+            gh pr create --base "${GITHUB_REF_NAME}" --head "$EXAMPLES_BRANCH" \
+              --title "chore(examples): sync to latest phoria packages" \
+              --body "Automated sync of the example dependencies to the just-released phoria versions."
+            exit 0
           fi
 
           git config user.name "github-actions[bot]"
