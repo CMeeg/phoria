@@ -161,29 +161,23 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
 2. **Server robustness & production-readiness** — **complete.** The shutdown bug (including the `Process.Kill()` process-tree bug), the `StartServer`/`StopServer` semaphore race, undisposed `StreamPool`s, the unconditional `DangerousAcceptAnyServerCertificateValidator`, prod error handling, lifecycle hardening, hardened shutdown paths for the Node/Vite sidecar (signal handling, `run-p` replacement), opt-in OpenTelemetry logging, tracing, and metrics across the .NET host and Node/Vite sidecar, `.NET 10` memory-pool assessment, and deferred-issue close-out are complete. The memory-pool replacement remains deferred post-1.0. Task-by-task detail:
    [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md)
    and [`docs/superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md`](superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md).
-3. **Test consolidation & review** — (a) coverage tooling: Vitest `v8`
-   provider (`@vitest/coverage-v8`) per JS package and `coverlet.MTP` for
-   `Phoria.Tests`, both reporting-only with no enforced thresholds, wired into
-   CI as reporting-only steps; (b) full Svelte/Vue ↔ React test parity — CSR
-   browser tests (Svelte/Vue gain a `vitest.browser.config.ts` +
-   `test:browser` script mirroring React), `server/ssr` unit tests,
-   `main.ts` framework-registration tests, and plugin-test parity (incl.
-   Vue's missing `setSsrEnvironment` test and React's untested `hydrate`
-   path); (c) coverage-hole triage at the public-contract bar — fix what
-   consumers hit (server routing/`/hc`/CSR paths, `client/phoria-island` +
-   `idle` directive, manifest readers, `ViteDevServerHmrProxy`,
-   `PhoriaIslandEntryScriptsTagHelper`, `PhoriaIslandPreloadHtmlContent`,
-   dev-certs behavior), document deep internals as accepted gaps; (d) define
-   the signal-to-noise criteria (regression-catching, value-per-task,
-   ratio-with-size/cost), apply them to every test written so far
-   (delete-unless-real, else rewrite), and adopt them as a standing
-   end-of-phase review practice (`TODO.md` `## Tests`).
+3. **Test consolidation & review** — **complete.** Reporting-only coverage
+   tooling (Vitest `v8` via `@vitest/coverage-v8` per JS package, `coverlet.MTP`
+   for `Phoria.Tests`, `scripts/coverage.js`, codecov) wired into CI, Svelte/Vue
+   ↔ React test parity (CSR browser tests, `server/ssr`, framework-registration,
+   plugin tests), coverage-hole fixes at the public-contract bar with deep
+   internals documented as accepted gaps, and the signal-to-noise criteria
+   applied as a standing end-of-phase review practice. Task-by-task detail:
+   [`docs/plans/2026-08-13-phase-3-test-consolidation.md`](plans/2026-08-13-phase-3-test-consolidation.md),
+   spec: [`docs/superpowers/specs/2026-08-13-phase-3-test-consolidation-design.md`](superpowers/specs/2026-08-13-phase-3-test-consolidation-design.md).
 4. **Canary & release workflow** — a canary branch producing `beta` builds
    (changesets prereleases) published to npm and NuGet for integration and
    production testing; resolves the unpublished-`@phoria/opentelemetry` docker
    blocker; absorbs the develop-ahead-of-main integration rather than a single
    big-bang merge; examples install+build against published packages as a
-   release gate, not per-PR CI (`TODO.md` `## Canary workflow`).
+   release gate, not per-PR CI (`TODO.md` `## Canary workflow`). Publishing
+   moves to npm trusted publishing (OIDC) per the npm GAT 2FA-bypass
+   deprecation. Design: [`docs/superpowers/specs/2026-08-15-canary-release-workflow-design.md`](superpowers/specs/2026-08-15-canary-release-workflow-design.md).
 5. **Docs & guides** — drift pass over READMEs, `docs/guides`, and
    `ARCHITECTURE.md` against completed phases 0-2; flesh out placeholders;
    human/agent writing-style consistency; document the deliberate
@@ -220,7 +214,9 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
 - **Changesets prerelease flow (canary/beta)** — changesets documents
   prereleases as "very complicated"; running a `beta` stream alongside the
   stable `1.0.0` cut (peer-range cascade, example refs, NuGet publishing via
-  `scripts/dotnet/publish.js`) must not collide.
+  `scripts/dotnet/publish.js`) must not collide. The Phase 4 design resolves
+  the mechanics (single shared release workflow, pre.json on canary, stable-cut
+  runbook); rehearsal precedes going live.
 - **Examples scope (triage)** — the v1 examples subset is undecided until the
   Examples phase; over-scoping it is the largest schedule risk in the new work.
 - **DX & tooling decisions** — dropping cjs is a breaking change to every
