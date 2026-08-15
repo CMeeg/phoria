@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Options;
 using Phoria.Islands;
 using Phoria.Server;
+using Phoria.Tests.TestUtilities;
 using Xunit;
 
 namespace Phoria.Tests.Islands;
@@ -18,9 +19,9 @@ public class PhoriaIslandTagHelperTests
 			Component = "my-component"
 		};
 
-		TagHelperOutput output = CreateTagHelperOutput();
+		TagHelperOutput output = TagHelperTestFactory.CreateTagHelperOutput("phoria-island");
 
-		await tagHelper.ProcessAsync(CreateTagHelperContext(), output);
+		await tagHelper.ProcessAsync(TagHelperTestFactory.CreateTagHelperContext(), output);
 
 		Assert.Null(output.TagName);
 		Assert.Empty(output.Content.GetContent());
@@ -40,20 +41,8 @@ public class PhoriaIslandTagHelperTests
 		};
 
 		await Assert.ThrowsAsync<PhoriaIslandComponentException>(
-			() => tagHelper.ProcessAsync(CreateTagHelperContext(), CreateTagHelperOutput()));
+			() => tagHelper.ProcessAsync(TagHelperTestFactory.CreateTagHelperContext(), TagHelperTestFactory.CreateTagHelperOutput("phoria-island")));
 	}
-
-	private static TagHelperContext CreateTagHelperContext() =>
-		new(
-			new TagHelperAttributeList(),
-			new Dictionary<object, object?>(),
-			Guid.NewGuid().ToString("N"));
-
-	private static TagHelperOutput CreateTagHelperOutput() =>
-		new(
-			"phoria-island",
-			new TagHelperAttributeList(),
-			(childContent, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
 
 	private sealed class ThrowingComponentFactory : IPhoriaIslandComponentFactory
 	{

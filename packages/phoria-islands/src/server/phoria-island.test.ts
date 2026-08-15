@@ -14,17 +14,10 @@ describe("PhoriaIsland.create", () => {
 	})
 
 	it("throws when the body is an array rather than an object", async () => {
-		const { registerComponent, registerSsrService } = await import("~/register")
+		const { registerSsrComponentFramework } = await import("../../tests/utilities/register-fakes")
 		const { PhoriaIsland } = await import("./phoria-island")
 
-		registerSsrService("react", {
-			render: async () => ({ framework: "react", html: "<div></div>" })
-		})
-
-		registerComponent("Counter", {
-			framework: "react",
-			loader: async () => ({ default: {} })
-		})
+		registerSsrComponentFramework()
 
 		await expect(
 			PhoriaIsland.create({ params: { component: "Counter" }, readProps: async () => [1, 2] })
@@ -32,17 +25,10 @@ describe("PhoriaIsland.create", () => {
 	})
 
 	it("treats an absent body as null props", async () => {
-		const { registerComponent, registerSsrService } = await import("~/register")
+		const { registerSsrComponentFramework } = await import("../../tests/utilities/register-fakes")
 		const { PhoriaIsland } = await import("./phoria-island")
 
-		registerSsrService("react", {
-			render: async () => ({ framework: "react", html: "<div></div>" })
-		})
-
-		registerComponent("Counter", {
-			framework: "react",
-			loader: async () => ({ default: {} })
-		})
+		registerSsrComponentFramework()
 
 		const island = await PhoriaIsland.create({
 			params: { component: "Counter" },
@@ -50,5 +36,25 @@ describe("PhoriaIsland.create", () => {
 		})
 
 		expect(island.props).toBeNull()
+	})
+
+	it("throws for an unknown component", async () => {
+		const { PhoriaIsland } = await import("./phoria-island")
+
+		await expect(
+			PhoriaIsland.create({ params: { component: "Missing" }, readProps: async () => undefined })
+		).rejects.toThrow('Component "Missing" not found in registry.')
+	})
+
+	it("throws when a registered component has no SSR service", async () => {
+		const { registerComponent, registerCsrService } = await import("~/register")
+		const { PhoriaIsland } = await import("./phoria-island")
+
+		registerCsrService("no-ssr", { mount: async () => {} })
+		registerComponent("NoSsr", { framework: "no-ssr", loader: async () => ({ default: {} }) })
+
+		await expect(
+			PhoriaIsland.create({ params: { component: "NoSsr" }, readProps: async () => undefined })
+		).rejects.toThrow('No SSR service could be found for framework "no-ssr".')
 	})
 })

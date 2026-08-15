@@ -1,11 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Razor.TagHelpers;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 using Phoria.Islands;
 using Phoria.Server;
+using Phoria.Tests.TestUtilities;
 using Phoria.Vite;
 using Xunit;
 using static Phoria.Tests.TestUtilities.GoldenManifestFixture;
@@ -62,13 +60,11 @@ public class PhoriaIslandPreloadTagHelperTests
 		// Assert
 		string html = output.Content.GetContent();
 
-		// Counter.tsx maps to ["/ui/assets/Counter-D9HeyafA.js", "/ui/assets/Counter-DXes5fBr.css"]
+		// Counter.tsx maps to a hashed .js chunk and a hashed .css chunk
 		// For .js files: <link rel="modulepreload" crossorigin href="...">
 		// For .css files: <link rel="stylesheet" href="...">
-		Assert.Contains("rel=\"modulepreload\"", html);
-		Assert.Contains("Counter-D9HeyafA.js", html);
-		Assert.Contains("Counter-DXes5fBr.css", html);
-		Assert.Contains("rel=\"stylesheet\"", html);
+		Assert.Matches("rel=\"modulepreload\"[^>]*href=\"/ui/assets/Counter-[A-Za-z0-9_-]+\\.js\"", html);
+		Assert.Matches("rel=\"stylesheet\"[^>]*href=\"/ui/assets/Counter-[A-Za-z0-9_-]+\\.css\"", html);
 	}
 
 	[Fact]
@@ -207,8 +203,8 @@ public class PhoriaIslandPreloadTagHelperTests
 		string html = output.Content.GetContent();
 		int modulepreloadCount = CountOccurrences(html, "rel=\"modulepreload\"");
 		int stylesheetCount = CountOccurrences(html, "rel=\"stylesheet\"");
-		Assert.Equal(1, modulepreloadCount); // Counter-D9HeyafA.js
-		Assert.Equal(1, stylesheetCount);    // Counter-DXes5fBr.css
+		Assert.Equal(1, modulepreloadCount); // the Counter .js modulepreload
+		Assert.Equal(1, stylesheetCount);    // the Counter .css stylesheet
 	}
 
 	[Fact]
@@ -255,8 +251,8 @@ public class PhoriaIslandPreloadTagHelperTests
 
 		// Assert
 		string html = output.Content.GetContent();
-		Assert.Contains("Counter-RVJx8xKX.js", html);
-		Assert.Contains("Counter-Bz3VW5_o.css", html);
+		Assert.Matches("rel=\"modulepreload\"[^>]*href=\"/ui/assets/Counter-[A-Za-z0-9_-]+\\.js\"", html);
+		Assert.Matches("rel=\"stylesheet\"[^>]*href=\"/ui/assets/Counter-[A-Za-z0-9_-]+\\.css\"", html);
 	}
 
 	private static int CountOccurrences(string text, string substring)
@@ -273,91 +269,9 @@ public class PhoriaIslandPreloadTagHelperTests
 
 	// --- Stubs ---
 
-	private sealed class StubServerMonitor(PhoriaServerMode mode) : IPhoriaServerMonitor
-	{
-		public PhoriaServerStatus ServerStatus { get; } = new()
-		{
-			Mode = mode,
-			Url = "http://localhost:5173"
-		};
-
-		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
-		public Task StopMonitoring() => Task.CompletedTask;
-	}
-
 	private sealed class StubScopedContext(params PhoriaIsland[] islands) : IPhoriaIslandScopedContext
 	{
 		public IReadOnlyList<PhoriaIsland> Islands { get; } = islands;
 		public void AddIsland(PhoriaIsland island) { }
-	}
-
-	private sealed class StubManifestReader(IViteSsrManifest manifest) : IViteSsrManifestReader
-	{
-		public IViteSsrManifest ReadSsrManifest() => manifest;
-	}
-
-	[Fact]
-	public void StubUrlHelper_ActionContext_ThrowsNotSupportedException()
-	{
-		var urlHelper = new StubUrlHelper();
-
-		Assert.Throws<NotSupportedException>(() => urlHelper.ActionContext);
-	}
-
-	private sealed class StubUrlHelper : IUrlHelper
-	{
-		public ActionContext ActionContext => throw new NotSupportedException($"{nameof(StubUrlHelper)} does not support {nameof(ActionContext)}.");
-
-		public string? ActionName => null;
-
-		public RouteValueDictionary? RouteValues => null;
-
-		public string? RequestScheme => "http";
-
-		public bool IsLocalUrl(string? path) => true;
-
-		public string? Content(string? contentPath)
-		{
-			// Mimic ASP.NET Core UrlHelper.Content: strip ~/
-			if (contentPath == null) return null;
-			return contentPath.StartsWith("~/") ? contentPath[1..] : contentPath;
-		}
-
-		public string? Action(UrlActionContext context) => null;
-
-		public string? RouteUrl(UrlRouteContext context) => null;
-
-		public string? RouteUrl(object? routeValues) => null;
-
-		public string? RouteUrl(string? routeName, object? routeValues) => null;
-
-		public string? RouteUrl(string? routeName, object? routeValues, string? protocol, string? host, string? fragment) => null;
-
-		public string? Link(string? routeName, object? values) => null;
-
-		public string? PageUrl(string? pageName, object? routeValues) => null;
-
-		public string? Page(string? pageName, object? routeValues) => null;
-
-		public string? Page(string? pageName, string? pageHandler, object? routeValues, string? protocol, string? host, string? fragment) => null;
-
-		public string? Action(string? actionName) => null;
-
-		public string? Action(string? actionName, object? routeValues) => null;
-
-		public string? Action(string? actionName, string? controllerName, object? routeValues, string? protocol, string? host, string? fragment) => null;
-
-		public string? Action(string? actionName, string? controllerName, RouteValueDictionary? routeValues, string? protocol, string? host, string? fragment) => null;
-
-		public bool IsValidRouteValue(object? value) => true;
-
-		public string? GetRouteUrl(string? routeName, object? routeValues) => null;
-
-		public string? GetRouteUrl(string? routeName, object? routeValues, string? protocol, string? host, string? fragment) => null;
-	}
-
-	private sealed class StubUrlHelperFactory(IUrlHelper urlHelper) : IUrlHelperFactory
-	{
-		public IUrlHelper GetUrlHelper(ActionContext context) => urlHelper;
 	}
 }

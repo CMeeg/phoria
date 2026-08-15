@@ -67,6 +67,8 @@ v1 is successful when:
 - All packages are on current deps and target .NET 8/10.
 - Vite bundling of .NET-referenced static assets works end-to-end.
 - Svelte and Vue packages have test coverage on par with React's.
+- Coverage tooling exists for both ecosystems and produces reports locally
+  and in CI, with no enforced thresholds (reporting-only by design for v1).
 - `beta` versions of the JS and NuGet packages publish from a canary branch and
   are consumable by the examples (including docker-compose).
 - A committed example installs and builds standalone (giget fetch end-to-end).
@@ -85,8 +87,13 @@ v1 is successful when:
 - Server robustness: process shutdown bug (`Process.Kill()` process-tree, `StartServer`/`StopServer` semaphore race), production error handling, lifecycle hardening (in-process start, monitor/reconnect, graceful degradation, SIGTERM→grace-period→kill-tree stop sequence), hardened shutdown paths for the Node/Vite sidecar (signal handling, `run-p` replacement with a signal-forwarding orchestrator), and opt-in OpenTelemetry logging, tracing, and metrics across the .NET host and Node/Vite sidecar. Each signal is independently gated; the scope also includes an assessment of `.NET 10` memory pools. `IMemoryPoolFactory<byte>` adoption is explicitly deferred post-1.0 because it does not provide the stream and buffer-writer semantics used by `Phoria.IO`. Task-by-task detail is split between the main plan and its close-out:
   [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md)
   and [`docs/superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md`](superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md).
-- Test consolidation & review: Svelte/Vue package coverage, coverage-holes
-  assessment, signal-to-noise review of the Phase-0 tests, mock/stub dedup
+- Test consolidation & review: full Svelte/Vue ↔ React test parity (CSR
+  browser, SSR unit, framework-registration, plugin), a coverage-holes
+  assessment triaged at the public-contract bar (deep internals documented as
+  accepted gaps), coverage tooling for both ecosystems (Vitest `v8` provider,
+  `coverlet.MTP`) with reporting-only CI and no thresholds, a defined
+  signal-to-noise criterion applied to all tests written so far plus a
+  standing end-of-phase review practice, and mock/stub/fake dedup
   (`TODO.md` `## Tests`).
 - Canary & release workflow: canary branch + `beta` publishing to npm and NuGet
   (changesets prereleases), the unpublished-`@phoria/opentelemetry` docker
@@ -114,6 +121,7 @@ v1 is successful when:
 - Formal API freeze / audit (approach is **best-effort stable** for v1; API may
   still evolve with minor bumps post-1.0).
 - Web components library (deferred to post-v1).
+- Enforced coverage thresholds in CI (coverage is reporting-only for v1).
 - Docs website (deferred to post-v1; a Phoria web app deployed to Render).
 - Examples beyond the triaged v1 subset (deployment/styling variants pending
   Examples-phase triage).
@@ -153,9 +161,23 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
 2. **Server robustness & production-readiness** — **complete.** The shutdown bug (including the `Process.Kill()` process-tree bug), the `StartServer`/`StopServer` semaphore race, undisposed `StreamPool`s, the unconditional `DangerousAcceptAnyServerCertificateValidator`, prod error handling, lifecycle hardening, hardened shutdown paths for the Node/Vite sidecar (signal handling, `run-p` replacement), opt-in OpenTelemetry logging, tracing, and metrics across the .NET host and Node/Vite sidecar, `.NET 10` memory-pool assessment, and deferred-issue close-out are complete. The memory-pool replacement remains deferred post-1.0. Task-by-task detail:
    [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md)
    and [`docs/superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md`](superpowers/plans/2026-08-02-phase-2-server-robustness-closeout.md).
-3. **Test consolidation & review** — close the Svelte/Vue package test gap,
-   assess remaining coverage holes, review the Phase-0 tests for
-   signal-to-noise, and dedupe mocks/stubs/fakes (`TODO.md` `## Tests`).
+3. **Test consolidation & review** — (a) coverage tooling: Vitest `v8`
+   provider (`@vitest/coverage-v8`) per JS package and `coverlet.MTP` for
+   `Phoria.Tests`, both reporting-only with no enforced thresholds, wired into
+   CI as reporting-only steps; (b) full Svelte/Vue ↔ React test parity — CSR
+   browser tests (Svelte/Vue gain a `vitest.browser.config.ts` +
+   `test:browser` script mirroring React), `server/ssr` unit tests,
+   `main.ts` framework-registration tests, and plugin-test parity (incl.
+   Vue's missing `setSsrEnvironment` test and React's untested `hydrate`
+   path); (c) coverage-hole triage at the public-contract bar — fix what
+   consumers hit (server routing/`/hc`/CSR paths, `client/phoria-island` +
+   `idle` directive, manifest readers, `ViteDevServerHmrProxy`,
+   `PhoriaIslandEntryScriptsTagHelper`, `PhoriaIslandPreloadHtmlContent`,
+   dev-certs behavior), document deep internals as accepted gaps; (d) define
+   the signal-to-noise criteria (regression-catching, value-per-task,
+   ratio-with-size/cost), apply them to every test written so far
+   (delete-unless-real, else rewrite), and adopt them as a standing
+   end-of-phase review practice (`TODO.md` `## Tests`).
 4. **Canary & release workflow** — a canary branch producing `beta` builds
    (changesets prereleases) published to npm and NuGet for integration and
    production testing; resolves the unpublished-`@phoria/opentelemetry` docker
@@ -208,6 +230,13 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   with the server process/monitor design.
 - **Dependency upgrade breakage** — Vite 6→8 (Rolldown/Oxc) and framework
   majors may surface breaking changes; mitigated by tests-first ordering.
+- **Coverage tooling on Vite 8/Rolldown** — `@vitest/coverage-v8` has known
+  quirks on Vite 8 (ignore-hints lost with elided type-only imports;
+  uncovered `.tsx` files dropped during parse); mitigated by pinning current
+  vite/oxc and excluding known-problem files from coverage include.
+- **Svelte/Vue browser-mode test setup** — parity work introduces a
+  Playwright-provider browser config + hydration/mount tests to two packages
+  that have none today; framework hydration is the new flakiness surface.
 
 ## Open questions (TODO)
 
@@ -217,8 +246,17 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   streaming, server actions, Deno, props generator).
 - TODO: Decide the v1 vs post-v1 examples subset (triage at Examples-phase
   start).
-- TODO: Define "high signal-to-noise" for the Phase-0 test review (Test
-  consolidation start).
+- RESOLVED (Phase 3 explore): "High signal-to-noise" is defined by three
+  criteria applied together: (1) regression-catching — a test must fail on a
+  real behavior regression of the code it claims to cover; (2) value-per-task
+  — each test is reviewed against the task that introduced it, so
+  development-artifact tests are re-evaluated for forward value; (3)
+  ratio-with-size/cost — value is weighed against maintenance cost
+  (flakiness, brittleness, duplication) and the worst ratios are pruned.
+  Default disposition is delete unless the test catches a real regression,
+  otherwise rewrite. Because Phoria is pre-1.0 there is no public contract, so
+  behavior is still being shaped: the criteria are reapplied at the end of
+  every phase, not just this one.
 - TODO: HTTPS-in-Preview — document http vs https pros/cons for the Phoria
   Server in Dev vs Production and update examples (research in DX & tooling,
   written up in Docs).

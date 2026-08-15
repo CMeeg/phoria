@@ -6,8 +6,23 @@ export default defineConfig({
 	},
 	test: {
 		environment: "node",
-		include: ["src/**/*.test.ts"],
+		include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
 		exclude: ["src/**/*.browser.test.ts", "src/**/*.browser.test.tsx"],
-		passWithNoTests: true
+		passWithNoTests: true,
+		coverage: {
+			provider: "v8",
+			all: true,
+			include: ["src/**/*.{ts,tsx}"],
+			exclude: [
+				"**/*.test.ts",
+				"**/*.test.tsx",
+				"**/*.browser.test.ts",
+				"**/*.browser.test.tsx",
+				"src/main.ts",
+				"src/client/main.ts",
+				"src/server/main.ts"
+			],
+			reporter: ["text", "json", "lcov"]
+		}
 	}
 })

@@ -14,9 +14,10 @@ describe("register", () => {
 	})
 
 	it("registers a component after its framework is registered and looks it up case-insensitively", async () => {
-		const { registerCsrService, registerComponent, getComponent } = await import("./register")
+		const { registerCsrFramework } = await import("../tests/utilities/register-fakes")
+		const { registerComponent, getComponent } = await import("./register")
 
-		registerCsrService("React", { mount: async () => {} })
+		registerCsrFramework("React")
 		registerComponent("Widget", { framework: "React", loader: async () => ({ default: {} }) })
 
 		const entry = getComponent("widget")
@@ -26,10 +27,23 @@ describe("register", () => {
 	})
 
 	it("normalises framework names to lowercase in getFrameworks", async () => {
-		const { registerCsrService, getFrameworks } = await import("./register")
+		const { registerCsrFramework } = await import("../tests/utilities/register-fakes")
+		const { getFrameworks } = await import("./register")
 
-		registerCsrService("Vue", { mount: async () => {} })
+		registerCsrFramework("Vue")
 
 		expect(getFrameworks()).toContain("vue")
+	})
+
+	it("throws when looking up an unregistered SSR framework", async () => {
+		const { getSsrService } = await import("./register")
+
+		expect(() => getSsrService("missing")).toThrow('Framework "missing" has not been registered.')
+	})
+
+	it("throws when looking up an unregistered CSR framework", async () => {
+		const { getCsrService } = await import("./register")
+
+		expect(() => getCsrService("missing")).toThrow('Framework "missing" has not been registered.')
 	})
 })

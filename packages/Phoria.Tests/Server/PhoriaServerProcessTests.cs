@@ -2,10 +2,13 @@ using System.Diagnostics;
 using System.Globalization;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Phoria.Server;
+using Phoria.Tests.TestUtilities;
 using Xunit;
+using static Phoria.Tests.TestUtilities.AsyncTestWaits;
 
 namespace Phoria.Tests.Server;
 
@@ -260,45 +263,49 @@ public class PhoriaServerProcessTests
 	[Fact]
 	public async Task StartServer_RestartLimitExceeded_StopsSpawningAndEndsSupervisionLoop()
 	{
-		var hookCalls = 0;
+		string markerPath = CreateMarkerPath(nameof(StartServer_RestartLimitExceeded_StopsSpawningAndEndsSupervisionLoop));
 		using var cts = new CancellationTokenSource();
 		using PhoriaServerProcess serverProcess = CreateServerProcess(
-			script: "process.exit(0);",
-			beforeProcessIdAssignment: _ => Interlocked.Increment(ref hookCalls),
+			command: "bash",
+			arguments: ["-c", AppendPidScript(markerPath)],
 			maxRestartAttempts: 1);
 
 		// Give-up returns normally (no throw) once the limit is exceeded.
 		await serverProcess.StartServer(cts.Token).WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
 
 		// Initial spawn + 1 restart, then the supervision loop gives up.
-		Assert.Equal(2, hookCalls);
+		Assert.Equal(2, LineCount(markerPath));
 	}
 
 	[Fact]
 	public async Task StartServer_RestartLimit_ResetsAttemptsWhenServerBecomesHealthy()
 	{
+		string markerPath = CreateMarkerPath(nameof(StartServer_RestartLimit_ResetsAttemptsWhenServerBecomesHealthy));
+		var logger = new ListLogger<PhoriaServerProcess>();
 		var monitor = new SettableServerMonitor();
-		var hookCalls = 0;
 		using var cts = new CancellationTokenSource();
 		using PhoriaServerProcess serverProcess = CreateServerProcess(
+			logger: logger,
 			monitor: monitor,
-			script: "process.exit(0);",
-			beforeProcessIdAssignment: _ => Interlocked.Increment(ref hookCalls),
+			command: "bash",
+			arguments: ["-c", AppendPidScript(markerPath)],
 			maxRestartAttempts: 1);
 
 		Task startTask = serverProcess.StartServer(cts.Token);
 
-		await WaitUntilAsync(() => hookCalls >= 1, TimeSpan.FromSeconds(10));
+		await WaitUntilAsync(() => LineCount(markerPath) >= 1, TimeSpan.FromSeconds(10));
 
 		// Becoming healthy must reset the restart counter: with max=1 and a single healthy blip the
 		// supervision loop can spawn at least one more process than the raw limit would allow.
 		monitor.ServerStatus = monitor.ServerStatus with { Health = PhoriaServerHealth.Healthy };
-		await Task.Delay(TimeSpan.FromSeconds(1.5), TestContext.Current.CancellationToken);
+		await WaitUntilAsync(
+			() => logger.Entries.Any(e => e.Message.Contains("Phoria server process is healthy.")),
+			TimeSpan.FromSeconds(3));
 		monitor.ServerStatus = monitor.ServerStatus with { Health = PhoriaServerHealth.Unhealthy };
 
 		await startTask.WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
 
-		Assert.True(hookCalls >= 3, $"Expected at least 3 spawns after a healthy reset, got {hookCalls}.");
+		Assert.True(LineCount(markerPath) >= 3, $"Expected at least 3 spawns after a healthy reset, got {LineCount(markerPath)}.");
 	}
 
 	[Fact]
@@ -336,13 +343,19 @@ public class PhoriaServerProcessTests
 		string? script = null,
 		Action<int>? beforeProcessIdAssignment = null,
 		IPhoriaServerMonitor? monitor = null,
-		int maxRestartAttempts = 0)
+		int maxRestartAttempts = 0,
+		ILogger<PhoriaServerProcess>? logger = null,
+		string command = "node",
+		IReadOnlyList<string>? arguments = null)
 	{
 		return new PhoriaServerProcess(
-			NullLogger<PhoriaServerProcess>.Instance,
+			logger ?? NullLogger<PhoriaServerProcess>.Instance,
 			monitor ?? new StubServerMonitor(),
 			new StubHostEnvironment(),
-			Options.Create(CreateProcessOptions(script ?? "setInterval(() => {}, 1000);", maxRestartAttempts)),
+			Options.Create(CreateProcessOptions(
+				command,
+				arguments ?? ["-e", script ?? "setInterval(() => {}, 1000);"],
+				maxRestartAttempts)),
 			processId,
 			stopGracePeriod ?? TimeSpan.FromSeconds(6),
 			beforeProcessIdAssignment);
@@ -354,10 +367,10 @@ public class PhoriaServerProcessTests
 			NullLogger<PhoriaServerProcess>.Instance,
 			new StubServerMonitor(),
 			new StubHostEnvironment(),
-			Options.Create(CreateProcessOptions(script)));
+			Options.Create(CreateProcessOptions("node", ["-e", script])));
 	}
 
-	private static PhoriaOptions CreateProcessOptions(string script, int maxRestartAttempts = 0)
+	private static PhoriaOptions CreateProcessOptions(string command, IReadOnlyList<string> arguments, int maxRestartAttempts = 0)
 	{
 		return new PhoriaOptions
 		{
@@ -365,8 +378,8 @@ public class PhoriaServerProcessTests
 			{
 				Process = new PhoriaServerOptions.ProcessOptions
 				{
-					Command = "node",
-					Arguments = ["-e", script],
+					Command = command,
+					Arguments = arguments.ToArray(),
 					HealthCheckInterval = 1,
 					MaxRestartAttempts = maxRestartAttempts
 				}
@@ -439,25 +452,23 @@ public class PhoriaServerProcessTests
 		setTimeout(() => {}, 10000);
 		""";
 
+	private static string AppendPidScript(string markerPath) => $"echo $$ >> \"{markerPath}\"";
+
+	private static int LineCount(string markerPath)
+	{
+		if (!File.Exists(markerPath))
+		{
+			return 0;
+		}
+
+		return File.ReadAllLines(markerPath).Length;
+	}
+
 	private static string LongLivedNodeScript(string markerPath) =>
 		$$"""
 		require('fs').writeFileSync("{{markerPath}}", 'ready');
 		setInterval(() => {}, 1000);
 		""";
-
-	private static async Task WaitUntilAsync(Func<bool> condition, TimeSpan timeout)
-	{
-		var deadline = DateTime.UtcNow.Add(timeout);
-		while (!condition())
-		{
-			if (DateTime.UtcNow >= deadline)
-			{
-				throw new TimeoutException($"Condition was not met within {timeout}.");
-			}
-
-			await Task.Delay(25);
-		}
-	}
 
 	private static async Task WaitForMarker(string markerPath, string expectedContents)
 	{
@@ -489,32 +500,6 @@ public class PhoriaServerProcessTests
 		{
 			return false;
 		}
-	}
-
-	private sealed class StubServerMonitor : IPhoriaServerMonitor
-	{
-		public PhoriaServerStatus ServerStatus { get; } = new()
-		{
-			Health = PhoriaServerHealth.Unhealthy,
-			Url = "http://localhost:5173"
-		};
-
-		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
-
-		public Task StopMonitoring() => Task.CompletedTask;
-	}
-
-	private sealed class SettableServerMonitor : IPhoriaServerMonitor
-	{
-		public PhoriaServerStatus ServerStatus { get; set; } = new()
-		{
-			Health = PhoriaServerHealth.Unhealthy,
-			Url = "http://localhost:5173"
-		};
-
-		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
-
-		public Task StopMonitoring() => Task.CompletedTask;
 	}
 
 	private sealed class StubHostEnvironment : IHostEnvironment

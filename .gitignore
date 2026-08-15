@@ -6,9 +6,11 @@
 .vite-inspect/
 .worktrees/
 bin/
+coverage/
 **/dist/**
 node_modules/
 obj/
+TestResults/
 !**/wwwroot/lib/**/dist/**
 
 *.tmp

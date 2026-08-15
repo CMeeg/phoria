@@ -2,6 +2,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Phoria.Diagnostics.HealthChecks;
 using Phoria.Server;
+using Phoria.Tests.TestUtilities;
 using Xunit;
 
 namespace Phoria.Tests.Diagnostics.HealthChecks;
@@ -60,17 +61,5 @@ public class PhoriaServerHealthCheckTests
 		HealthCheckResult result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
 
 		Assert.Equal(HealthStatus.Unhealthy, result.Status);
-	}
-
-	private sealed class StubServerMonitor(PhoriaServerHealth health) : IPhoriaServerMonitor
-	{
-		public PhoriaServerStatus ServerStatus { get; } = new()
-		{
-			Health = health,
-			Url = "http://localhost:5173"
-		};
-
-		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
-		public Task StopMonitoring() => Task.CompletedTask;
 	}
 }

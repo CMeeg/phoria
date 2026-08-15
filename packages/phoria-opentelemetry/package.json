@@ -37,7 +37,8 @@
 		"build": "vite build",
 		"lint": "biome check",
 		"check": "tsc",
-		"test": "vitest run"
+		"test": "vitest run",
+		"test:coverage": "vitest run --coverage"
 	},
 	"dependencies": {
 		"@opentelemetry/api": "catalog:",
@@ -59,6 +60,7 @@
 	"devDependencies": {
 		"@phoria/phoria": "workspace:*",
 		"@types/node": "catalog:",
+		"@vitest/coverage-v8": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",

@@ -60,7 +60,8 @@
 		"lint": "biome check",
 		"check": "tsc",
 		"test": "vitest run",
-		"test:browser": "vitest run --config vitest.browser.config.ts"
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"test:coverage": "vitest run --coverage"
 	},
 	"dependencies": {
 		"defu": "catalog:",
@@ -72,6 +73,7 @@
 	"devDependencies": {
 		"@types/node": "catalog:",
 		"@vitest/browser-playwright": "catalog:",
+		"@vitest/coverage-v8": "catalog:",
 		"playwright": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",

@@ -58,7 +58,9 @@
 		"build": "vite build",
 		"lint": "biome check",
 		"check": "tsc",
-		"test": "vitest run"
+		"test": "vitest run",
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"test:coverage": "vitest run --coverage"
 	},
 	"dependencies": {
 		"@rollup/pluginutils": "catalog:",
@@ -68,6 +70,9 @@
 		"@phoria/phoria": "workspace:*",
 		"@types/node": "catalog:",
 		"@vitejs/plugin-vue": "catalog:",
+		"@vitest/coverage-v8": "catalog:",
+		"@vitest/browser-playwright": "catalog:",
+		"playwright": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",

@@ -21,11 +21,13 @@
 		"publish": "changeset publish && pnpm --filter phoria-dotnet run publish",
 		"test": "turbo run test",
 		"test:browser": "turbo run test:browser",
+		"test:coverage": "turbo run test:coverage",
 		"version": "changeset version && pnpm install --no-frozen-lockfile"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.5",
 		"@changesets/cli": "^2.31.1",
+		"@codecov/bundle-analyzer": "^2.0.1",
 		"playwright": "catalog:",
 		"turbo": "^2.10.7"
 	},

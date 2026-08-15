@@ -70,8 +70,16 @@ Runs `tsc` (no emit) on each package.
 
 ```bash
 pnpm test            # Vitest unit tests across JS packages (via Turborepo)
-pnpm test:browser    # Vitest browser-mode component tests (Playwright provider)
+pnpm test:browser    # Vitest browser-mode component tests across islands, React, Svelte, and Vue
+pnpm test:coverage   # Reporting-only v8 coverage across JS packages
 dotnet test --solution Phoria.sln --configuration Release  # xUnit v3 tests for the Phoria .NET package
+```
+
+Code coverage is **reporting-only** (no enforced thresholds); tooling lands in Phase 3:
+
+```bash
+pnpm --filter <package> exec vitest run --coverage   # Vitest v8 coverage for a JS package
+dotnet test --solution Phoria.sln --configuration Release --coverlet --coverlet-output-format cobertura --coverlet-file-prefix ""  # coverlet.MTP for the Phoria .NET package
 ```
 
 `global.json` sets `test.runner: Microsoft.Testing.Platform`, so `dotnet test` runs in MTP mode — pass `--solution <path>` (not a bare path) to run every project's test executable across both target frameworks.
@@ -112,6 +120,13 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - **Comments are opt-in, not expected**: only add them when they explain a non-obvious decision (e.g. the `process.cwd()` constraint comment in the example AppHost `Program.cs`) — never to restate what the code already says
 - **`InternalsVisibleTo` is a code smell**: avoid it, including for test assemblies, unless there is no other good alternative
 
+### Tests (JS and .NET)
+
+- **JS test files are co-located** with the system under test (`.test.ts` beside `.ts`); shared or multi-consumer test utilities live in `<pkg>/tests/utilities/`, sibling to `src/` — one concern per file, specific names, no generic `test-utils` dump.
+- **.NET test seams live in `Phoria.Tests/TestUtilities/`** as `internal` classes — never `InternalsVisibleTo`.
+- **Framework plugin tests are parallel copies** across the framework packages (they publish independently) — cross-package test sharing is not a goal.
+- Coverage is **reporting-only**; suite layout and coverage approach are in `docs/ARCHITECTURE.md` (`## Testing strategy`).
+
 ### Markdown & prose
 
 - **Don't hard-wrap prose with line breaks** — write each paragraph as an unbroken line and let the reader's editor/viewer soft-wrap it. Applies to `docs/*.md`, `AGENTS.md`, and any other plain-text docs.
@@ -128,6 +143,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - **Vite 8 uses Rolldown/Oxc** — `rollupOptions` is deprecated in favour of `rolldownOptions` in build config.
 - **`resolve.tsconfigPaths: true`** (built into Vite 8) replaces the separate `vite-tsconfig-paths` plugin — do not reintroduce the plugin.
 - **All pnpm settings live in `pnpm-workspace.yaml`**, not `package.json`/`.npmrc` (e.g. `packageExtensions`, `peerDependencyRules`, catalogs).
+- **`.superpowers/` is a local AI-agent workflow directory and must never be committed.** It is gitignored; do not stage it with `git add -f` or any other bypass — this has slipped through before and been reverted. `git add .`/`git add -u` already respect the ignore rule; the only way it gets committed is a deliberate force-add.
 
 ## Versioning & Publishing
 

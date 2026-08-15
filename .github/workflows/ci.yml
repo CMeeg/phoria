@@ -20,7 +20,7 @@ jobs:
   build-and-test:
     name: Build and test
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -61,6 +61,58 @@ jobs:
 
       - name: Test dotnet
         run: dotnet test --solution Phoria.sln --configuration Release
+
+      - name: Test packages (coverage)
+        run: pnpm test:coverage
+
+      - name: Test dotnet (coverage)
+        run: dotnet test --solution Phoria.sln --configuration Release --coverlet --coverlet-output-format cobertura --coverlet-file-prefix ""
+
+      - name: Prepare coverage reports for Codecov
+        run: node scripts/coverage.js
+
+      - name: Upload coverage to Codecov (JS)
+        if: env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v6
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: packages/phoria-islands/coverage/lcov.info,packages/phoria-react/coverage/lcov.info,packages/phoria-svelte/coverage/lcov.info,packages/phoria-vue/coverage/lcov.info,packages/phoria-opentelemetry/coverage/lcov.info,packages/vite-plugin-dotnet-dev-certs/coverage/lcov.info
+          flags: js
+          fail_ci_if_error: true
+
+      - name: Upload coverage to Codecov (.NET)
+        if: env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v6
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: TestResults/net8.0.cobertura.xml,TestResults/net10.0.cobertura.xml
+          flags: dotnet
+          fail_ci_if_error: true
+
+      - name: Upload bundle analysis to Codecov
+        if: env.CODECOV_TOKEN != ''
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          for pkg in phoria-islands phoria-react phoria-svelte phoria-vue phoria-opentelemetry vite-plugin-dotnet-dev-certs; do
+            [ -d "packages/$pkg/dist" ] || continue
+            pnpm exec bundle-analyzer "packages/$pkg/dist" \
+              --bundle-name="$pkg" \
+              --upload-token="$CODECOV_TOKEN" \
+              --ignore-patterns '*.d.ts' '*.map'
+          done
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v5
+        with:
+          name: coverage-reports
+          path: |
+            **/coverage/**
+            **/TestResults/*cobertura*.xml
 
   test-browser:
     name: Browser tests

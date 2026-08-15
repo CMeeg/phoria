@@ -1,38 +1,32 @@
-import { describe, expect, it, vi } from "vitest"
-import type { PhoriaOtelAppSettings } from "./appsettings"
-import { createPhoriaLogger } from "./logger"
+import { describe, expect, it } from "vitest"
+import { createPhoriaOtelAppSettings } from "../tests/utilities/otel-appsettings-fixture"
+import { getPhoriaObservabilityAppSettings, type PhoriaObservabilityAppSettingsInput } from "./appsettings"
 
-const appsettings: PhoriaOtelAppSettings = {
-	root: "ui",
-	base: "/ui",
-	entry: "src/entry-client.ts",
-	ssrBase: "/ssr",
-	ssrEntry: "src/entry-server.ts",
-	server: {
-		host: "localhost",
-		https: false
-	},
-	build: {
-		outDir: "dist"
-	},
-	observability: {
-		logging: false,
-		tracing: {
-			enabled: false,
-			samplingRatio: 0.1
-		},
-		metrics: false
-	}
-}
+describe("getPhoriaObservabilityAppSettings", () => {
+	it("applies observability defaults when none are provided", () => {
+		const settings = getPhoriaObservabilityAppSettings(createPhoriaOtelAppSettings())
 
-describe("PhoriaOtelAppSettings", () => {
-	it("normalizes missing observability values through the OTel logger factory", () => {
-		const info = vi.spyOn(console, "info").mockImplementation(() => {})
-		const logger = createPhoriaLogger({ ...appsettings, observability: undefined })
+		expect(settings.logging).toBe(false)
+		expect(settings.tracing).toEqual({ enabled: false, samplingRatio: 0.1 })
+		expect(settings.metrics).toBe(false)
+	})
 
-		logger.info("message")
+	it("merges partial observability settings over the defaults", () => {
+		const settings = getPhoriaObservabilityAppSettings(
+			createPhoriaOtelAppSettings({ observability: { tracing: { enabled: true } } })
+		)
 
-		expect(info).toHaveBeenCalledWith("message", undefined)
-		info.mockRestore()
+		expect(settings.tracing.enabled).toBe(true)
+		expect(settings.tracing.samplingRatio).toBe(0.1)
+	})
+
+	it("preserves unknown keys from the input settings", () => {
+		const settings = getPhoriaObservabilityAppSettings(
+			createPhoriaOtelAppSettings({
+				observability: { custom: "value" } as unknown as PhoriaObservabilityAppSettingsInput
+			})
+		) as unknown as { custom: string }
+
+		expect(settings.custom).toBe("value")
 	})
 })

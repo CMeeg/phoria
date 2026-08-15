@@ -1,17 +1,82 @@
 using System.Net;
+using System.Net.WebSockets;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Phoria;
 using Phoria.Server;
+using Phoria.Tests.TestUtilities;
 using Xunit;
 
 namespace Phoria.Tests.Server;
 
 public class PhoriaServerMiddlewareTests
 {
+	[Fact]
+	public async Task InvokeAsync_HmrRequest_UsesHmrProxyAndSkipsNext()
+	{
+		var proxy = new RecordingHmrProxy();
+		bool nextCalled = false;
+		var (pipeline, services) = CreatePipeline(
+			new StubServerMonitor(PhoriaServerHealth.Healthy),
+			new StubHttpClientFactory(),
+			Options.Create(new PhoriaOptions()),
+			_ => { nextCalled = true; return Task.CompletedTask; },
+			proxy);
+
+		try
+		{
+			DefaultHttpContext context = CreateGetContext("/@vite/client");
+			context.Request.Headers.Upgrade = "websocket";
+			context.Request.Headers["Sec-WebSocket-Protocol"] = "vite-hmr";
+			context.Features.Set<IHttpWebSocketFeature>(new StubWebSocketFeature(true, ["vite-hmr"]));
+			context.RequestServices = services;
+
+			await pipeline(context);
+
+			Assert.True(proxy.Called);
+			Assert.False(nextCalled);
+		}
+		finally
+		{
+			(services as IDisposable)?.Dispose();
+		}
+	}
+
+	[Theory]
+	[InlineData(false, "vite-hmr")]
+	[InlineData(true, "other")]
+	[InlineData(true, "")]
+	public async Task InvokeAsync_NonHmrWebSocket_FallsThrough(bool isWebSocket, string protocol)
+	{
+		var proxy = new RecordingHmrProxy();
+		bool nextCalled = false;
+		var (pipeline, services) = CreatePipeline(
+			new StubServerMonitor(PhoriaServerHealth.Healthy),
+			new StubHttpClientFactory(),
+			Options.Create(new PhoriaOptions()),
+			_ => { nextCalled = true; return Task.CompletedTask; },
+			proxy);
+
+		try
+		{
+			DefaultHttpContext context = CreateGetContext("/@vite/client");
+			context.Features.Set<IHttpWebSocketFeature>(new StubWebSocketFeature(isWebSocket, [protocol]));
+			context.RequestServices = services;
+
+			await pipeline(context);
+
+			Assert.True(nextCalled);
+			Assert.False(proxy.Called);
+		}
+		finally
+		{
+			(services as IDisposable)?.Dispose();
+		}
+	}
 	[Fact]
 	public async Task InvokeAsync_FailPolicyUnhealthy_Returns503ForUnclaimedGet()
 	{
@@ -175,54 +240,23 @@ public class PhoriaServerMiddlewareTests
 		return context;
 	}
 
-	private sealed class StubServerMonitor(PhoriaServerHealth health) : IPhoriaServerMonitor
+	private sealed class RecordingHmrProxy : IViteDevServerHmrProxy
 	{
-		public PhoriaServerStatus ServerStatus { get; } = new()
+		public bool Called { get; private set; }
+
+		public Task ProxyAsync(HttpContext context, CancellationToken cancellationToken)
 		{
-			Health = health,
-			Url = "http://localhost:5173"
-		};
-
-		public Task StartMonitoring(CancellationToken cancellationToken) => Task.CompletedTask;
-		public Task StopMonitoring() => Task.CompletedTask;
-	}
-
-	private sealed class StubHttpClientFactory : IPhoriaServerHttpClientFactory
-	{
-		private readonly Func<HttpRequestMessage, HttpResponseMessage> send;
-
-		public StubHttpClientFactory()
-			: this(_ => new HttpResponseMessage(HttpStatusCode.NotFound))
-		{
-		}
-
-		public StubHttpClientFactory(HttpResponseMessage response)
-			: this(_ => response)
-		{
-		}
-
-		public StubHttpClientFactory(Func<HttpRequestMessage, HttpResponseMessage> send)
-		{
-			this.send = send;
-		}
-
-		public HttpClient CreateClient() => new(new StubHttpMessageHandler(send))
-		{
-			BaseAddress = new Uri("http://localhost:5173")
-		};
-
-		private sealed class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> send) : HttpMessageHandler
-		{
-			protected override Task<HttpResponseMessage> SendAsync(
-				HttpRequestMessage request,
-				CancellationToken cancellationToken) =>
-				Task.FromResult(send(request));
+			Called = true;
+			return Task.CompletedTask;
 		}
 	}
 
-	private sealed class StubHmrProxy : IViteDevServerHmrProxy
+	private sealed class StubWebSocketFeature(bool isWebSocket, IList<string> protocols) : IHttpWebSocketFeature
 	{
-		public Task ProxyAsync(HttpContext context, CancellationToken cancellationToken) =>
-			throw new InvalidOperationException("The HMR proxy should not be reached in these tests.");
+		public bool IsWebSocketRequest { get; } = isWebSocket;
+		public IList<string> WebSocketRequestedProtocols { get; } = protocols;
+
+		public Task<WebSocket> AcceptAsync(WebSocketAcceptContext context) =>
+			throw new NotSupportedException();
 	}
 }
