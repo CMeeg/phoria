@@ -1,0 +1,14 @@
+{
+  "mode": "pre",
+  "tag": "beta",
+  "initialVersions": {
+    "phoria-dotnet": "0.4.2",
+    "@phoria/phoria": "0.4.2",
+    "@phoria/opentelemetry": "0.1.0",
+    "@phoria/phoria-react": "0.4.2",
+    "@phoria/phoria-svelte": "0.3.2",
+    "@phoria/phoria-vue": "0.3.2",
+    "@phoria/vite-plugin-dotnet-dev-certs": "0.2.1"
+  },
+  "changesets": []
+}
