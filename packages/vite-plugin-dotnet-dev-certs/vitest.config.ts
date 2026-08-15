@@ -12,7 +12,7 @@ export default defineConfig({
 			all: true,
 			include: ["src/**/*.{ts,tsx}"],
 			exclude: ["**/*.test.ts", "**/*.test.tsx", "**/*.browser.test.ts", "**/*.browser.test.tsx"],
-			reporter: ["text", "json"]
+			reporter: ["text", "json", "lcov"]
 		}
 	}
 })

@@ -21,7 +21,7 @@ export default defineConfig({
 				"src/client/main.ts",
 				"src/server/main.ts"
 			],
-			reporter: ["text", "json"]
+			reporter: ["text", "json", "lcov"]
 		}
 	}
 })

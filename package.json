@@ -27,6 +27,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.5",
 		"@changesets/cli": "^2.31.1",
+		"@codecov/bundle-analyzer": "^2.0.1",
 		"playwright": "catalog:",
 		"turbo": "^2.10.7"
 	},
