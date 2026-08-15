@@ -514,7 +514,7 @@ Versioning and publishing use **Changesets** with a two-branch model: feature wo
 
 ### The beta stream
 
-`canary` commits `.changeset/pre.json` (`mode: "pre"`, `tag: "beta"`) and a `baseBranch: "canary"` config, while `main` keeps `baseBranch: "main"`. Every merged change with a changeset makes the release workflow open a "Version Packages (beta)" pull request; merging it runs `changeset publish` and publishes each bumped package as a `beta` prerelease on npm and a matching beta on NuGet, then syncs the examples (`pnpm examples:bump`) to the released versions. Framework peer ranges on `@phoria/phoria` (`>=0.4.0 <1.0.0`) cannot satisfy a beta, so changesets rewrites them on each beta bump (the peer-range cascade); they are reconciled to `^1.0.0` at the 1.0.0 cut.
+`canary` commits `.changeset/pre.json` (`mode: "pre"`, `tag: "beta"`) and a `baseBranch: "canary"` config, while `main` keeps `baseBranch: "main"`. Every merged change with a changeset makes the release workflow open a "Version Packages (beta)" pull request; merging it runs `changeset publish` and publishes each bumped package as a `beta` prerelease on npm and a matching beta on NuGet, then syncs the examples (`pnpm examples:bump`) to the released versions. Framework peer ranges on `@phoria/phoria` start at the upcoming core tuple with a prerelease marker (`>=0.5.0-0 <2.0.0` for the first stream), so the beta remains in the natural 0.x version family and Changesets does not trigger a peer-range major cascade. Before each later beta cycle, update that lower-bound tuple; reconcile the ranges to `^1.0.0` at the 1.0.0 cut.
 
 ### A single shared release workflow
 

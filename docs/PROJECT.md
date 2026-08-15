@@ -201,9 +201,10 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
    triaged at phase start) + giget fetch verification (`TODO.md` `## Examples`).
 10. **Release prep** — version reconciliation to `1.0.0`, docs pass, changesets,
    GitHub milestone/issues, inline-TODO cleanup. NOTE: framework peer ranges on
-   `@phoria/phoria` are widened to `>=0.4.0 <1.0.0` during pre-1.0 (to prevent
-   premature `1.0.0` releases via the changesets peer cascade); tighten them to
-   `^1.0.0` as part of this phase.
+    `@phoria/phoria` use a prerelease-aware lower bound such as
+    `>=0.5.0-0 <2.0.0` during the first beta stream (to prevent a premature
+    major via the changesets peer cascade); update the tuple before each later
+    beta cycle and tighten them to `^1.0.0` as part of this phase.
 
 ## Riskiest unknowns
 
@@ -213,10 +214,10 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   spike before implementation.
 - **Changesets prerelease flow (canary/beta)** — changesets documents
   prereleases as "very complicated"; running a `beta` stream alongside the
-  stable `1.0.0` cut (peer-range cascade, example refs, NuGet publishing via
-  `scripts/dotnet/publish.js`) must not collide. The Phase 4 design resolves
-  the mechanics (single shared release workflow, pre.json on canary, stable-cut
-  runbook); rehearsal precedes going live.
+  stable `1.0.0` cut (prerelease-aware peer ranges, example refs, NuGet
+  publishing via `scripts/dotnet/publish.js`) must not collide. The Phase 4
+  design resolves the mechanics (single shared release workflow, pre.json on
+  canary, stable-cut runbook); rehearsal precedes going live.
 - **Examples scope (triage)** — the v1 examples subset is undecided until the
   Examples phase; over-scoping it is the largest schedule risk in the new work.
 - **DX & tooling decisions** — dropping cjs is a breaking change to every

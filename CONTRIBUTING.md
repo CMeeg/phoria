@@ -67,7 +67,7 @@ Contributions completed with the assistance of a coding agent are welcome — ma
 
 ### Beta stream (canary)
 
-Every merged change with a changeset makes Changesets open a "Version Packages (beta)" pull request on `canary`. Merging that PR runs the release workflow, which publishes each bumped package as `0.5.0-beta.N` (npm `beta` dist-tag) and a matching beta to NuGet, then syncs the examples to the released beta versions. Betas are safe to consume for integration and production testing of work in progress.
+Every merged change with a changeset makes Changesets open a "Version Packages (beta)" pull request on `canary`. Merging that PR runs the release workflow, which publishes each package at its natural 0.x beta version (npm `beta` dist-tag) and a matching beta to NuGet, then syncs the examples to the released beta versions. The four framework peer ranges use a prerelease-aware lower bound matching the upcoming core tuple, for example `>=0.5.0-0 <2.0.0`; update that tuple before a later beta cycle. Betas are safe to consume for integration and production testing of work in progress.
 
 ### Stable releases (the canary → main cut)
 

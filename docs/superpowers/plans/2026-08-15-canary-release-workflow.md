@@ -4,7 +4,7 @@
 
 **Goal:** Ship Phase 4 — a `canary` branch producing changesets-prerelease `beta` builds published to npm (trusted publishing/OIDC) and NuGet, with examples synced to the published betas and the `develop`-ahead-of-`main` integration absorbed.
 
-**Architecture:** `canary` replaces `develop` and commits `.changeset/pre.json` (`mode: "pre"`, `tag: "beta"`) + `baseBranch: "canary"` so every merged change opens a beta version PR that publishes `0.5.0-beta.N` via a single shared `release.yml` (triggered on both `main` and `canary`; repo state, not branch, decides beta vs stable). npm publishing moves to OIDC trusted publishing (`id-token: write`, no `NPM_TOKEN`); `NUGET_API_KEY` is unchanged. The `examples:bump` sync lands as a PR merged by the maintainer because branch protection rejects the workflow's direct push (`GH006`).
+**Architecture:** `canary` replaces `develop` and commits `.changeset/pre.json` (`mode: "pre"`, `tag: "beta"`) + `baseBranch: "canary"` so every merged change opens a beta version PR that publishes the natural 0.x beta versions via a single shared `release.yml` (triggered on both `main` and `canary`; repo state, not branch, decides beta vs stable). npm publishing moves to OIDC trusted publishing (`id-token: write`, no `NPM_TOKEN`); `NUGET_API_KEY` is unchanged. The `examples:bump` sync lands as a PR merged by the maintainer because branch protection rejects the workflow's direct push (`GH006`).
 
 **Tech Stack:** GitHub Actions (single `release.yml` + `ci.yml`), Changesets 2.31 prereleases, pnpm 11, npm trusted publishing (OIDC), NuGet (`scripts/dotnet/publish.js`), GitHub branch protection (web UI), docker-compose.
 
@@ -19,7 +19,7 @@
 - Trusted-publishing prereqs already satisfied: every JS package's `repository.url` is `git+https://github.com/CMeeg/phoria.git`; Node 24 runners bundle npm ≥ 11.5.1.
 - The `examples:bump` commit lands via a **pull request** (`gh pr create`, base = the branch that published) merged by the maintainer — direct push is rejected by branch protection. Git tags are pushed directly (`--follow-tags`); branch protection covers `refs/heads/*`, not `refs/tags/*`.
 - Branch protection (web UI): require a pull request, require status checks `build-and-test` + `test-browser`, block force pushes, restrict push to maintainers, admin bypass allowed ("Do not allow bypassing the above settings" left **unchecked**), **no** required approvals (GitHub never counts the PR author's own approval — would deadlock a sole maintainer).
-- First beta run bumps the 16 pending minor/patch changesets → `0.5.0-beta.0`-family versions. Packages at `0.4.2` with a minor changeset → `0.5.0-beta.0`; exact per-package numbers are recorded in the Task 1 rehearsal and reused by later tasks. The `1.0.0` major changesets stay queued for Phase 10.
+- First beta run applies the 15 pending minor/patch changesets → natural 0.x beta versions. The `@phoria/phoria` peerers use `>=0.5.0-0 <2.0.0`, so the core's `0.5.0-beta.0` is in range and does not force framework major bumps. The `1.0.0` major changesets stay queued for Phase 10.
 - npm quirk: a never-published package's first publish also takes the `latest` dist-tag — applies to `@phoria/opentelemetry`; accepted and documented.
 - CI order stays `build` → `lint` → `check` → `test`, plus `dotnet test --solution Phoria.sln --configuration Release`; `pnpm examples:check` runs in `ci.yml`.
 - Biome style: tabs, as-needed semicolons, no trailing commas, 120-col. C# comments are opt-in. Markdown prose: no hard wrapping.
@@ -35,7 +35,7 @@ Validates the riskiest unknown (changesets prereleases) before anything is commi
 - Modify: `docs/MEMORY.md` (dated entry recording findings)
 
 **Interfaces:**
-- Produces: the recorded expected values consumed by Task 6 verification (`0.5.0-beta.0`-family versions per package, the peer-range rewrite form, the dotnet `0.5.0-beta.0` sync).
+- Produces: the recorded expected values consumed by Task 6 verification (natural 0.x beta versions per package, unchanged `>=0.5.0-0 <2.0.0` peer ranges, and the dotnet `0.5.0-beta.0` sync).
 
 - [ ] **Step 1: Create the throwaway worktree and install**
 
@@ -57,7 +57,7 @@ Expected: install completes cleanly (shared repo-object store; fresh `node_modul
 pnpm changeset pre enter beta
 ```
 
-Expected: `.changeset/pre.json` is created with `"mode": "pre"`, `"tag": "beta"`, the 16 pending changesets in `"changesets"`, and `"initialVersions"` for all 7 packages derived from current package state.
+Expected: `.changeset/pre.json` is created with `"mode": "pre"`, `"tag": "beta"`, the 15 pending changesets in `"changesets"`, and `"initialVersions"` for all 7 packages derived from current package state.
 
 - [ ] **Step 3: Apply the version bumps**
 
@@ -65,7 +65,7 @@ Expected: `.changeset/pre.json` is created with `"mode": "pre"`, `"tag": "beta"`
 pnpm run version
 ```
 
-This runs `changeset version && pnpm install --no-frozen-lockfile`. Expected: versions bump to the `0.5.0-beta.0` family, changelogs are written, and the lockfile is refreshed.
+This runs `changeset version && pnpm install --no-frozen-lockfile`. Expected: versions bump to their natural beta values, changelogs are written, and the lockfile is refreshed.
 
 - [ ] **Step 4: Inspect and record the results (beta)**
 
@@ -75,7 +75,7 @@ node -e 'for (const p of ["phoria-react","phoria-svelte","phoria-vue","phoria-op
 git status --short
 ```
 
-Expected: the `0.4.2` packages → `0.5.0-beta.0` (minor) — packages at other bases follow the same rule (`0.3.2` → `0.4.0-beta.0`, `0.2.1` → `0.3.0-beta.0`, `0.1.0` → `0.2.0-beta.0`, unless their pending changesets are patch-only). The framework peers (`@phoria/phoria` `>=0.4.0 <1.0.0`) **must be rewritten** — a prerelease tuple like `0.5.0` is not matched by a `0.4.0` range comparator, so changesets widens them to include the beta (e.g. `>=0.5.0-beta.0 <1.0.0`); `phoria-react`, `phoria-svelte`, `phoria-vue`, and `phoria-opentelemetry` all peer on `@phoria/phoria` and must all be rewritten. `packages/Phoria/package.json` (the `phoria-dotnet` version that drives `dotnet pack -p:Version=`) → `0.5.0-beta.0`. Record the exact observed values.
+Expected: `@phoria/phoria` and `@phoria/phoria-react` → `0.5.0-beta.0`; `@phoria/phoria-svelte` and `@phoria/phoria-vue` → `0.4.0-beta.0`; `@phoria/opentelemetry` → `0.2.0-beta.0`; `@phoria/vite-plugin-dotnet-dev-certs` → `0.3.0-beta.0`; and `phoria-dotnet` → `0.5.0-beta.0`. All four peer ranges remain `>=0.5.0-0 <2.0.0` because the core beta is in range, so no `1.0.0-beta.0` cascade occurs. Record the exact observed values.
 
 - [ ] **Step 5: Rehearse the stable-cut mechanics (runbook steps 1–2)**
 
@@ -89,7 +89,7 @@ pnpm run version
 node -e 'for (const p of ["phoria-islands","phoria-react","phoria-vue"]) { const j=require(`./packages/${p}/package.json`); console.log(`${j.name} -> ${j.version}`) }'
 ```
 
-Expected: `pre exit` removes `pre.json` cleanly, and `changeset version` now produces **stable** bumps (`0.5.0`, `0.4.0`, …) with peers rewritten to `>=0.5.0 <1.0.0` — validating that the canary→main cut produces stable releases and that the window between `pre exit` and `pre enter beta` is quiescent. Record the observed stable versions.
+Expected: `pre exit` removes `pre.json` cleanly, and `changeset version` now produces **stable** bumps (`0.5.0`, `0.4.0`, …) with peers unchanged at `>=0.5.0-0 <2.0.0` — validating that the canary→main cut produces stable releases and that the window between `pre exit` and `pre enter beta` is quiescent. Record the observed stable versions.
 
 - [ ] **Step 6: Discard the worktree**
 
@@ -102,7 +102,7 @@ Expected: no worktree remains; the working repo is untouched (verify `git status
 
 - [ ] **Step 7: Commit the rehearsal findings to `docs/MEMORY.md`**
 
-Add a dated entry (`## 2026-08-15 — Phase 4 rehearsal (canary prerelease flow)`) capturing: the exact beta versions per package, the exact peer-range rewrite form, the dotnet version sync, the stable-cut mechanics result, and the pre.json shape. Then:
+Add a dated entry (`## 2026-08-15 — Phase 4 rehearsal (canary prerelease flow)`) capturing: the exact beta versions per package, the unchanged peer range, the dotnet version sync, the stable-cut mechanics result, and the pre.json shape. Then:
 
 ```bash
 git add docs/MEMORY.md
@@ -209,7 +209,7 @@ Expected: `.changeset/pre.json` created (no hand-written version list — change
 node -e 'const p=require("./.changeset/pre.json"); console.log("mode:", p.mode); console.log("tag:", p.tag); console.log("changesets:", p.changesets.length); console.log("initialVersions:", JSON.stringify(p.initialVersions, null, 1))'
 ```
 
-Expected: `mode: pre`, `tag: beta`, 16 changesets, and `initialVersions` for all 7 packages. Any discrepancy (wrong count, wrong tag) means Task 1's rehearsal didn't reflect reality — stop and reconcile before committing.
+Expected: `mode: pre`, `tag: beta`, 15 changesets, and `initialVersions` for all 7 packages. Any discrepancy (wrong count, wrong tag) means Task 1's rehearsal didn't reflect reality — stop and reconcile before committing.
 
 - [ ] **Step 4: Commit and push**
 
@@ -345,7 +345,7 @@ git commit -m "ci: single shared release workflow with npm trusted publishing"
 git push
 ```
 
-Expected: the push triggers the rewritten `release.yml` on `canary` → `changesets/action` sees the 16 pending changesets + `pre.json` → opens the beta "Version Packages" PR. This is the first canary run beginning; Task 6 takes it from here. Nothing is published yet (only a version PR is opened).
+Expected: the push triggers the rewritten `release.yml` on `canary` → `changesets/action` sees the 15 pending changesets + `pre.json` → opens the beta "Version Packages" PR. This is the first canary run beginning; Task 6 takes it from here. Nothing is published yet (only a version PR is opened).
 
 ### Task 5: Manual rollout — branch protection and npm trusted publishers (maintainer, web UI)
 
