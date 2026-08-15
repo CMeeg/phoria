@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - canary
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -12,9 +13,10 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     permissions:
-      contents: write       # to create release (changesets/action)
-      issues: write         # to post issue comments (changesets/action)
-      pull-requests: write  # to create pull request (changesets/action)
+      contents: write       # to create releases and push the examples-sync branch (changesets/action)
+      issues: write          # to post issue comments (changesets/action)
+      pull-requests: write   # to create the version PR and the examples-sync PR
+      id-token: write        # npm trusted publishing (OIDC) during changeset publish
     steps:
       - uses: actions/checkout@v7
 
@@ -48,17 +50,26 @@ jobs:
           publish: pnpm run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
-      - name: Sync examples to released versions
-        if: ${{ steps.changesets.outputs.published == 'true' }}
-        run: |
-          pnpm examples:bump
-          git add examples
-          git commit -m "chore(examples): sync to latest phoria packages"
-
       - name: Push release tags
-        if: ${{ steps.changesets.outputs.published == 'true' }}
+        if: steps.changesets.outputs.published == 'true'
         run: git push --follow-tags
         shell: bash
+
+      - name: Open examples-sync pull request
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push origin --delete chore/examples-sync 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          pnpm examples:bump
+          git checkout -b chore/examples-sync
+          git add examples
+          git commit -m "chore(examples): sync to latest phoria packages"
+          git push -u origin chore/examples-sync
+          gh pr create --base "${GITHUB_REF_NAME}" --head chore/examples-sync \
+            --title "chore(examples): sync to latest phoria packages" \
+            --body "Automated sync of the example dependencies to the just-released phoria versions."

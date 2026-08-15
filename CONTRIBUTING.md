@@ -67,14 +67,14 @@ Contributions completed with the assistance of a coding agent are welcome — ma
 
 ### Beta stream (canary)
 
-Every merged change with a changeset makes Changesets open a "Version Packages (beta)" pull request on `canary`. Merging that PR runs the release workflow, which publishes each package at its natural 0.x beta version (npm `beta` dist-tag) and a matching beta to NuGet, then syncs the examples to the released beta versions. The four framework peer ranges use a prerelease-aware lower bound matching the upcoming core tuple, for example `>=0.5.0-0 <2.0.0`; update that tuple before a later beta cycle. Betas are safe to consume for integration and production testing of work in progress.
+Every merged change with a changeset makes Changesets open a "Version Packages (beta)" pull request on `canary`. Merging that PR runs the release workflow, which publishes each package at its natural 0.x beta version (npm `beta` dist-tag) and a matching beta to NuGet, then opens a "Sync examples" pull request that updates the examples to the released beta versions — merge it too. The four framework peer ranges use a prerelease-aware lower bound matching the upcoming core tuple, for example `>=0.5.0-0 <2.0.0`; update that tuple before a later beta cycle. Betas are safe to consume for integration and production testing of work in progress.
 
 ### Stable releases (the canary → main cut)
 
 Stable releases are coordinated cuts, run by a maintainer:
 
 1. On `canary`: `pnpm changeset pre exit`, commit.
-2. Merge `canary` into `main`. The `main` release workflow opens a stable "Version Packages" pull request; merging it publishes the stable versions (npm `latest`, NuGet), syncs examples to stable refs, and pushes release tags.
+2. Merge `canary` into `main`. The `main` release workflow opens a stable "Version Packages" pull request; merging it publishes the stable versions (npm `latest`, NuGet), pushes release tags, and opens a "Sync examples" pull request syncing the examples to stable refs — merge that too.
 3. Merge `main` back into `canary`, then `pnpm changeset pre enter beta`, commit.
 
 Between steps 1 and 3 the beta stream is quiescent — `canary` publishes nothing until pre mode is re-entered. Do not merge feature work to `canary` during this window.
