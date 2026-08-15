@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
+import Hello from "../../tests/utilities/hello-fixture.svelte"
 import { service } from "./csr"
-import Hello from "./Hello.svelte"
 
 describe("svelte csr service", () => {
 	it("mounts a component into the island element", async () => {

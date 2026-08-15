@@ -143,6 +143,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - **Vite 8 uses Rolldown/Oxc** — `rollupOptions` is deprecated in favour of `rolldownOptions` in build config.
 - **`resolve.tsconfigPaths: true`** (built into Vite 8) replaces the separate `vite-tsconfig-paths` plugin — do not reintroduce the plugin.
 - **All pnpm settings live in `pnpm-workspace.yaml`**, not `package.json`/`.npmrc` (e.g. `packageExtensions`, `peerDependencyRules`, catalogs).
+- **`.superpowers/` is a local AI-agent workflow directory and must never be committed.** It is gitignored; do not stage it with `git add -f` or any other bypass — this has slipped through before and been reverted. `git add .`/`git add -u` already respect the ignore rule; the only way it gets committed is a deliberate force-add.
 
 ## Versioning & Publishing
 
