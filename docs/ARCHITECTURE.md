@@ -518,7 +518,7 @@ Versioning and publishing use **Changesets** with a two-branch model: feature wo
 
 ### A single shared release workflow
 
-One `release.yml` runs on pushes to **both** `main` and `canary`; runtime `baseBranch` normalization establishes the branch identity before Changesets runs, while pre.json presence/exit state determines beta versus stable behavior. The single-file shape is required by npm trusted publishing: npm allows exactly one trusted-publisher config per package, keyed to one workflow filename. A build failure prevents Changesets; a publish failure prevents tag and examples-sync steps; an examples-sync failure cannot republish packages and is independently retryable. Successful publishing pushes tags only, never a branch ref.
+One `release.yml` runs on pushes to **both** `main` and `canary`; runtime `baseBranch` normalization establishes the branch identity before Changesets runs, while pre.json presence/exit state determines beta versus stable behavior. The single-file shape is required by npm trusted publishing: npm allows exactly one trusted-publisher config per package, keyed to one workflow filename. A build failure prevents Changesets; a publish failure prevents tag and examples-sync steps; an examples-sync failure cannot republish packages and is independently retryable. Stable package publishing, including the release-tag step, pushes tags only, never a branch ref; the separate examples-sync step pushes the release-specific `chore/examples-sync-<branch>-<commit>` branch and opens its pull request.
 
 ### Publishing security
 
