@@ -237,3 +237,10 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 - **Approved resolution:** the examples sync lands as a `gh`-created pull request, which the maintainer merges.
 - **Workflow shape:** one shared `release.yml` runs on `main` and `canary`, grants `id-token: write` for npm trusted publishing, and has no `NPM_TOKEN`; NuGet continues to use `NUGET_API_KEY`.
 - **Branch-creation deviation:** `canary` was created at the current `HEAD`, not at bare `develop` `HEAD`.
+
+## 2026-08-15 — Phase 4 Task 2 documentation alignment
+
+- Public release documentation now records the implemented seam: `.changeset/config.json.baseBranch` is normalized from `GITHUB_REF_NAME` at runtime immediately before Changesets runs. Stable-cut recovery restores `baseBranch: "canary"` after merging `main` back into `canary`, before beta mode and `pre.json` are committed again.
+- Examples synchronization is release-specific (`chore/examples-sync-<branch>-<commit>`), opened as a pull request for the publishing branch. The workflow does not delete or overwrite a fixed branch, and the maintainer merges the examples-sync PR separately.
+- Publishing is tag-only (`git push origin --tags`), so the release step does not push a protected branch ref. Failure boundaries are explicit: build failure prevents Changesets, publish failure prevents tag and examples-sync steps, and examples-sync failure cannot republish packages and is independently retryable.
+- This entry documents the implemented workflow only; external branch protection, trusted-publisher configuration, package publishing, and registry verification were not performed locally.

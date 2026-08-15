@@ -67,17 +67,19 @@ Contributions completed with the assistance of a coding agent are welcome — ma
 
 ### Beta stream (canary)
 
-Every merged change with a changeset makes Changesets open a "Version Packages (beta)" pull request on `canary`. Merging that PR runs the release workflow, which publishes each package at its natural 0.x beta version (npm `beta` dist-tag) and a matching beta to NuGet, then opens a "Sync examples" pull request that updates the examples to the released beta versions — merge it too. The four framework peer ranges use a prerelease-aware lower bound matching the upcoming core tuple, for example `>=0.5.0-0 <2.0.0`; update that tuple before a later beta cycle. Betas are safe to consume for integration and production testing of work in progress.
+Every merged change with a changeset makes Changesets open a "Version Packages (beta)" pull request on `canary`. Merging that PR runs the release workflow, which publishes each package at its natural 0.x beta version (npm `beta` dist-tag) and a matching beta to NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request that updates the examples to the released beta versions. Merge that examples-sync PR separately. The workflow never deletes or overwrites a fixed examples branch. Before Changesets runs, the shared workflow normalizes `.changeset/config.json.baseBranch` from `GITHUB_REF_NAME`, so the runtime branch identity is always correct. The four framework peer ranges use a prerelease-aware lower bound matching the upcoming core tuple, for example `>=0.5.0-0 <2.0.0`; update that tuple before a later beta cycle. Betas are safe to consume for integration and production testing of work in progress.
 
 ### Stable releases (the canary → main cut)
 
 Stable releases are coordinated cuts, run by a maintainer:
 
-1. On `canary`: `pnpm changeset pre exit`, commit.
-2. Merge `canary` into `main`. The `main` release workflow opens a stable "Version Packages" pull request; merging it publishes the stable versions (npm `latest`, NuGet), pushes release tags, and opens a "Sync examples" pull request syncing the examples to stable refs — merge that too.
-3. Merge `main` back into `canary`, then `pnpm changeset pre enter beta`, commit.
+1. On `canary`, exit beta mode and commit with `baseBranch: "canary"`.
+2. Merge `canary` into `main`; the workflow normalizes `baseBranch` to `main` before opening the stable version PR.
+3. Merge the stable version PR, then merge `main` back into `canary`.
+4. Restore `baseBranch: "canary"`, enter beta mode, and commit the config plus `pre.json`.
+5. Merge the release-specific examples-sync PR separately.
 
-Between steps 1 and 3 the beta stream is quiescent — `canary` publishes nothing until pre mode is re-entered. Do not merge feature work to `canary` during this window.
+Stable publishing pushes release tags only; it does not push a branch ref. Between steps 1 and 4 the beta stream is quiescent — `canary` publishes nothing until pre mode is re-entered. Do not merge feature work to `canary` during this window. A build failure prevents Changesets from running, a publish failure prevents tag and examples-sync steps, and an examples-sync failure cannot republish packages and is independently retryable.
 
 ### Publishing security
 
