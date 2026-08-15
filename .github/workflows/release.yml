@@ -40,6 +40,23 @@ jobs:
       - name: Build Packages
         run: pnpm build
 
+      - name: Normalize Changesets base branch
+        env:
+          RELEASE_BRANCH: ${{ github.ref_name }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs"
+
+          const path = ".changeset/config.json"
+          const config = JSON.parse(fs.readFileSync(path, "utf8"))
+          const branch = process.env.RELEASE_BRANCH
+
+          if (config.baseBranch !== branch) {
+            config.baseBranch = branch
+            fs.writeFileSync(path, `${JSON.stringify(config, null, "\t")}\n`)
+          }
+          NODE
+
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1.9.0
@@ -54,22 +71,33 @@ jobs:
 
       - name: Push release tags
         if: steps.changesets.outputs.published == 'true'
-        run: git push --follow-tags
+        run: git push origin --tags
         shell: bash
 
       - name: Open examples-sync pull request
         if: steps.changesets.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXAMPLES_BRANCH: chore/examples-sync-${{ github.ref_name }}-${{ github.sha }}
         run: |
-          git push origin --delete chore/examples-sync 2>/dev/null || true
+          if git ls-remote --exit-code --heads origin "$EXAMPLES_BRANCH" >/dev/null 2>&1; then
+            echo "Examples sync branch already exists: $EXAMPLES_BRANCH"
+            exit 1
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           pnpm examples:bump
-          git checkout -b chore/examples-sync
           git add examples
+
+          if git diff --cached --quiet; then
+            echo "Examples are already synchronized"
+            exit 0
+          fi
+
           git commit -m "chore(examples): sync to latest phoria packages"
-          git push -u origin chore/examples-sync
-          gh pr create --base "${GITHUB_REF_NAME}" --head chore/examples-sync \
+          git checkout -b "$EXAMPLES_BRANCH"
+          git push -u origin "$EXAMPLES_BRANCH"
+          gh pr create --base "${GITHUB_REF_NAME}" --head "$EXAMPLES_BRANCH" \
             --title "chore(examples): sync to latest phoria packages" \
             --body "Automated sync of the example dependencies to the just-released phoria versions."
