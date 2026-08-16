@@ -1,41 +1,18 @@
 # With Tailwind Example
 
-This example demonstrates Tailwind CSS v4 with a React Phoria island in a standalone .NET web application.
+This example demonstrates Tailwind CSS v4 with a React Phoria island in a standalone .NET web application. Tailwind is loaded through `@tailwindcss/vite`; the stylesheet uses `@source` directives to scan Razor and UI sources without a legacy Tailwind configuration file.
 
-## Tailwind
-
-Tailwind is added through the official `@tailwindcss/vite` plugin. The application stylesheet imports Tailwind and scans both Razor Pages and UI sources with `@source` directives, so utilities used in Razor markup are included in the build without a legacy Tailwind configuration file.
-
-## Usage
-
-Install the published dependencies from the `WebApp` directory:
+Run these commands from `examples/with-tailwind/WebApp`:
 
 ```bash
 pnpm install
-```
-
-Run the example in development mode:
-
-```bash
+pnpm build
 pnpm dev
 ```
 
-`pnpm dev` starts the WebApp, the Phoria Server with Vite HMR, and the Aspire dashboard. The WebApp listens on port `5773` and the Phoria Server listens on port `5673`.
+The WebApp is at `http://localhost:5773`; the Phoria Server is at `http://localhost:5673`. Use `pnpm preview` after the build and `pnpm stop` to stop the AppHost. With the app running, `pnpm test:e2e` checks the React island, Tailwind-rendered page, modulepreload output, and `GET /health`. Set `PHORIA_WEBAPP_URL` to override the default `http://localhost:5773`.
 
-Build and preview the production output with:
-
-```bash
-pnpm build
-pnpm preview
-```
-
-Run the smoke test against the Aspire-hosted app with:
-
-```bash
-pnpm test:e2e
-```
-
-The example can also be fetched directly with:
+Fetch a standalone copy with:
 
 ```bash
 pnpx giget gh:cmeeg/phoria/examples/with-tailwind with-tailwind
