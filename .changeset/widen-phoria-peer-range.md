@@ -4,4 +4,4 @@
 "@phoria/phoria-vue": patch
 ---
 
-Widen the `@phoria/phoria` peer dependency range to `>=0.4.0 <1.0.0` to keep pre-1.0 releases non-breaking.
+Widen the `@phoria/phoria` peer dependency range to `>=0.5.0-0 <2.0.0` so the first beta prerelease stays in the 0.x version family without a peer-range major cascade.

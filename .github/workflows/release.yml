@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - canary
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -12,9 +13,10 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     permissions:
-      contents: write       # to create release (changesets/action)
-      issues: write         # to post issue comments (changesets/action)
-      pull-requests: write  # to create pull request (changesets/action)
+      contents: write       # to create releases and push the examples-sync branch (changesets/action)
+      issues: write          # to post issue comments (changesets/action)
+      pull-requests: write   # to create the version PR and the examples-sync PR
+      id-token: write        # npm trusted publishing (OIDC) during changeset publish
     steps:
       - uses: actions/checkout@v7
 
@@ -38,6 +40,23 @@ jobs:
       - name: Build Packages
         run: pnpm build
 
+      - name: Normalize Changesets base branch
+        env:
+          RELEASE_BRANCH: ${{ github.ref_name }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs"
+
+          const path = ".changeset/config.json"
+          const config = JSON.parse(fs.readFileSync(path, "utf8"))
+          const branch = process.env.RELEASE_BRANCH
+
+          if (config.baseBranch !== branch) {
+            config.baseBranch = branch
+            fs.writeFileSync(path, `${JSON.stringify(config, null, "\t")}\n`)
+          }
+          NODE
+
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1.9.0
@@ -48,17 +67,45 @@ jobs:
           publish: pnpm run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
-      - name: Sync examples to released versions
-        if: ${{ steps.changesets.outputs.published == 'true' }}
+      - name: Push release tags
+        if: steps.changesets.outputs.published == 'true'
+        run: git push origin --tags
+        shell: bash
+
+      - name: Open examples-sync pull request
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXAMPLES_BRANCH: chore/examples-sync-${{ github.ref_name }}-${{ github.sha }}
         run: |
+          if git ls-remote --exit-code --heads origin "$EXAMPLES_BRANCH" >/dev/null 2>&1; then
+            echo "Examples sync branch already exists: $EXAMPLES_BRANCH"
+            if [[ "$(gh pr list --state open --head "$EXAMPLES_BRANCH" --base "${GITHUB_REF_NAME}" --json number --jq 'length > 0')" == "true" ]]; then
+              echo "Examples sync PR already exists for $EXAMPLES_BRANCH"
+              exit 0
+            fi
+
+            gh pr create --base "${GITHUB_REF_NAME}" --head "$EXAMPLES_BRANCH" \
+              --title "chore(examples): sync to latest phoria packages" \
+              --body "Automated sync of the example dependencies to the just-released phoria versions."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           pnpm examples:bump
           git add examples
-          git commit -m "chore(examples): sync to latest phoria packages"
 
-      - name: Push release tags
-        if: ${{ steps.changesets.outputs.published == 'true' }}
-        run: git push --follow-tags
-        shell: bash
+          if git diff --cached --quiet; then
+            echo "Examples are already synchronized"
+            exit 0
+          fi
+
+          git commit -m "chore(examples): sync to latest phoria packages"
+          git checkout -b "$EXAMPLES_BRANCH"
+          git push -u origin "$EXAMPLES_BRANCH"
+          gh pr create --base "${GITHUB_REF_NAME}" --head "$EXAMPLES_BRANCH" \
+            --title "chore(examples): sync to latest phoria packages" \
+            --body "Automated sync of the example dependencies to the just-released phoria versions."

@@ -508,6 +508,34 @@ JS test files are co-located with the system under test (`.test.ts` beside `.ts`
 
 Coverage holes are triaged at the public-contract bar: fix what consumers hit (routing/`/hc`/CSR paths, manifest readers, HMR proxy, tag helpers, dev-certs behavior), and document deep internals as accepted gaps. The current fix list and accepted gaps live in PROJECT.md Phase 3.
 
+## Release workflow
+
+Versioning and publishing use **Changesets** with a two-branch model: feature work lands on `canary`, which produces prerelease `beta` builds, and `main` receives coordinated stable cuts from `canary`. The design is in `docs/superpowers/specs/2026-08-15-canary-release-workflow-design.md` (Phase 4).
+
+### The beta stream
+
+`canary` commits `.changeset/pre.json` (`mode: "pre"`, `tag: "beta"`) and a `baseBranch: "canary"` config. The shared release workflow normalizes that config from `GITHUB_REF_NAME` immediately before Changesets runs, so a canary→main merge cannot leave the stable stream pointing at canary. Every merged change with a changeset makes the release workflow open a "Version Packages (beta)" pull request; merging it runs `changeset publish` and publishes each bumped package as a `beta` prerelease on npm and a matching beta on NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request updating the examples (`pnpm examples:bump`) to the released versions. The workflow never deletes or overwrites a fixed examples branch; the maintainer merges each examples-sync PR separately. Framework peer ranges on `@phoria/phoria` start at the upcoming core tuple with a prerelease marker (`>=0.5.0-0 <2.0.0` for the first stream), so the beta remains in the natural 0.x version family and Changesets does not trigger a peer-range major cascade. Before each later beta cycle, update that lower-bound tuple; reconcile the ranges to `^1.0.0` at the 1.0.0 cut.
+
+### A single shared release workflow
+
+One `release.yml` runs on pushes to **both** `main` and `canary`; runtime `baseBranch` normalization establishes the branch identity before Changesets runs, while pre.json presence/exit state determines beta versus stable behavior. The single-file shape is required by npm trusted publishing: npm allows exactly one trusted-publisher config per package, keyed to one workflow filename. A build failure prevents Changesets; a publish failure prevents tag and examples-sync steps; an examples-sync failure cannot republish packages and is independently retryable. Stable package publishing, including the release-tag step, pushes tags only, never a branch ref; the separate examples-sync step pushes the release-specific `chore/examples-sync-<branch>-<commit>` branch and opens its pull request.
+
+### Publishing security
+
+npm publishes use **trusted publishing (OIDC)**: the workflow carries an `id-token: write` permission and the npm CLI auto-detects GitHub OIDC during `changeset publish`, so no npm token exists in the repository or workflows and provenance is added automatically. The 2026-07-08 GAT 2FA-bypass deprecation removed the token alternative. NuGet still uses an API key secret (`NUGET_API_KEY`) via `scripts/dotnet/publish.js` — nuget.org has no OIDC equivalent. Branch protection on `main` and `canary` (require PRs + CI, restrict push to maintainers) means only a maintainer can trigger a publish.
+
+### Stable-cut runbook
+
+A maintainer cuts a stable release using this sequence:
+
+1. On `canary`, exit beta mode and commit with `baseBranch: "canary"`.
+2. Merge `canary` into `main`; the workflow normalizes `baseBranch` to `main` before opening the stable version PR.
+3. Merge the stable version PR, then merge `main` back into `canary`.
+4. Restore `baseBranch: "canary"`, enter beta mode, and commit the config plus `pre.json`.
+5. Merge the release-specific examples-sync PR separately.
+
+The window between steps 1 and 4 is quiescent — canary publishes nothing and feature merges should wait. The examples-sync PR is release-owned and independently retryable; it cannot republish packages. A build failure prevents Changesets from running, and a publish failure prevents tag and examples-sync steps.
+
 ## Agent cheat-sheet
 
 Quick pointers for common tasks and failure investigations:
@@ -532,3 +560,4 @@ The central tension to keep in mind: **two runtimes (C# and Node.js) must agree 
 - [`docs/guides/`](guides/) — configuration, creating islands, directives, building for production, deployment, and more.
 - [`docs/PROJECT.md`](PROJECT.md) — the v1 milestone scope, phases, and open questions.
 - [`docs/MEMORY.md`](MEMORY.md) — dated log of design decisions and the reasoning behind them.
+- [`CONTRIBUTING.md`](../CONTRIBUTING.md) — development setup, contribution flow, and the release workflow.
