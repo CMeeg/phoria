@@ -14,6 +14,8 @@ pnpm dev
 
 `pnpm dev` starts the WebApp, the Phoria Server with Vite HMR, and the Aspire dashboard. The WebApp listens on port `5873` and the Phoria Server listens on port `5773`.
 
+The SSR source entry is `src/entry-server.tsx`. Production bundles are emitted as JavaScript, so the example's server entry applies a production-only `.tsx` to `.ts` runtime filename alias for the current published Phoria runtime; development uses the `.tsx` entry directly through Vite.
+
 Run the smoke test against the Aspire-hosted app with:
 
 ```bash
