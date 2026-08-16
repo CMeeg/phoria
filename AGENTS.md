@@ -20,6 +20,7 @@ packages/
   phoria-react/         @phoria/phoria-react - React integration
   phoria-svelte/        @phoria/phoria-svelte - Svelte integration
   phoria-vue/           @phoria/phoria-vue - Vue integration
+  phoria-opentelemetry/ @phoria/opentelemetry - OpenTelemetry instrumentation for the Node sidecar
   vite-plugin-dotnet-dev-certs/  @phoria/vite-plugin-dotnet-dev-certs - A Vite plugin to integrate dotnet dev-certs
   Phoria/               Phoria (.NET) - NuGet package with TagHelpers, SSR, server process
   Phoria.Tests/         Phoria (.NET) test project
@@ -147,17 +148,9 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 
 ## Versioning & Publishing
 
-Uses **Changesets** (`pnpm changeset` to create). Release flow:
+Uses **Changesets** (`pnpm changeset` to create). Feature work targets `canary`, which produces prerelease `beta` builds; `main` receives coordinated stable cuts from `canary`. A single shared `release.yml` runs on pushes to both branches, normalizes `.changeset/config.json.baseBranch` from `GITHUB_REF_NAME`, and opens a version pull request titled `chore: release`. Merging that PR publishes the changed packages and opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request updating the examples. See `docs/PROJECT.md` Phase 4 and `CONTRIBUTING.md`.
 
-1. `pnpm changeset` — create a changeset describing the change
-2. Merge to `main` — CI runs `changesets/action` which opens a "Release" PR
-3. Merge the Release PR — publishes to npm (JS packages) and NuGet (Phoria .NET)
-
-Pre-1.0, the planned Phase 4 work adds a **canary branch** producing `beta` builds
-(changesets prereleases) so integration/production testing runs against real
-published packages — see `docs/PROJECT.md`.
-
-NuGet publishing uses the `scripts/dotnet/publish.js` script via `pnpm --filter phoria-dotnet run publish`.
+npm publishing uses trusted publishing (OIDC), with no npm token in the repository. NuGet publishing uses `scripts/dotnet/publish.js` via `pnpm --filter phoria-dotnet run publish`, with `NUGET_API_KEY` supplied by the short-lived token from `NuGet/login@v1`.
 
 ## Examples
 

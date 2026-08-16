@@ -67,7 +67,7 @@ Contributions completed with the assistance of a coding agent are welcome — ma
 
 ### Beta stream (canary)
 
-Every merged change with a changeset makes Changesets open a "Version Packages (beta)" pull request on `canary`. Merging that PR runs the release workflow, which publishes each package at its natural 0.x beta version (npm `beta` dist-tag) and a matching beta to NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request that updates the examples to the released beta versions. Merge that examples-sync PR separately. The workflow never deletes or overwrites a fixed examples branch. Before Changesets runs, the shared workflow normalizes `.changeset/config.json.baseBranch` from `GITHUB_REF_NAME`, so the runtime branch identity is always correct. The four framework peer ranges use a prerelease-aware lower bound matching the upcoming core tuple, for example `>=0.5.0-0 <2.0.0`; update that tuple before a later beta cycle. Betas are safe to consume for integration and production testing of work in progress.
+Every merged change with a changeset makes the release workflow open a version pull request titled `chore: release` on `canary`. Merging that PR runs the release workflow, which publishes each package at its natural 0.x beta version (npm `beta` dist-tag) and a matching beta to NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request that updates the examples to the released beta versions. Merge that examples-sync PR separately. The workflow never deletes or overwrites a fixed examples branch. Before Changesets runs, the shared workflow normalizes `.changeset/config.json.baseBranch` from `GITHUB_REF_NAME`, so the runtime branch identity is always correct. The four framework peer ranges use a prerelease-aware lower bound matching the upcoming core tuple, for example `>=0.5.0-0 <2.0.0`; update that tuple before a later beta cycle. Betas are safe to consume for integration and production testing of work in progress.
 
 ### Stable releases (the canary → main cut)
 
@@ -83,7 +83,7 @@ Stable package publishing pushes release tags only; it does not push a branch re
 
 ### Publishing security
 
-Publishing is gated end to end: only maintainers can merge to `main`/`canary` (branch protection), npm publishes use trusted publishing (OIDC) so no npm token lives in the repository or workflows, and NuGet uses a repository secret API key. There is no per-PR npm/NuGet publish — packages only reach the registry through the release workflow.
+Publishing is gated end to end: only maintainers can merge to `main`/`canary` (branch protection), npm publishes use trusted publishing (OIDC) so no npm token lives in the repository or workflows, and NuGet uses trusted publishing (OIDC) via `NuGet/login@v1`, so no long-lived NuGet API key is required. There is no per-PR npm/NuGet publish — packages only reach the registry through the release workflow.
 
 ## Documentation
 

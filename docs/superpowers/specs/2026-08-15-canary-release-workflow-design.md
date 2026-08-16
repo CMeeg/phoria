@@ -60,7 +60,7 @@ Investigated per `TODO.md`'s "npm publishing changes" item: `npm stage publish` 
 
 ## Branch protection (applied via the GitHub web UI; `gh` is unavailable here)
 
-Applied to both `main` and `canary`: require a pull request before merging (no direct pushes), require the CI status checks (`build-and-test`, `test-browser`), block force pushes, restrict who can push to maintainers, and allow admin bypass ("Do not allow bypassing the above settings" left unchecked — an emergency escape hatch on a solo repo). Required approvals are deliberately not enforced: GitHub never counts the PR author's own approval, so requiring approvals would deadlock a sole maintainer; enable them when a second active maintainer exists.
+Applied to both `main` and `canary`: require a pull request before merging (no direct pushes), require the CI status checks (`build-and-test`, `test-browser`), block force pushes, restrict who can push to maintainers, and allow admin bypass ("Do not allow bypassing the above settings" left unchecked — an emergency escape hatch on a solo repo). The `main` rule additionally requires the `Canary to Main guard` status check, which permits `canary` and the release automation branches (`changeset-release/*` and `chore/examples-sync-*`) while blocking other PR sources. Required approvals are deliberately not enforced: GitHub never counts the PR author's own approval, so requiring approvals would deadlock a sole maintainer; enable them when a second active maintainer exists.
 
 ## CONTRIBUTING.md (new, repo root)
 

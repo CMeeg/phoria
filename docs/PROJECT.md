@@ -170,16 +170,15 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
    applied as a standing end-of-phase review practice. Task-by-task detail:
    [`docs/plans/2026-08-13-phase-3-test-consolidation.md`](plans/2026-08-13-phase-3-test-consolidation.md),
    spec: [`docs/superpowers/specs/2026-08-13-phase-3-test-consolidation-design.md`](superpowers/specs/2026-08-13-phase-3-test-consolidation-design.md).
-4. **Canary & release workflow** — a canary branch producing `beta` builds
+4. **Canary & release workflow** — **complete.** A canary branch producing `beta` builds
    (changesets prereleases) published to npm and NuGet for integration and
    production testing; resolves the unpublished-`@phoria/opentelemetry` docker
    blocker; absorbs the develop-ahead-of-main integration rather than a single
    big-bang merge; examples install+build against published packages as a
    release gate, not per-PR CI (`TODO.md` `## Canary workflow`). Publishing
-   moves to npm trusted publishing (OIDC) per the npm GAT 2FA-bypass
-   deprecation. Design: [`docs/superpowers/specs/2026-08-15-canary-release-workflow-design.md`](superpowers/specs/2026-08-15-canary-release-workflow-design.md).
+    uses trusted publishing (OIDC) for npm and NuGet (`NuGet/login@v1`). Design: [`docs/superpowers/specs/2026-08-15-canary-release-workflow-design.md`](superpowers/specs/2026-08-15-canary-release-workflow-design.md).
 5. **Docs & guides** — drift pass over READMEs, `docs/guides`, and
-   `ARCHITECTURE.md` against completed phases 0-2; flesh out placeholders;
+   `ARCHITECTURE.md` against completed phases 0-4; flesh out placeholders;
    human/agent writing-style consistency; document the deliberate
    `<outDir>/server` layout; HTTPS-in-Preview pros/cons decision and docs
    (research in Phase 7). Sequenced before the remaining feature work so docs
@@ -212,12 +211,11 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   mechanism is unproven and could force more fundamental design changes across
   the Vite plugin and .NET manifest/TagHelper layers. Gated behind a design
   spike before implementation.
-- **Changesets prerelease flow (canary/beta)** — changesets documents
-  prereleases as "very complicated"; running a `beta` stream alongside the
-  stable `1.0.0` cut (prerelease-aware peer ranges, example refs, NuGet
-  publishing via `scripts/dotnet/publish.js`) must not collide. The Phase 4
-  design resolves the mechanics (single shared release workflow, pre.json on
-  canary, stable-cut runbook); rehearsal precedes going live.
+- **Changesets prerelease flow (canary/beta)** — resolved in Phase 4: the
+  single shared release workflow, `pre.json` on canary, stable-cut runbook,
+  prerelease-aware peer ranges, example refs, and NuGet publishing via
+  `scripts/dotnet/publish.js` were rehearsed and implemented; the first beta
+  was published on 2026-08-16.
 - **Examples scope (triage)** — the v1 examples subset is undecided until the
   Examples phase; over-scoping it is the largest schedule risk in the new work.
 - **DX & tooling decisions** — dropping cjs is a breaking change to every

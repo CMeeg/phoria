@@ -99,7 +99,7 @@ All options live in `PhoriaOptions` (`PhoriaOptions.cs`), bound from the `"phori
 
 #### Service registration (`ServiceCollectionExtensions.cs`)
 
-`AddPhoria` registers the named `PhoriaServerHttpClient` (used for all .NET → Phoria Server calls). In **Development** it accepts any server certificate (`DangerousAcceptAnyServerCertificateValidator`) so the .NET side can talk HTTPS to the Node sidecar using the ASP.NET dev certificate; outside Development it uses default validation. The rest of the graph:
+`AddPhoria` registers the named `PhoriaServerHttpClient` for SSR calls and the separate `PhoriaServerHealthCheckHttpClient` for health polling. In **Development** both accept any server certificate (`DangerousAcceptAnyServerCertificateValidator`) so the .NET side can talk HTTPS to the Node sidecar using the ASP.NET dev certificate; outside Development they use default validation. The rest of the graph:
 
 | Service | Lifetime | Purpose |
 |---|---|---|
@@ -108,6 +108,7 @@ All options live in `PhoriaOptions` (`PhoriaOptions.cs`), bound from the `"phori
 | `PhoriaServerProcessService` | Hosted service | Runs the process supervisor |
 | `PhoriaServerMonitorService` | Hosted service | Runs the health monitor |
 | `IPhoriaServerHttpClientFactory` | Singleton | Creates the named client with base URL |
+| `IPhoriaServerHealthCheckHttpClientFactory` | Singleton | Creates the health-check client with base URL |
 | `IViteManifestReader` / `IViteSsrManifestReader` | Singleton | Manifest parsing + file watching |
 | `IPhoriaIslandSsr` → `PhoriaIslandSsr` | Singleton | SSR HTTP client |
 | `IPhoriaIslandComponentFactory` | Scoped | Per-request island creation |
@@ -132,9 +133,8 @@ All options live in `PhoriaOptions` (`PhoriaOptions.cs`), bound from the `"phori
 - **`PhoriaIsland`** (`PhoriaIsland.cs`) is the runtime model: `ComponentName`, `Props`, `RenderMode` (`ServerOnly`/`ClientOnly`/`Isomorphic`), `Client` (the hydration directive), and `Framework`/`ComponentPath` — the latter two are **filled in from the SSR response headers**, not set by the developer. The static `Client` class is the Razor-facing factory for directives: `Client.Only`, `Client.Load`, `Client.Idle(timeout?)`, `Client.Visible(rootMargin?)`, `Client.Media(query)`.
 - **`PhoriaIslandTagHelper`** is the core `<phoria-island component props client>` tag. It delegates to `PhoriaIslandComponentFactory.CreateAsync` and replaces itself with a `PhoriaIslandHtmlContent`.
 - **`PhoriaIslandComponentFactory`** (scoped) derives the render mode from the directive: no `client` attribute → `ServerOnly`; `client:only` → `ClientOnly`; any other directive → `Isomorphic`. It consults the monitor and:
-  - `Isomorphic` + unhealthy server → **degrades to `ClientOnly`** (renders the web component with no SSR markup) and logs a warning;
-  - `ServerOnly` + unhealthy server → **throws `PhoriaIslandComponentException`** (logged, then suppressed by the tag helper);
-  - `ClientOnly` is unaffected.
+  - Under the default `Degrade` policy, `Isomorphic` + unhealthy server → **degrades to `ClientOnly`** (renders the web component with no SSR markup) and logs a warning, while `ServerOnly` + unhealthy server → **throws `PhoriaIslandComponentException`** (logged, then suppressed by the tag helper).
+  - Under `Fail`, both `Isomorphic` and `ServerOnly` + unhealthy server throw, and the tag helper rethrows so the page returns 500; `ClientOnly` is unaffected by either policy.
   It adds every island to the scoped context (so `<phoria-island-preload>` can see every island on the page). For non-`ClientOnly` modes it calls `PhoriaIslandSsr.RenderIsland` and wraps the result in `PhoriaIslandHtmlContent`.
 - **`PhoriaIslandSsr`** is the SSR HTTP client. It serializes `island.Props` (via `Islands.PropsSerializer`) to a pooled stream and `POST`s it as JSON to `{SsrBase}/render/{ComponentName}` on the Phoria Server URL. The response body (the rendered HTML) is pooled, and the `x-phoria-island-framework` / `x-phoria-island-path` response headers are copied into `island.Framework` / `island.ComponentPath`. The SSR call is a plain server-to-server POST — cookies, headers, and auth from the original browser request are **not** forwarded; props are the only request input, HTML plus the two headers the only output.
 - **`PhoriaIslandHtmlContent`** writes the emitted markup. For `ServerOnly` islands it writes only the SSR HTML. Otherwise it writes the `<phoria-island>` custom element wrapper:
@@ -143,7 +143,7 @@ All options live in `PhoriaOptions` (`PhoriaOptions.cs`), bound from the `"phori
   <phoria-island component="Counter" client:load props="{&quot;startAt&quot;:5}" framework="react">[SSR HTML]</phoria-island>
   ```
 
-  The `props` attribute prefers the echoed serialized props from the SSR request; the `client` directive becomes a bare attribute (`client:load`) or a valued one (`client:idle="200"`). The streamed SSR HTML is written out via `TextWriterBufferWriter` (`IO/TextWriterBufferWriter.cs`), and the underlying `RecyclableMemoryStream`s are returned to the pool (`IO/StreamPool.cs`) as soon as the tag is written.
+  The `props` attribute is written from the serialized props kept by the .NET SSR client after the request is sent; the server does not echo props. The `client` directive becomes a bare attribute (`client:load`) or a valued one (`client:idle="200"`). The streamed SSR HTML is written out via `TextWriterBufferWriter` (`IO/TextWriterBufferWriter.cs`), and the underlying `RecyclableMemoryStream`s are returned to the pool (`IO/StreamPool.cs`) as soon as the tag is written.
 - **`PhoriaIslandPropsSerializer`** — `SystemTextJsonPropsSerializer` uses camelCase naming, omits nulls, reads case-insensitively, and uses `JavaScriptEncoder.UnsafeRelaxedJsonEscaping` (props end up inside an HTML attribute, so HTML-entity escaping is deliberately disabled).
 
 #### Entry & preload tags (`PhoriaIslandEntryTagHelper.cs`)
@@ -187,7 +187,7 @@ Registration happens at **module scope** through four module-level registries: `
 
 The public API is:
 
-- `registerFramework` / `getFramework` / `getFrameworks` — framework names (e.g. `"react"`); `getFrameworks()` feeds the health-check payload.
+- `getFrameworks` — registered framework names (e.g. `"react"`); feeds the health-check payload. Framework registration is internal; registering an SSR or CSR service also registers its framework.
 - `registerSsrService` / `getSsrService` — the server-side renderer for a framework; registering a service also registers its framework.
 - `registerCsrService` / `getCsrService` — the client-side mounter for a framework.
 - `registerComponent(name, { loader, framework })` / `registerComponents(record)` / `getComponent(name)` — component entries keyed by lowercased name. Registering a component for an unregistered framework throws.
@@ -215,7 +215,7 @@ export const __phoriaComponentPath = "/src/components/Counter/Counter.tsx";
   1. if `client:only` is present, mounts with `{ mode: "render" }` (full CSR, no hydration) — this has the highest priority;
   2. otherwise it finds the first hydration directive attribute present and runs the directive with `{ mode: "hydrate" }`;
   3. if none, it throws (`No known client directive was found.`).
-  Errors are caught and `console.error`-ed (non-fatal). `PhoriaIsland.register()` defines the custom element when `customElements` exists.
+  Errors inside the handler are caught and `console.error`-ed (non-fatal); a missing `component` attribute throws before the handler's try block. `PhoriaIsland.register()` defines the custom element when `customElements` exists.
 - **Directives** (`src/client/directives.ts`) — `client:load` (mount immediately), `client:idle` (`requestIdleCallback` with an optional numeric timeout), `client:visible` (`IntersectionObserver` with an optional `rootMargin`), `client:media` (a required media query, mounts on match/change). They map 1:1 to the .NET `Client` directive factories.
 - **CSR service contract** (`src/client/csr.ts`): `PhoriaIslandComponentCsrService.mount(island, component, props, options)` with `csrMountMode = { render, hydrate }`.
 
@@ -300,7 +300,7 @@ The app's `src/server.ts` reads those paths from the Vite dev server config to b
 
 ### Examples (`examples/`)
 
-`getting-started` (React only) and `framework-multiple` (React + Svelte + Vue) share the same skeleton: an Aspire **AppHost**, a **WebApp** (.NET), and a **`ui/`** directory (the Vite root). They differ only in ports (getting-started: web app `5373`, Phoria Server `5273`; framework-multiple: `5573`/ `5473`).
+`getting-started` (React only) and `framework-multiple` (React + Svelte + Vue) share the same skeleton: an Aspire **AppHost**, a **WebApp** (.NET), and a **`ui/`** directory (the Vite root). They use different ports (getting-started: web app `5373`, Phoria Server `5273`; framework-multiple: `5573`/ `5473`), and getting-started additionally includes custom component integrations, a Privacy page, and Bootstrap/jQuery assets.
 
 The **AppHost** (`AppHost/Program.cs`) owns both processes:
 
@@ -319,7 +319,7 @@ The **`ui/`** directory contains the Vite project:
 - `src/server.ts` (built as the `server` environment) parses appsettings, boots a middleware-mode Vite dev server when not in production, composes the four request handlers into an h3 app, and listens via `listhen` (using the Vite HTTPS config in dev). It also parses the shared `phoria:observability` settings, starts `@phoria/opentelemetry`'s NodeSDK before listening, enriches h3 spans with SSR component/framework or CSR asset data, uses the OTel logger with a console fallback, and flushes observability providers during graceful SIGTERM/SIGINT shutdown. The .NET WebApp independently gates logging, ASP.NET Core and HttpClient tracing/metrics, and the `Phoria` ActivitySource; its SSR span propagates `traceparent` to the Node sidecar, producing a page request -> `phoria.ssr.render` -> HTTP client/server SSR trace shape. The Node sidecar filters `/hc` from spans and metrics, while the .NET WebApp filters `/hc` from client spans only — its `/hc` client metrics (the runtime-built `System.Net.Http` meter) are a residual limitation, as OpenTelemetry .NET 1.17.0 exposes no per-request filter for them.
 - `src/components/register.ts` registers each component with a loader and `framework` name.
 
-Razor pages use `<phoria-island component="Counter" client="Client.Load" props="new { StartAt = 5 }">`, and the layout places `<phoria-island-styles />` + `<phoria-island-preload />` in `<head>` and `<phoria-island-scripts />` before `</body>`. `framework-multiple` additionally shows custom Tag Helpers and View Components built on `IPhoriaIslandComponentFactory` (`Components/`), and exercises all three directives plus all three frameworks on one page.
+Razor pages use `<phoria-island component="Counter" client="Client.Load" props="new { StartAt = 1 }">`, and the layout places `<phoria-island-styles />` + `<phoria-island-preload />` in `<head>` and `<phoria-island-scripts />` before `</body>`. `getting-started` additionally shows custom Tag Helpers and View Components built on `IPhoriaIslandComponentFactory` (`Components/`), while `framework-multiple` exercises all three directives plus all three frameworks on one page.
 
 ---
 
@@ -514,7 +514,7 @@ Versioning and publishing use **Changesets** with a two-branch model: feature wo
 
 ### The beta stream
 
-`canary` commits `.changeset/pre.json` (`mode: "pre"`, `tag: "beta"`) and a `baseBranch: "canary"` config. The shared release workflow normalizes that config from `GITHUB_REF_NAME` immediately before Changesets runs, so a canary→main merge cannot leave the stable stream pointing at canary. Every merged change with a changeset makes the release workflow open a "Version Packages (beta)" pull request; merging it runs `changeset publish` and publishes each bumped package as a `beta` prerelease on npm and a matching beta on NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request updating the examples (`pnpm examples:bump`) to the released versions. The workflow never deletes or overwrites a fixed examples branch; the maintainer merges each examples-sync PR separately. Framework peer ranges on `@phoria/phoria` start at the upcoming core tuple with a prerelease marker (`>=0.5.0-0 <2.0.0` for the first stream), so the beta remains in the natural 0.x version family and Changesets does not trigger a peer-range major cascade. Before each later beta cycle, update that lower-bound tuple; reconcile the ranges to `^1.0.0` at the 1.0.0 cut.
+`canary` commits `.changeset/pre.json` (`mode: "pre"`, `tag: "beta"`) and a `baseBranch: "canary"` config. The shared release workflow normalizes that config from `GITHUB_REF_NAME` immediately before Changesets runs, so a canary→main merge cannot leave the stable stream pointing at canary. Every merged change with a changeset makes the release workflow open a version pull request titled `chore: release`; merging it runs `changeset publish` and publishes each bumped package as a `beta` prerelease on npm and a matching beta on NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request updating the examples (`pnpm examples:bump`) to the released versions. The workflow never deletes or overwrites a fixed examples branch; the maintainer merges each examples-sync PR separately. Framework peer ranges on `@phoria/phoria` start at the upcoming core tuple with a prerelease marker (`>=0.5.0-0 <2.0.0` for the first stream), so the beta remains in the natural 0.x version family and Changesets does not trigger a peer-range major cascade. Before each later beta cycle, update that lower-bound tuple; reconcile the ranges to `^1.0.0` at the 1.0.0 cut.
 
 ### A single shared release workflow
 
@@ -522,7 +522,7 @@ One `release.yml` runs on pushes to **both** `main` and `canary`; runtime `baseB
 
 ### Publishing security
 
-npm publishes use **trusted publishing (OIDC)**: the workflow carries an `id-token: write` permission and the npm CLI auto-detects GitHub OIDC during `changeset publish`, so no npm token exists in the repository or workflows and provenance is added automatically. The 2026-07-08 GAT 2FA-bypass deprecation removed the token alternative. NuGet also uses **trusted publishing (OIDC)**: `NuGet/login@v1` exchanges the workflow's OIDC token for a short-lived API key, which `scripts/dotnet/publish.js` passes to `dotnet nuget push`. No long-lived NuGet API key is required. Branch protection on `main` and `canary` (require PRs + CI, restrict push to maintainers) means only a maintainer can trigger a publish.
+npm publishes use **trusted publishing (OIDC)**: the workflow carries an `id-token: write` permission and the npm CLI auto-detects GitHub OIDC during `changeset publish`, so no npm token exists in the repository or workflows and provenance is added automatically. The 2026-07-08 GAT 2FA-bypass deprecation removed the token alternative. NuGet also uses **trusted publishing (OIDC)**: `NuGet/login@v1` exchanges the workflow's OIDC token for a short-lived API key, which `scripts/dotnet/publish.js` passes to `dotnet nuget push`. No long-lived NuGet API key is required. Branch protection on `main` and `canary` (require PRs + CI, restrict push to maintainers) means only a maintainer can trigger a publish. The required `Canary to Main guard` check prevents feature branches from bypassing the canary workflow when targeting `main`; it allows the coordinated `canary` cut and the Changesets/examples-sync automation branches.
 
 ### Stable-cut runbook
 

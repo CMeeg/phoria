@@ -199,59 +199,27 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 - Final verification is reporting-only and green: `pnpm build`, `pnpm lint`, `pnpm check`, `pnpm test`, `pnpm test:browser`, `pnpm test:coverage`, `dotnet test --solution Phoria.sln --configuration Release`, and `pnpm examples:check` are the closeout commands.
 - Task 5 coverage results are recorded in ARCHITECTURE Table 4. Browser-mode tests are deliberately excluded from v8 reports; the remaining accepted gaps are the live HMR transceive loop, singleton-state observability paths, browser-only CSR modules in v8, and the internal HTTP-client base-address branch covered indirectly through middleware.
 
-## 2026-08-15 — Phase 4 design (canary & release workflow spec)
+## 2026-08-15 — Phase 4 canary & release workflow
 
-- **A single shared `release.yml` runs on pushes to both `main` and `canary`**, replacing the earlier plan for a separate canary workflow. npm trusted publishing allows exactly one trusted-publisher config per package, keyed to one workflow filename, so both streams must publish from the same file; repo state (pre.json present on canary, absent/exit on main) decides beta vs stable, not the branch.
-- **npm publishing moves from `NPM_TOKEN` to trusted publishing (OIDC)**: the workflow gains `id-token: write`, the token is removed, and the npm CLI auto-detects GitHub OIDC during `changeset publish` (adding provenance automatically). Driven by the 2026-07-08 GAT 2FA-bypass deprecation. NuGet is unchanged (`NUGET_API_KEY`) — nuget.org has no OIDC equivalent.
-- **Staged publishing (`npm stage publish`) investigated and deferred**: `changeset publish` has no staged mode (would need a custom publish loop re-implementing dist-tag/git-tag handling), a brand-new package cannot be staged (so `@phoria/opentelemetry`'s first publish is direct regardless), and for a sole maintainer the human gate it adds already exists as the version PR + canary→main cut + branch protection. Trusted publishing alone satisfies the deprecation; revisit post-1.0.
-- **`canary` replaces `develop`**: created at develop HEAD, `ci.yml` triggers move `develop` → `canary`, and feature PRs target canary; `main` gets only coordinated stable cuts. First betas use the natural 0.x prerelease versions from the 15 pending minor/patch changesets, so consumers benefit from the phased v1 work as stable releases as it matures; the `1.0.0` major changesets stay queued for Phase 10.
-- **Examples sync to beta refs on canary** after each beta publish (`examples:bump`), fixing the `@phoria/opentelemetry` docker blocker and satisfying the docker-compose success criterion.
-- **Branch protection on `main` + `canary`** (web UI; `gh` unavailable): require PRs, require CI checks, block force pushes, restrict push to maintainers, allow admin bypass as an emergency escape hatch, and **no required approvals** — GitHub never counts the PR author's own approval, so requiring them would deadlock a sole maintainer. Enable approvals when a second active maintainer exists.
-- **`CONTRIBUTING.md` added at the repo root** (prerequisites, dev setup, branch model, contribution flow, release workflow + stable-cut runbook, publishing security) — the public-facing counterpart to the agent-focused AGENTS.md.
-- The design is recorded in `docs/superpowers/specs/2026-08-15-canary-release-workflow-design.md` and the release flow in ARCHITECTURE's new `## Release workflow` section. Follow-ups: staged publishing (post-1.0), peer-range reconciliation to `^1.0.0` at the 1.0.0 cut, `gh`-based branch-protection automation.
+- A single shared `release.yml` runs on pushes to both `main` and `canary`; `.changeset/config.json.baseBranch` is normalized from `GITHUB_REF_NAME` immediately before Changesets runs, while `pre.json` presence/exit state determines beta versus stable behavior. This avoids carrying the canary branch identity into a stable cut and is required because npm trusted publishing allows one workflow filename per package.
+- npm publishing uses trusted publishing (OIDC) with `id-token: write` and no `NPM_TOKEN`; staged publishing was investigated and deferred post-1.0 because Changesets has no staged mode, a new package cannot be staged, and the maintainer already has human gates through version PRs, stable cuts, and branch protection. NuGet likewise uses trusted publishing through `NuGet/login@v1`.
+- `canary` replaces `develop` as the integration branch. Feature PRs target canary, main receives coordinated stable cuts, and the first beta stream stays in the natural 0.x family. Rehearsal verified that framework peer ranges of `>=0.5.0-0 <2.0.0` prevent the Changesets peer cascade; update that tuple before later beta cycles and reconcile to `^1.0.0` at the 1.0.0 cut.
+- Successful publishes open release-specific `chore/examples-sync-<branch>-<commit>` PRs using `pnpm examples:bump`; the workflow never deletes or overwrites a fixed branch, pushes tags only, and has explicit failure boundaries: build failure prevents Changesets, publish failure prevents tag/examples-sync, and examples-sync failure cannot republish packages.
+- Branch protection exposed GH006 when the workflow tried to push directly; the examples sync therefore lands as a `gh`-created pull request. Protection on `main` and `canary` requires PRs and CI, restricts pushes to maintainers, and has no required approvals because GitHub does not count a sole maintainer's own approval. `CONTRIBUTING.md` is the public-facing counterpart to this agent guidance.
 
-## 2026-08-15 — Phase 4 rehearsal (canary prerelease flow)
-
-- Rehearsed the Changesets prerelease flow in a throwaway worktree with the pending Phase 4 changesets. `pnpm install` completed cleanly using pnpm 11.17.0.
-- The initial rehearsal with the old peer range produced the peer cascade: `@phoria/phoria` -> `0.5.0-beta.0`, the four peer packages -> `1.0.0-beta.0`, dev-certs -> `0.3.0-beta.0`, and `phoria-dotnet` -> `0.5.0-beta.0`. Changesets rewrote the peers to `>=0.5.0-beta.0` and dropped the old upper bound.
-- The revised rehearsal first widened all four peer ranges to `>=0.5.0-0 <2.0.0`. Beta versions then stayed natural and in the 0.x family: `@phoria/phoria`/`@phoria/phoria-react` -> `0.5.0-beta.0`, `@phoria/phoria-svelte`/`@phoria/phoria-vue` -> `0.4.0-beta.0`, `@phoria/opentelemetry` -> `0.2.0-beta.0`, `@phoria/vite-plugin-dotnet-dev-certs` -> `0.3.0-beta.0`, and `phoria-dotnet` -> `0.5.0-beta.0`. The peer ranges remained unchanged because the core beta was in range.
-- The generated `.changeset/pre.json` had `mode: "pre"`, `tag: "beta"`, `initialVersions` of `phoria-dotnet`/`@phoria/phoria`/`@phoria/phoria-react` = `0.4.2`, `@phoria/opentelemetry` = `0.1.0`, `@phoria/phoria-svelte`/`@phoria/phoria-vue` = `0.3.2`, and `@phoria/vite-plugin-dotnet-dev-certs` = `0.2.1`, plus 15 observed changeset IDs: `build-app-server-environment`, `decouple-h3-from-public-api`, `dotnet-10-xunit-v3`, `eager-rivers`, `graceful-server-process-stop`, `otel-observability-examples`, `quiet-island-styles-css-warning`, `quiet-otlp-requests`, `raise-node-and-pnpm`, `typescript-6-vite-plugin-dts-5`, `unavailable-server-policy`, `update-remaining-dependencies`, `vite-8-rolldown`, `vite-plugin-correctness`, and `widen-phoria-peer-range`.
-- Stable-cut rehearsal with `pre enter beta`, `pre exit`, and `pnpm run version` removed `pre.json` cleanly and produced `@phoria/phoria` -> `0.5.0`, `@phoria/phoria-react` -> `0.5.0`, `@phoria/phoria-svelte` -> `0.4.0`, `@phoria/phoria-vue` -> `0.4.0`, `@phoria/opentelemetry` -> `0.2.0`, `@phoria/vite-plugin-dotnet-dev-certs` -> `0.3.0`, and `phoria-dotnet` -> `0.5.0`. Stable peers remained `>=0.5.0-0 <2.0.0` for all four peer packages. The revised rehearsal worktree was removed and pruned; the implementation worktree remained clean before these documentation edits.
-
-## 2026-08-15 — Phase 4 implementation spec gap
-
-- Task 4 review found that the documented branch-local Changesets config is not self-consistent across the stable-cut merge: `canary` commits `baseBranch: "canary"`, but merging it into `main` carries that value into the stable branch unless an explicit restoration step or workflow seam changes it back to `main`. The existing workflow does not provide that seam, so stable-cut behavior is not yet safe to implement.
-- The same review found that deleting a fixed `chore/examples-sync` branch before every publish can orphan an existing maintainer PR and can collide across the independent `main` and `canary` concurrency groups. The examples-sync branch/PR identity needs a design decision before the workflow is finalized.
-- The tag step also needs to use an explicit tag-only push rather than `git push --follow-tags`, which pushes the protected branch ref as well as tags.
-
-## 2026-08-15 — Phase 4 spec reconciliation
-
-- **Runtime branch normalization approved:** `.changeset/config.json.baseBranch` is normalized to `GITHUB_REF_NAME` immediately before Changesets runs. The canary commit remains `canary`; the main release path repairs the value to `main` after the canary→main merge; the stable-cut runbook restores `canary` before re-entering beta mode. This avoids pretending one merged file can retain two branch identities.
-- **Release-specific examples branches approved:** successful publishes use `chore/examples-sync-<branch>-<commit>` and never delete or overwrite a fixed branch. This prevents abandoned maintainer PRs and cross-stream collisions; historical short-lived branches are an accepted cost.
-- **Tags-only publishing approved:** the workflow pushes tags explicitly rather than using `git push --follow-tags`, which can push a protected branch ref.
-- **Failure boundaries:** build failure prevents Changesets; publish failure prevents tag/examples steps; examples-sync failure cannot republish packages and is independently retryable.
-
-## 2026-08-15 — Phase 4 execution (canary release workflow)
-
-- **GH006 finding:** branch protection rejects the workflow's direct `git push`; the classic "allow specified actors to bypass required pull requests" setting only skips the pull-request requirement, not required status checks.
-- **Approved resolution:** the examples sync lands as a `gh`-created pull request, which the maintainer merges.
-- **Workflow shape:** one shared `release.yml` runs on `main` and `canary`, grants `id-token: write` for npm trusted publishing, and has no `NPM_TOKEN`; NuGet continues to use `NUGET_API_KEY`.
-- **Branch-creation deviation:** `canary` was created at the current `HEAD`, not at bare `develop` `HEAD`.
-
-## 2026-08-15 — Phase 4 Task 2 documentation alignment
-
-- Public release documentation now records the implemented seam: `.changeset/config.json.baseBranch` is normalized from `GITHUB_REF_NAME` at runtime immediately before Changesets runs. Stable-cut recovery restores `baseBranch: "canary"` after merging `main` back into `canary`, before beta mode and `pre.json` are committed again.
-- Examples synchronization is release-specific (`chore/examples-sync-<branch>-<commit>`), opened as a pull request for the publishing branch. The workflow does not delete or overwrite a fixed branch, and the maintainer merges the examples-sync PR separately.
-- Publishing is tag-only (`git push origin --tags`), so the release step does not push a protected branch ref. Failure boundaries are explicit: build failure prevents Changesets, publish failure prevents tag and examples-sync steps, and examples-sync failure cannot republish packages and is independently retryable.
-- This entry documents the implemented workflow only; external branch protection, trusted-publisher configuration, package publishing, and registry verification were not performed locally.
-
-## 2026-08-16 - Phase 4 first-publish recovery
+## 2026-08-16 — Phase 4 first-publish recovery
 
 - A brand-new npm package cannot be created by trusted publishing (OIDC), so its first version requires a maintainer bootstrap publish. That bootstrap must use `pnpm publish`, not plain `npm publish`, because pnpm literalizes workspace `catalog:` specifiers in the published manifest.
 - The manual `@phoria/opentelemetry@0.2.0-beta.0` publish left `catalog:` dependencies in the npm artifact and blocked example installs. The recovery republishes `0.2.0-beta.1` through the workflow's pnpm-based Changesets path; no source catalog literalization is needed.
 - After a publish recovery, verify the published manifest with `npm view <package>@<version> dependencies` before running the examples sync. The missing `@phoria/opentelemetry@0.2.0-beta.0` git tag belongs on the `5d99cde` release commit for history consistency.
 
-## 2026-08-16 - NuGet trusted publishing
+## 2026-08-16 — NuGet trusted publishing
 
 - NuGet.org supports GitHub Actions trusted publishing. The release workflow uses `NuGet/login@v1` with the `meeg` nuget.org profile name, exchanges the job's OIDC token for a short-lived API key, and passes that key to the existing `scripts/dotnet/publish.js` path through `NUGET_API_KEY`.
 - The NuGet trusted-publishing policy is tied to repository owner `CMeeg`, repository `phoria`, and workflow file `release.yml`; no GitHub Actions environment is configured. The long-lived `NUGET_API_KEY` GitHub secret should remain only until the OIDC publish is verified, then be removed.
+
+## 2026-08-16 — Main branch source guard
+
+- Added `.github/workflows/canary-to-main.yml`, a checkout-free required check for PRs targeting `main`. It allows `canary`, `changeset-release/*`, and `chore/examples-sync-*`; other head branches fail with an explicit error.
+- The check is required only on `main`, in addition to the existing CI checks. It is intentionally not required on `canary`, where feature PRs land.
+- The workflow is first merged into `canary`, then a `canary` to `main` PR is opened and left parked. The check can then be selected in the `main` branch rule without merging the stable cut. Until the guard file reaches `main`, other PRs targeting `main` remain blocked with an expected-but-unreported status; merging the parked cut makes the guard report explicit failures for disallowed sources.

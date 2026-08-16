@@ -1,0 +1,29 @@
+name: Canary to Main
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  canary-to-main:
+    name: Canary to Main guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Allow only canary and release automation into main
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          case "$HEAD_REF" in
+            canary|changeset-release/*|chore/examples-sync-*) exit 0 ;;
+            *)
+              echo "::error::PRs into main must come from canary (or release automation); got '$HEAD_REF'."
+              exit 1
+              ;;
+          esac
