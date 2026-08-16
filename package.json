@@ -14,6 +14,7 @@
 		"check": "turbo run check",
 		"examples:bump": "node scripts/examples.js bump",
 		"examples:check": "node scripts/examples.js check",
+		"examples:e2e": "node scripts/examples-e2e.js",
 		"examples:link": "node scripts/examples.js link",
 		"examples:refresh": "node scripts/examples.js refresh",
 		"examples:sync": "node scripts/examples.js sync",

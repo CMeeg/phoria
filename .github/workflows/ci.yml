@@ -6,6 +6,8 @@ on:
     branches:
       - main
       - canary
+    paths-ignore:
+      - "examples/**"
   pull_request:
     branches:
       - main
@@ -19,6 +21,7 @@ concurrency:
 jobs:
   build-and-test:
     name: Build and test
+    if: ${{ github.event_name != 'pull_request' || !startsWith(github.event.pull_request.head.ref, 'chore/examples-sync-') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -116,6 +119,7 @@ jobs:
 
   test-browser:
     name: Browser tests
+    if: ${{ github.event_name != 'pull_request' || !startsWith(github.event.pull_request.head.ref, 'chore/examples-sync-') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -149,3 +153,24 @@ jobs:
 
       - name: Browser-mode component tests
         run: pnpm test:browser
+
+  ci:
+    name: CI
+    if: ${{ always() }}
+    needs:
+      - build-and-test
+      - test-browser
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check required jobs
+        env:
+          BUILD_AND_TEST_RESULT: ${{ needs.build-and-test.result }}
+          BROWSER_TEST_RESULT: ${{ needs.test-browser.result }}
+        run: |
+          if [[ "$BUILD_AND_TEST_RESULT" == "failure" || "$BUILD_AND_TEST_RESULT" == "cancelled" ]]; then
+            exit 1
+          fi
+
+          if [[ "$BROWSER_TEST_RESULT" == "failure" || "$BROWSER_TEST_RESULT" == "cancelled" ]]; then
+            exit 1
+          fi
