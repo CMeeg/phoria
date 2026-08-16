@@ -244,3 +244,9 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 - Examples synchronization is release-specific (`chore/examples-sync-<branch>-<commit>`), opened as a pull request for the publishing branch. The workflow does not delete or overwrite a fixed branch, and the maintainer merges the examples-sync PR separately.
 - Publishing is tag-only (`git push origin --tags`), so the release step does not push a protected branch ref. Failure boundaries are explicit: build failure prevents Changesets, publish failure prevents tag and examples-sync steps, and examples-sync failure cannot republish packages and is independently retryable.
 - This entry documents the implemented workflow only; external branch protection, trusted-publisher configuration, package publishing, and registry verification were not performed locally.
+
+## 2026-08-16 - Phase 4 first-publish recovery
+
+- A brand-new npm package cannot be created by trusted publishing (OIDC), so its first version requires a maintainer bootstrap publish. That bootstrap must use `pnpm publish`, not plain `npm publish`, because pnpm literalizes workspace `catalog:` specifiers in the published manifest.
+- The manual `@phoria/opentelemetry@0.2.0-beta.0` publish left `catalog:` dependencies in the npm artifact and blocked example installs. The recovery republishes `0.2.0-beta.1` through the workflow's pnpm-based Changesets path; no source catalog literalization is needed.
+- After a publish recovery, verify the published manifest with `npm view <package>@<version> dependencies` before running the examples sync. The missing `@phoria/opentelemetry@0.2.0-beta.0` git tag belongs on the `5d99cde` release commit for history consistency.
