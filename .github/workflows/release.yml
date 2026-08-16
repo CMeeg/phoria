@@ -76,12 +76,12 @@ jobs:
           NUGET_API_KEY: ${{ steps.nuget_login.outputs.NUGET_API_KEY }}
 
       - name: Push release tags
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.hasChangesets == 'false'
         run: git push origin --tags
         shell: bash
 
       - name: Open examples-sync pull request
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.hasChangesets == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EXAMPLES_BRANCH: chore/examples-sync-${{ github.ref_name }}-${{ github.sha }}
