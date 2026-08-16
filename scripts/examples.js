@@ -388,7 +388,7 @@ async function bump(exampleDir) {
 		await writeFile(propsPath, props.replace(/<ItemGroup>/, `<ItemGroup>\n\t\t${versionLine}`))
 	}
 
-	await run("pnpm install", exampleDir)
+	await run("pnpm install --no-frozen-lockfile", exampleDir)
 
 	success(`Bumped ${exampleDir} to ${versions.join(", ")} (registry refs).`)
 }
