@@ -43,3 +43,5 @@ jobs:
 
       - name: Run example end-to-end tests
         run: pnpm examples:e2e
+        env:
+          EXAMPLES_E2E: getting-started,framework-multiple,with-workspace
