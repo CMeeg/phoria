@@ -223,3 +223,13 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 - Added `.github/workflows/canary-to-main.yml`, a checkout-free required check for PRs targeting `main`. It allows `canary`, `changeset-release/*`, and `chore/examples-sync-*`; other head branches fail with an explicit error.
 - The check is required only on `main`, in addition to the existing CI checks. It is intentionally not required on `canary`, where feature PRs land.
 - The workflow is first merged into `canary`, then a `canary` to `main` PR is opened and left parked. The check can then be selected in the `main` branch rule without merging the stable cut. Until the guard file reaches `main`, other PRs targeting `main` remain blocked with an expected-but-unreported status; merging the parked cut makes the guard report explicit failures for disallowed sources.
+
+## 2026-08-16 — Examples parity design
+
+- Split the Examples phase: parity with the archived `phoria-examples` repository is a new Phase 5 before Docs; the existing new-example scope moves to Phase 10 after Docs, Vite assets, DX/tooling, and exploration.
+- Parity includes all seven missing examples: `framework-react`, `framework-vue`, `framework-svelte`, `with-workspace`, `with-tailwind`, `with-styled-components`, and `with-storybook`.
+- Rebuild parity examples on the current AppHost/Aspire, OpenTelemetry, standalone-workspace, and e2e template. Reuse useful old content but remove obsolete Lerna/Nx and root-package markers.
+- `with-workspace` uses `apps/WebApp` plus `packages/ui` under a root pnpm workspace. Existing examples keep `WebApp/`; example tooling must discover both layouts and derive relative package, project-reference, and lockfile paths.
+- Local examples e2e runs all discovered examples by default. The examples-sync workflow uses the quota-bounded allow-list `getting-started,framework-multiple,with-workspace`; ports for the seven new examples are 5173, 5273, 5473, 5673, 5773, 5873, and 5973 respectively.
+- `with-tailwind` uses Tailwind v4.2.2+ through `@tailwindcss/vite`. `with-styled-components` uses the existing `renderComponent` seam with `ServerStyleSheet`; no framework API change is required. `with-storybook` pins Vite to `~8.0.16` until the Vite 8.1.x/Rolldown Storybook regression is fixed.
+- Add per-example READMEs, an `examples/README.md` index, and a contributor checklist; archive the old repository only after parity reaches `main`.
