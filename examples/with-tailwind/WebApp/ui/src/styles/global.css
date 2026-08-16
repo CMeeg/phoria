@@ -1,0 +1,63 @@
+@import "tailwindcss";
+@source "../../../Pages";
+@source "../../../ui";
+
+@layer base {
+  :root {
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1 {
+    font-size: var(--text-5xl);
+    line-height: --spacing(12);
+  }
+
+  a {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-blue-400);
+  }
+
+  a:hover {
+    color: var(--color-sky-300);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    a:hover {
+      color: var(--color-blue-500);
+    }
+  }
+
+  button {
+    border-radius: var(--radius-lg);
+    border: 1px solid transparent;
+    padding: --spacing(2) --spacing(4);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    background-color: var(--color-neutral-200);
+    cursor: pointer;
+    transition: border-color 0.25s;
+  }
+
+  button:hover {
+    border-color: var(--color-blue-400);
+  }
+
+  button:focus,
+  button:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    button {
+      background-color: var(--color-neutral-900);
+    }
+  }
+}
+
+@theme {
+  --font-sans: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --animate-spin-slow: spin 20s linear infinite;
+}

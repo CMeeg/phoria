@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="bg-neutral-50 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-50">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>@ViewData["Title"] - WebApp</title>
+
+	<phoria-island-styles />
+	<phoria-island-preload />
+
+	@await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="m-0 flex min-h-screen min-w-[320px] place-items-center">
+	<main role="main" id="root" class="mx-auto max-w-[1280px] p-8 text-center">
+		@RenderBody()
+	</main>
+
+	<phoria-island-scripts />
+
+	@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

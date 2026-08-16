@@ -1,0 +1,13 @@
+import { inspectConfig } from "@meeg/vite-plugin-inspect-config"
+import { phoria } from "@phoria/phoria/vite"
+import { phoriaReact } from "@phoria/phoria-react/vite"
+import { dotnetDevCerts } from "@phoria/vite-plugin-dotnet-dev-certs"
+import tailwindcss from "@tailwindcss/vite"
+import { defineConfig } from "vite"
+
+export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
+  plugins: [dotnetDevCerts(), tailwindcss(), phoria(), phoriaReact(), inspectConfig()],
+})
