@@ -8,7 +8,6 @@ const storybookViteConfig = {
 }
 
 const config: StorybookConfig = {
-  addons: [],
   core: {
     builder: {
       name: "@storybook/builder-vite",
