@@ -37,7 +37,7 @@ First thing you will need to do is add a Dockerfile to describe how to create a 
 
 ```dockerfile
 # UI build stage
-FROM node:22-slim AS uibuild
+FROM node:24-slim AS uibuild
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 WORKDIR /src
@@ -53,9 +53,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 ENV NODE_ENV=production
 ENV DOTNET_ENVIRONMENT=Production
 
-## Build Phoria Islands and Server
+## Build Phoria Islands (client, SSR and Phoria Server bundles)
 RUN pnpm run build:islands
-RUN pnpm run build:server
 
 ## Create deployment package
 RUN mkdir -p /app/WebApp/ui \
@@ -64,7 +63,7 @@ RUN mkdir -p /app/WebApp/ui \
   && cp /src/package.json /app/package.json
 
 # Dotnet build stage
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS dotnetbuild
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dotnetbuild
 WORKDIR /src
 
 ## Copy source code
@@ -77,7 +76,7 @@ RUN dotnet restore
 RUN dotnet publish ./WebApp/WebApp.csproj -c Release --no-restore -o /app
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 ENV NODE_ENV=production
 ENV DOTNET_ENVIRONMENT=Production
 WORKDIR /app
@@ -92,7 +91,7 @@ RUN mv /app/WebApp /app/WebAppCmd
 COPY --from=uibuild /app .
 
 # Install node for Phoria Server
-ENV NODE_VERSION=22.11.0
+ENV NODE_VERSION=24
 RUN apt-get -y update \
   && apt-get install -y curl \
   && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} -o nodesource_setup.sh | bash \
@@ -143,6 +142,26 @@ You can configure the Phoria Web App to start and monitor the Phoria Server `nod
   }
 }
 ```
+
+For a fail-fast deployment you can also set the startup timeout, the unavailable behavior, and a restart limit alongside the process config:
+
+```json
+{
+  "phoria": {
+    "server": {
+      "startupTimeout": 60,
+      "unavailableBehavior": "Fail",
+      "process": {
+        "command": "node",
+        "arguments": ["WebApp/ui/dist/server/server.js"],
+        "maxRestartAttempts": 5
+      }
+    }
+  }
+}
+```
+
+With `unavailableBehavior: "Fail"` the WebApp reports the server status through the opt-in `/health` check, so an orchestrator (Kubernetes, Azure Container Apps, Docker) can restart the container when recovery has failed.
 
 Now you can build and run the container image using Docker from the root of your repo:
 

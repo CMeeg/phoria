@@ -1,6 +1,6 @@
 {
 	"name": "@phoria/phoria-react",
-	"version": "0.4.2",
+	"version": "0.5.0-beta.0",
 	"description": "Use React with Phoria Islands for dotnet.",
 	"keywords": [
 		"phoria",
@@ -59,7 +59,8 @@
 		"lint": "biome check",
 		"check": "tsc",
 		"test": "vitest run",
-		"test:browser": "vitest run --config vitest.browser.config.ts"
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"test:coverage": "vitest run --coverage"
 	},
 	"dependencies": {
 		"@rollup/pluginutils": "catalog:",
@@ -67,10 +68,12 @@
 	},
 	"devDependencies": {
 		"@phoria/phoria": "workspace:*",
+		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
-		"@vitejs/plugin-react": "^4.3.4",
-		"@vitest/browser": "catalog:",
+		"@vitejs/plugin-react": "catalog:",
+		"@vitest/browser-playwright": "catalog:",
+		"@vitest/coverage-v8": "catalog:",
 		"cross-env": "catalog:",
 		"playwright": "catalog:",
 		"react": "catalog:",
@@ -79,19 +82,18 @@
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",
 		"vite-plugin-externalize-deps": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@phoria/phoria": "~0.4.0",
+		"@phoria/phoria": ">=0.5.0-0 <2.0.0",
 		"@types/react": "^19.0.0",
 		"@types/react-dom": "^19.0.0",
-		"@vitejs/plugin-react": "^4.0.0",
+		"@vitejs/plugin-react": "^6.0.0",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
-		"vite": "^6.0.0"
+		"vite": "^8.0.0"
 	},
 	"engines": {
-		"node": "^18.17.1 || ^20.3.0 || >=22.0.0"
+		"node": "^20.19.0 || ^22.12.0 || >=24.0.0"
 	}
 }

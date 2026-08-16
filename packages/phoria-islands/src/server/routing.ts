@@ -5,17 +5,31 @@ import {
 	createError,
 	createRouter,
 	defineEventHandler,
+	type EventHandler,
+	type EventHandlerRequest,
 	fromNodeMiddleware,
+	getRouterParams,
+	readBody,
 	serveStatic,
 	setResponseHeader,
 	useBase
 } from "h3"
 import mime from "mime/lite"
-import type { DevEnvironment, RunnableDevEnvironment, ViteDevServer } from "vite"
+import { isRunnableDevEnvironment, type RunnableDevEnvironment, type ViteDevServer } from "vite"
 import { getFrameworks } from "~/register"
 import type { PhoriaAppSettings } from "./appsettings"
+import { type PhoriaLogger, phoriaConsoleLogger } from "./logger"
 import { PhoriaIsland } from "./phoria-island"
 import type { PhoriaServerEntry } from "./ssr"
+import type { PhoriaViteDevServer } from "./vite"
+
+/**
+ * A request handler that can be mounted on a Phoria Server app.
+ *
+ * The underlying HTTP library is an implementation detail of Phoria and may
+ * change in a future minor release. Treat values of this type as opaque.
+ */
+type PhoriaRequestHandler = EventHandler<EventHandlerRequest, unknown>
 
 function isServerEntry(serverEntry: unknown): serverEntry is PhoriaServerEntry {
 	if (typeof serverEntry === "undefined" || serverEntry === null) {
@@ -35,7 +49,11 @@ function isServerEntry(serverEntry: unknown): serverEntry is PhoriaServerEntry {
 
 type PhoriaServerEntryLoader = () => Promise<Record<string, unknown>>
 
-function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: string) {
+function createPhoriaSsrRouter(
+	loadServerEntry: PhoriaServerEntryLoader,
+	base: string,
+	logger: PhoriaLogger = phoriaConsoleLogger
+) {
 	const router = createRouter()
 
 	// Health check endpoint
@@ -43,9 +61,16 @@ function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: s
 	router.get(
 		"/hc",
 		defineEventHandler(async () => {
-			const serverEntry = await loadServerEntry()
+			let serverEntry: Record<string, unknown>
+			try {
+				serverEntry = await loadServerEntry()
+			} catch (error) {
+				logger.error("Failed to load Phoria SSR server entry.", { error })
+				throw error
+			}
 
 			if (!isServerEntry(serverEntry)) {
+				logger.error("Phoria SSR server entry is invalid.")
 				throw createError({
 					status: 500,
 					message: "Server entry is not of type `PhoriaServerEntry`."
@@ -67,9 +92,16 @@ function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: s
 	ssrRouter.post(
 		renderRoutePath,
 		defineEventHandler(async (event) => {
-			const serverEntry = await loadServerEntry()
+			let serverEntry: Record<string, unknown>
+			try {
+				serverEntry = await loadServerEntry()
+			} catch (error) {
+				logger.error("Failed to load Phoria SSR server entry.", { error })
+				throw error
+			}
 
 			if (!isServerEntry(serverEntry)) {
+				logger.error("Phoria SSR server entry is invalid.")
 				throw createError({
 					status: 500,
 					message: "Server entry is not of type `PhoriaServerEntry`."
@@ -77,7 +109,10 @@ function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: s
 			}
 
 			try {
-				const phoriaIsland = await PhoriaIsland.create(event)
+				const phoriaIsland = await PhoriaIsland.create({
+					params: getRouterParams(event),
+					readProps: () => readBody(event)
+				})
 
 				const result = await serverEntry.renderPhoriaIsland(phoriaIsland)
 
@@ -89,6 +124,10 @@ function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: s
 
 				return result.html
 			} catch (error) {
+				logger.error("Failed to render Phoria island.", {
+					component: getRouterParams(event).component,
+					error
+				})
 				throw createError({
 					status: 500,
 					message: "Error rendering component.",
@@ -105,6 +144,7 @@ function createPhoriaSsrRouter(loadServerEntry: PhoriaServerEntryLoader, base: s
 
 interface PhoriaSsrRequestHandlerOptions {
 	cwd: string
+	logger?: PhoriaLogger
 }
 
 const defaultSsrRequestHandlerOptions: PhoriaSsrRequestHandlerOptions = {
@@ -114,8 +154,9 @@ const defaultSsrRequestHandlerOptions: PhoriaSsrRequestHandlerOptions = {
 function createPhoriaSsrRequestHandler(
 	appsettings: PhoriaAppSettings,
 	options?: Partial<PhoriaSsrRequestHandlerOptions>
-) {
+): PhoriaRequestHandler {
 	const opts = { ...defaultSsrRequestHandlerOptions, ...options }
+	const logger = opts.logger ?? phoriaConsoleLogger
 
 	// Without `pathToFileURL` you will receive a `ERR_UNSUPPORTED_ESM_URL_SCHEME` error on Windows
 	const ssrEntry = pathToFileURL(
@@ -129,31 +170,37 @@ function createPhoriaSsrRequestHandler(
 		)
 	).href
 
-	const ssrRouter = createPhoriaSsrRouter(() => import(ssrEntry), appsettings.ssrBase)
+	const ssrRouter = createPhoriaSsrRouter(() => import(ssrEntry), appsettings.ssrBase, logger)
 
 	return ssrRouter.handler
 }
 
-function isRunnableDevEnvironment(
-	environment: DevEnvironment | RunnableDevEnvironment
-): environment is RunnableDevEnvironment {
-	return "runner" in environment
-}
-
-function createPhoriaDevSsrRequestHandler(viteDevServer: ViteDevServer, appsettings: PhoriaAppSettings) {
+function createPhoriaDevSsrRequestHandler(
+	viteDevServer: ViteDevServer | PhoriaViteDevServer,
+	appsettings: PhoriaAppSettings
+): PhoriaRequestHandler {
 	const environment = viteDevServer.environments.ssr
+	const isRunnable =
+		"_vite" in viteDevServer
+			? (viteDevServer._vite.isRunnableDevEnvironment as (environment: unknown) => boolean)
+			: isRunnableDevEnvironment
 
-	if (!isRunnableDevEnvironment(environment)) {
+	if (!isRunnable(environment)) {
 		throw new Error("Vite dev server does not have a runnable SSR environment.")
 	}
 
-	const ssrRouter = createPhoriaSsrRouter(() => environment.runner.import(appsettings.ssrEntry), appsettings.ssrBase)
+	const runnableEnvironment = environment as RunnableDevEnvironment
+	const ssrRouter = createPhoriaSsrRouter(
+		() => runnableEnvironment.runner.import(appsettings.ssrEntry),
+		appsettings.ssrBase
+	)
 
 	return ssrRouter.handler
 }
 
 interface PhoriaCsrRequestHandlerOptions {
 	cwd: string
+	logger?: PhoriaLogger
 }
 
 const defaultCsrRequestHandlerOptions: PhoriaCsrRequestHandlerOptions = {
@@ -163,8 +210,9 @@ const defaultCsrRequestHandlerOptions: PhoriaCsrRequestHandlerOptions = {
 function createPhoriaCsrRequestHandler(
 	appsettings: PhoriaAppSettings,
 	options?: Partial<PhoriaCsrRequestHandlerOptions>
-) {
+): PhoriaRequestHandler {
 	const opts = { ...defaultCsrRequestHandlerOptions, ...options }
+	const logger = opts.logger ?? phoriaConsoleLogger
 
 	const staticFilehandler = defineEventHandler((event) => {
 		return serveStatic(event, {
@@ -176,9 +224,12 @@ function createPhoriaCsrRequestHandler(
 			getMeta: async (id) => {
 				const filePath = join(opts.cwd, appsettings.root, appsettings.build.outDir, "phoria", "client", id)
 
-				const stats = await stat(filePath).catch(() => {})
+				const stats = await stat(filePath).catch((error: unknown) => {
+					logger.warn("Phoria client asset not found.", { path: filePath, error })
+					return undefined
+				})
 
-				if (!stats || !stats.isFile()) {
+				if (!stats?.isFile()) {
 					return
 				}
 
@@ -198,15 +249,14 @@ function createPhoriaCsrRequestHandler(
 	return createRouter().use(`${base}/**`, useBase(base, staticFilehandler)).handler
 }
 
-function createPhoriaDevCsrRequestHandler(viteDevServer: ViteDevServer) {
+function createPhoriaDevCsrRequestHandler(viteDevServer: ViteDevServer): PhoriaRequestHandler {
 	return fromNodeMiddleware(viteDevServer.middlewares)
 }
 
+export type { PhoriaLogger, PhoriaRequestHandler, PhoriaServerEntry, PhoriaServerEntryLoader }
 export {
 	createPhoriaCsrRequestHandler,
 	createPhoriaDevCsrRequestHandler,
 	createPhoriaDevSsrRequestHandler,
 	createPhoriaSsrRequestHandler
 }
-
-export type { PhoriaServerEntry, PhoriaServerEntryLoader }

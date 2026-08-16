@@ -1,16 +1,15 @@
 {
 	"$schema": "https://unpkg.com/@changesets/config@3.0.4/schema.json",
 	"access": "public",
-	"baseBranch": "main",
+	"baseBranch": "canary",
 	"changelog": "@changesets/cli/changelog",
 	"commit": false,
 	"fixed": [],
-	"ignore": ["framework-multiple", "with-workspace"],
 	"linked": [],
 	"privatePackages": { "version": true, "tag": true },
 	"updateInternalDependencies": "minor",
-  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
-    "onlyUpdatePeerDependentsWhenOutOfRange": true,
-    "updateInternalDependents": "always"
-  }
+	"___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+		"onlyUpdatePeerDependentsWhenOutOfRange": true,
+		"updateInternalDependents": "always"
+	}
 }

@@ -1,7 +1,7 @@
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import vue, { type Options as VueOptions } from "@vitejs/plugin-vue"
 import MagicString from "magic-string"
-import type { EnvironmentOptions, PluginOption } from "vite"
+import type { EnvironmentOptions, PluginOption, UserConfig } from "vite"
 
 const pluginName = "phoria-vue"
 
@@ -37,6 +37,12 @@ function setSsrEnvironment(options: EnvironmentOptions) {
 	}
 }
 
+function setOptimizeDeps(config: UserConfig, include: string[]) {
+	config.optimizeDeps ??= {}
+	config.optimizeDeps.include ??= []
+	config.optimizeDeps.include = Array.from(new Set([...config.optimizeDeps.include, ...include]))
+}
+
 function phoriaVuePlugin(options?: Partial<PhoriaVuePluginOptions>): PluginOption {
 	const opts = { ...defaultOptions, ...options }
 
@@ -52,11 +58,19 @@ function phoriaVuePlugin(options?: Partial<PhoriaVuePluginOptions>): PluginOptio
 		config: (config) => {
 			config.environments ??= {}
 			config.environments[environment.ssr] ??= {}
+
+			// Pre-bundle the runtime as its own entry so the client's dynamic import
+			// shares a single instance with the statically imported one in the app code
+
+			setOptimizeDeps(config, ["vue"])
 		},
 		configEnvironment(name, options) {
 			if (name === environment.ssr) {
 				setSsrEnvironment(options)
 			}
+		},
+		applyToEnvironment(environment) {
+			return environment.name === "client" || environment.name === "ssr"
 		},
 		transform(code, id) {
 			if (!filter(id)) {
@@ -96,6 +110,5 @@ function phoriaVue(options?: Partial<PhoriaVuePluginOptions>): PluginOption {
 	return plugins
 }
 
-export { phoriaVue }
-
 export type { PhoriaVuePluginOptions }
+export { phoriaVue }

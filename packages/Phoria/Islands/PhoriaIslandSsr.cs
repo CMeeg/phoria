@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Options;
+using Phoria.Diagnostics;
 using Phoria.IO;
 using Phoria.Server;
 
@@ -25,44 +27,60 @@ public class PhoriaIslandSsr(
 		CancellationToken cancellationToken = default)
 	{
 		StreamPool? propsStreamPool = null;
-		if (island.Props != null)
+		StreamPool? contentStreamPool = null;
+
+		try
 		{
-			propsStreamPool = new StreamPool();
-			options.Islands.PropsSerializer.Serialize(island.Props, propsStreamPool);
+			if (island.Props != null)
+			{
+				propsStreamPool = new StreamPool();
+				options.Islands.PropsSerializer.Serialize(island.Props, propsStreamPool);
+			}
+
+			using Activity? activity = PhoriaActivitySource.Instance.StartActivity("phoria.ssr.render", ActivityKind.Client);
+			activity?.SetTag("phoria.component", island.ComponentName);
+
+			using HttpClient client = phoriaServerHttpClientFactory.CreateClient();
+
+			StreamContent? body = CreatePropsContent(propsStreamPool);
+
+			HttpResponseMessage response = await client.PostAsync(
+				$"{options.SsrBase}/render/{island.ComponentName}",
+				body,
+				cancellationToken);
+
+			contentStreamPool = new StreamPool();
+			await response.Content.CopyToAsync(contentStreamPool.Stream, cancellationToken);
+
+			if (response.Headers.TryGetValues(
+				"x-phoria-island-framework",
+				out IEnumerable<string>? componentFrameworkHeader))
+			{
+				island.Framework = componentFrameworkHeader.FirstOrDefault();
+			}
+
+			activity?.SetTag("phoria.framework", island.Framework);
+
+			if (response.Headers.TryGetValues(
+				"x-phoria-island-path",
+				out IEnumerable<string>? componentPathHeader))
+			{
+				island.ComponentPath = componentPathHeader.FirstOrDefault();
+			}
+
+			return new PhoriaIslandSsrResult
+			{
+				Headers = response.Headers,
+				Content = contentStreamPool,
+				Props = propsStreamPool
+			};
 		}
-
-		using HttpClient client = phoriaServerHttpClientFactory.CreateClient();
-
-		StreamContent? body = CreatePropsContent(propsStreamPool);
-
-		HttpResponseMessage response = await client.PostAsync(
-			$"{options.SsrBase}/render/{island.ComponentName}",
-			body,
-			cancellationToken);
-
-		var contentStreamPool = new StreamPool();
-		await response.Content.CopyToAsync(contentStreamPool.Stream, cancellationToken);
-
-		if (response.Headers.TryGetValues(
-			"x-phoria-island-framework",
-			out IEnumerable<string>? componentFrameworkHeader))
+		catch
 		{
-			island.Framework = componentFrameworkHeader.FirstOrDefault();
+			contentStreamPool?.Dispose();
+			propsStreamPool?.Dispose();
+			throw;
 		}
-
-		if (response.Headers.TryGetValues(
-			"x-phoria-island-path",
-			out IEnumerable<string>? componentPathHeader))
-		{
-			island.ComponentPath = componentPathHeader.FirstOrDefault();
-		}
-
-		return new PhoriaIslandSsrResult
-		{
-			Headers = response.Headers,
-			Content = contentStreamPool,
-			Props = propsStreamPool
-		};
 	}
 
 	private static StreamContent? CreatePropsContent(StreamPool? props)
@@ -81,9 +99,24 @@ public class PhoriaIslandSsr(
 	}
 }
 
-public record PhoriaIslandSsrResult
+public record PhoriaIslandSsrResult : IDisposable
 {
+	private bool disposed;
+
 	public required HttpResponseHeaders Headers { get; init; }
 	public required StreamPool Content { get; init; }
 	public StreamPool? Props { get; init; }
+
+	public void Dispose()
+	{
+		if (disposed)
+		{
+			return;
+		}
+
+		disposed = true;
+		Content.Dispose();
+		Props?.Dispose();
+		GC.SuppressFinalize(this);
+	}
 }

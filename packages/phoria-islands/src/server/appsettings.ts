@@ -7,7 +7,7 @@ interface AppSettings {
 	phoria?: Partial<PhoriaAppSettings>
 }
 
-interface PhoriaAppSettings {
+interface PhoriaBaseAppSettings {
 	root: string
 	base: string
 	entry: string
@@ -16,6 +16,8 @@ interface PhoriaAppSettings {
 	server: PhoriaServerAppSettings
 	build: PhoriaBuildAppSettings
 }
+
+type PhoriaAppSettings<TAdditional extends object = object> = PhoriaBaseAppSettings & TAdditional
 
 interface PhoriaServerAppSettings {
 	host: string
@@ -49,12 +51,12 @@ async function parseAppSettings(
 	}
 }
 
-interface PhoriaAppSettingsOptions {
+interface PhoriaAppSettingsOptions<TAdditional extends object = object> {
 	fileName: string
 	encoding: BufferEncoding
 	cwd: string
 	environment?: string
-	inlineSettings?: Partial<PhoriaAppSettings>
+	inlineSettings?: Partial<PhoriaAppSettings<TAdditional>>
 }
 
 const defaultAppsettingsOptions: PhoriaAppSettingsOptions = {
@@ -72,7 +74,9 @@ function getEnvAppsettingsFileName(fileName: string, environment: string) {
 }
 
 // TODO: Could maybe make this more of a generic function that supports getting appsettings for any app, and add support for filtering by section e.g. in the case of Phoria we only want the Phoria section
-async function getPhoriaAppSettings(options?: Partial<PhoriaAppSettingsOptions>): Promise<Partial<PhoriaAppSettings>> {
+async function getPhoriaAppSettings<TAdditional extends object = object>(
+	options?: Partial<PhoriaAppSettingsOptions<TAdditional>>
+): Promise<Partial<PhoriaAppSettings<TAdditional>>> {
 	const opts = defu(options, defaultAppsettingsOptions)
 
 	const appsettings = await parseAppSettings(opts.fileName, opts.cwd, opts.encoding)
@@ -84,7 +88,7 @@ async function getPhoriaAppSettings(options?: Partial<PhoriaAppSettingsOptions>)
 			? await parseAppSettings(getEnvAppsettingsFileName(opts.fileName, opts.environment), opts.cwd, opts.encoding)
 			: {}
 
-	return defu(envAppsettings, baseappsettings)
+	return defu(envAppsettings, baseappsettings) as Partial<PhoriaAppSettings<TAdditional>>
 }
 
 // Defaults here must be in sync with the defaults set in `Phoria/PhoriaOptions.cs`
@@ -102,10 +106,12 @@ const defaultAppsettings: Partial<PhoriaAppSettings> = {
 	}
 }
 
-async function parsePhoriaAppSettings(options?: Partial<PhoriaAppSettingsOptions>): Promise<PhoriaAppSettings> {
+async function parsePhoriaAppSettings<TAdditional extends object = object>(
+	options?: Partial<PhoriaAppSettingsOptions<TAdditional>>
+): Promise<PhoriaAppSettings<TAdditional>> {
 	const appsettings = await getPhoriaAppSettings(options)
 
-	const parsedAppSettings = defu(appsettings, defaultAppsettings) as PhoriaAppSettings
+	const parsedAppSettings = defu(appsettings, defaultAppsettings) as PhoriaAppSettings<TAdditional>
 
 	if (!parsedAppSettings.entry) {
 		throw new Error("`entry` is required in `Phoria` app settings.")
@@ -118,6 +124,5 @@ async function parsePhoriaAppSettings(options?: Partial<PhoriaAppSettingsOptions
 	return parsedAppSettings
 }
 
-export { getPhoriaAppSettings, parsePhoriaAppSettings }
-
 export type { PhoriaAppSettings }
+export { getPhoriaAppSettings, parsePhoriaAppSettings }

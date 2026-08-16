@@ -1,0 +1,58 @@
+{
+  "name": "framework-multiple",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "ui/dist"
+  ],
+  "scripts": {
+    "build": "concurrently \"pnpm:build:*\"",
+    "build:islands": "vite build --app",
+    "build:webapp": "dotnet build WebApp.csproj --configuration Release",
+    "check": "tsc",
+    "dev": "aspire run",
+    "dev:server": "tsx ./ui/src/server.ts",
+    "dev:webapp": "dotnet watch",
+    "lint": "biome check",
+    "preview": "aspire start --environment Preview",
+    "preview:server": "node ui/dist/server/server.js",
+    "stop": "aspire stop --all",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
+  },
+  "dependencies": {
+    "@opentelemetry/api-logs": "^0.221.0",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.221.0",
+    "@opentelemetry/resources": "^2.10.0",
+    "@opentelemetry/sdk-logs": "^0.221.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
+    "@phoria/phoria": "^0.5.0-beta.0",
+    "@phoria/opentelemetry": "^0.2.0-beta.1",
+    "@phoria/phoria-react": "^0.5.0-beta.0",
+    "@phoria/phoria-svelte": "^0.4.0-beta.0",
+    "@phoria/phoria-vue": "^0.4.0-beta.0",
+    "h3": "^1.15.11",
+    "listhen": "^1.10.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "svelte": "^5.56.8",
+    "vue": "^3.5.40"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.5",
+    "@meeg/vite-plugin-inspect-config": "~0.3.0",
+    "@phoria/vite-plugin-dotnet-dev-certs": "^0.3.0-beta.0",
+    "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "concurrently": "^10.0.4",
+    "postcss-preset-env": "^11.3.2",
+    "tsx": "^4.23.1",
+    "typescript": "~6.0.3",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  }
+}

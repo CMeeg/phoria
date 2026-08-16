@@ -1,0 +1,14 @@
+.azure/
+.nuget/
+.vite-config/
+.vite-inspect/
+bin/
+**/dist/**
+node_modules/
+obj/
+!**/wwwroot/lib/**/dist/**
+
+*.tmp
+*.tsbuildinfo
+TODO.md
+vite.config.ts.*

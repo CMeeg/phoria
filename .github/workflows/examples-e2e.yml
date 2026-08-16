@@ -1,0 +1,45 @@
+name: Examples E2E
+
+on:
+  pull_request:
+    branches:
+      - main
+      - canary
+    paths:
+      - "examples/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref }}
+  cancel-in-progress: true
+
+jobs:
+  examples-e2e:
+    name: Examples e2e
+    if: ${{ startsWith(github.event.pull_request.head.ref, 'chore/examples-sync-') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            8.0.x
+          global-json-file: "./global.json"
+
+      - name: Check examples reference published versions
+        run: pnpm examples:check
+
+      - name: Run example end-to-end tests
+        run: pnpm examples:e2e

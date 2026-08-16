@@ -1,5 +1,17 @@
 # @phoria/vite-plugin-dotnet-dev-certs
 
+## 0.3.0-beta.0
+
+### Minor Changes
+
+- c716413: Require Vite 8. Peer dependency widened to ^8.0.0; vite-tsconfig-paths replaced by Vite's built-in resolve.tsconfigPaths.
+
+### Patch Changes
+
+- c716413: Raise minimum Node.js to ^20.19.0 || ^22.12.0 || >=24.0.0 and pnpm to 11
+- c716413: Build with TypeScript 6 and vite-plugin-dts 5
+- c716413: Update dependencies.
+
 ## 0.2.1
 
 ### Patch Changes

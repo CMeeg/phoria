@@ -1,7 +1,7 @@
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import { type Options as SvelteOptions, svelte } from "@sveltejs/vite-plugin-svelte"
 import MagicString from "magic-string"
-import type { EnvironmentOptions, PluginOption } from "vite"
+import type { EnvironmentOptions, PluginOption, UserConfig } from "vite"
 
 const pluginName = "phoria-svelte"
 
@@ -26,7 +26,15 @@ const defaultOptions: PhoriaSveltePluginOptions = {
 }
 
 function setSsrEnvironment(options: EnvironmentOptions) {
-	const external = ["@phoria/phoria-svelte/server"]
+	// `@phoria/phoria-svelte/server` is externalized (loaded via Node's ESM
+	// loader), so it resolves `svelte/server` outside of Vite's SSR module
+	// runner. Externalizing `svelte` too keeps both sides on the same Node
+	// module instance - otherwise the compiled `*.svelte` component (transformed
+	// by Vite's SSR runner) gets its own copy of `svelte/internal/server`, whose
+	// module-level `ssr_context` never sees the renderer's context and `push_element`
+	// crashes reading `null`.
+
+	const external = ["@phoria/phoria-svelte/server", "svelte"]
 
 	options.resolve ??= {}
 
@@ -35,6 +43,12 @@ function setSsrEnvironment(options: EnvironmentOptions) {
 	} else if (Array.isArray(options.resolve.external)) {
 		options.resolve.external.push(...external)
 	}
+}
+
+function setOptimizeDeps(config: UserConfig, include: string[]) {
+	config.optimizeDeps ??= {}
+	config.optimizeDeps.include ??= []
+	config.optimizeDeps.include = Array.from(new Set([...config.optimizeDeps.include, ...include]))
 }
 
 function phoriaSveltePlugin(options?: Partial<PhoriaSveltePluginOptions>): PluginOption {
@@ -52,11 +66,19 @@ function phoriaSveltePlugin(options?: Partial<PhoriaSveltePluginOptions>): Plugi
 		config: (config) => {
 			config.environments ??= {}
 			config.environments[environment.ssr] ??= {}
+
+			// Pre-bundle the runtime as its own entry so the client's dynamic import
+			// shares a single instance with the statically imported one in the app code
+
+			setOptimizeDeps(config, ["svelte"])
 		},
 		configEnvironment(name, options) {
 			if (name === environment.ssr) {
 				setSsrEnvironment(options)
 			}
+		},
+		applyToEnvironment(environment) {
+			return environment.name === "client" || environment.name === "ssr"
 		},
 		transform(code, id) {
 			if (!filter(id)) {
@@ -96,6 +118,5 @@ function phoriaSvelte(options?: Partial<PhoriaSveltePluginOptions>): PluginOptio
 	return plugins
 }
 
-export { phoriaSvelte }
-
 export type { PhoriaSveltePluginOptions }
+export { phoriaSvelte }

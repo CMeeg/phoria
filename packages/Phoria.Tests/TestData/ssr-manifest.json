@@ -1,0 +1,26 @@
+{
+	"../../\u0000/repo/node_modules/.pnpm/react-dom@19.0.0_react@19.0.0/node_modules/react-dom/cjs/react-dom-client.production.js?commonjs-exports": [
+		"/ui/assets/client-CRlG8KHk.js"
+	],
+	"../../\u0000/repo/node_modules/.pnpm/react-dom@19.0.0_react@19.0.0/node_modules/react-dom/cjs/react-dom.production.js?commonjs-exports": [
+		"/ui/assets/client-CRlG8KHk.js"
+	],
+	"../../\u0000/repo/node_modules/.pnpm/react@19.0.0/node_modules/react/cjs/react.production.js?commonjs-exports": [
+		"/ui/assets/index-y7SO_VIm.js"
+	],
+	"../../\u0000commonjsHelpers.js": ["/ui/assets/index-y7SO_VIm.js"],
+	"../../\u0000plugin-vue:export-helper": ["/ui/assets/Counter-Czw0-HxH.js", "/ui/assets/Counter-CY_eTupq.css"],
+	"../../../../node_modules/.pnpm/react-dom@19.0.0_react@19.0.0/node_modules/react-dom/cjs/react-dom-client.production.js": [
+		"/ui/assets/client-CRlG8KHk.js"
+	],
+	"../../../../node_modules/.pnpm/react@19.0.0/node_modules/react/cjs/react.production.js": [
+		"/ui/assets/index-y7SO_VIm.js"
+	],
+	"src/components/Counter/Counter.module.css": ["/ui/assets/Counter-D9HeyafA.js", "/ui/assets/Counter-DXes5fBr.css"],
+	"src/components/Counter/Counter.svelte": ["/ui/assets/Counter-RVJx8xKX.js", "/ui/assets/Counter-Bz3VW5_o.css"],
+	"src/components/Counter/Counter.tsx": ["/ui/assets/Counter-D9HeyafA.js", "/ui/assets/Counter-DXes5fBr.css"],
+	"src/components/Counter/Counter.vue": ["/ui/assets/Counter-Czw0-HxH.js", "/ui/assets/Counter-CY_eTupq.css"],
+	"src/components/register.ts": [],
+	"src/entry-client.ts": [],
+	"src/styles/global.css": []
+}

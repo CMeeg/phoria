@@ -1,7 +1,7 @@
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import react, { type Options as ViteReactPluginOptions } from "@vitejs/plugin-react"
 import MagicString from "magic-string"
-import type { EnvironmentOptions, PluginOption } from "vite"
+import type { EnvironmentOptions, PluginOption, UserConfig } from "vite"
 
 const pluginName = "phoria-react"
 
@@ -10,7 +10,7 @@ const environment = {
 	ssr: "ssr"
 } as const
 
-export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude" | "babel">
+export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude">
 
 type CreateFilterParams = Parameters<typeof createFilter>
 
@@ -39,6 +39,12 @@ function setSsrEnvironment(options: EnvironmentOptions) {
 	}
 }
 
+function setOptimizeDeps(config: UserConfig, include: string[]) {
+	config.optimizeDeps ??= {}
+	config.optimizeDeps.include ??= []
+	config.optimizeDeps.include = Array.from(new Set([...config.optimizeDeps.include, ...include]))
+}
+
 function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): PluginOption {
 	const opts = { ...defaultOptions, ...options }
 
@@ -54,11 +60,19 @@ function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): PluginO
 		config: (config) => {
 			config.environments ??= {}
 			config.environments[environment.ssr] ??= {}
+
+			// Pre-bundle the runtimes as their own entries so the client's dynamic imports
+			// share a single instance with the statically imported ones in the app code
+
+			setOptimizeDeps(config, ["react", "react-dom/client"])
 		},
 		configEnvironment(name, options) {
 			if (name === environment.ssr) {
 				setSsrEnvironment(options)
 			}
+		},
+		applyToEnvironment(environment) {
+			return environment.name === "client" || environment.name === "ssr"
 		},
 		transform(code, id) {
 			if (!filter(id)) {
@@ -98,6 +112,5 @@ function phoriaReact(options?: Partial<PhoriaReactPluginOptions>): PluginOption 
 	return plugins
 }
 
-export { phoriaReact }
-
 export type { PhoriaReactPluginOptions }
+export { phoriaReact }

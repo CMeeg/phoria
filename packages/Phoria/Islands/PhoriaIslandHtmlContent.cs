@@ -11,69 +11,90 @@ public class PhoriaIslandHtmlContent(
 	PhoriaIsland island,
 	PhoriaIslandSsrResult? ssrResult,
 	PhoriaOptions options)
-	: IHtmlContent
+	: IHtmlContent, IDisposable
 {
 	private const string TagName = "phoria-island";
 
 	private readonly PhoriaIsland island = island;
 	private readonly PhoriaIslandSsrResult? ssrResult = ssrResult;
 	private readonly PhoriaOptions options = options;
+	private bool disposed;
 
 	public void WriteTo(TextWriter writer, HtmlEncoder encoder)
 	{
-		if (island.RenderMode == PhoriaIslandRenderMode.ServerOnly)
+		try
 		{
+			if (island.RenderMode == PhoriaIslandRenderMode.ServerOnly)
+			{
+				if (ssrResult != null)
+				{
+					// Render the SSR result
+
+					WriteUtf8Stream(writer, ssrResult.Content.Stream);
+				}
+
+				return;
+			}
+
+			// Render the phoria-island web component
+
+			writer.Write($"<{TagName} component=\"{island.ComponentName}\"");
+
+			if (island.Client != null)
+			{
+				if (island.Client.Value == null)
+				{
+					writer.Write($" {island.Client.Name}");
+				}
+				else
+				{
+					writer.Write($" {island.Client.Name}=\"{encoder.Encode(island.Client.Value)}\"");
+				}
+			}
+
+			// TODO: Maybe it would be more performant to write props to a script tag so they are already parsed as javascript by the browser
+			if (ssrResult?.Props != null)
+			{
+				writer.Write(" props=\"");
+				WriteUtf8Stream(writer, ssrResult.Props.Stream, encoder);
+				writer.Write("\"");
+			}
+			else if (island.Props != null)
+			{
+				writer.Write($" props=\"{encoder.Encode(options.Islands.PropsSerializer.Serialize(island.Props))}\"");
+			}
+
+			if (island.Framework != null)
+			{
+				writer.Write($" framework=\"{island.Framework}\"");
+			}
+
+			writer.Write(">");
+
 			if (ssrResult != null)
 			{
-				// Render the SSR result
-
 				WriteUtf8Stream(writer, ssrResult.Content.Stream);
 			}
 
+			writer.Write($"</{TagName}>");
+		}
+		finally
+		{
+			Dispose();
+		}
+	}
+
+	public void Dispose()
+	{
+		if (disposed)
+		{
 			return;
 		}
 
-		// Render the phoria-island web component
-
-		writer.Write($"<{TagName} component=\"{island.ComponentName}\"");
-
-		if (island.Client != null)
-		{
-			if (island.Client.Value == null)
-			{
-				writer.Write($" {island.Client.Name}");
-			}
-			else
-			{
-				writer.Write($" {island.Client.Name}=\"{encoder.Encode(island.Client.Value)}\"");
-			}
-		}
-
-		// TODO: Maybe it would be more performant to write props to a script tag so they are already parsed as javascript by the browser
-		if (ssrResult?.Props != null)
-		{
-			writer.Write(" props=\"");
-			WriteUtf8Stream(writer, ssrResult.Props.Stream, encoder);
-			writer.Write("\"");
-		}
-		else if (island.Props != null)
-		{
-			writer.Write($" props=\"{encoder.Encode(options.Islands.PropsSerializer.Serialize(island.Props))}\"");
-		}
-
-		if (island.Framework != null)
-		{
-			writer.Write($" framework=\"{island.Framework}\"");
-		}
-
-		writer.Write(">");
-
-		if (ssrResult != null)
-		{
-			WriteUtf8Stream(writer, ssrResult.Content.Stream);
-		}
-
-		writer.Write($"</{TagName}>");
+		disposed = true;
+		ssrResult?.Content.Dispose();
+		ssrResult?.Props?.Dispose();
+		GC.SuppressFinalize(this);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

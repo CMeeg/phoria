@@ -1,4 +1,4 @@
-import { type PhoriaIslandProps, importComponent } from "@phoria/phoria"
+import { importComponent, type PhoriaIslandProps } from "@phoria/phoria"
 import type { PhoriaIsland, PhoriaIslandComponentSsrService, RenderPhoriaIslandComponent } from "@phoria/phoria/server"
 import { type Component, createSSRApp } from "vue"
 import { renderToString, renderToWebStream } from "vue/server-renderer"
@@ -50,6 +50,5 @@ const service: PhoriaIslandComponentSsrService<typeof framework.name, Component>
 	}
 }
 
-export { isVueIsland, renderComponentToStream, renderComponentToString, service }
-
 export type { RenderVuePhoriaIslandComponent, VuePhoriaIsland }
+export { isVueIsland, renderComponentToStream, renderComponentToString, service }

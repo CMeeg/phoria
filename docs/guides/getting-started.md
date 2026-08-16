@@ -7,46 +7,43 @@ There are two ways you can get started:
 
 ## Clone an example project
 
-You can use [giget](https://unjs.io/packages/giget) to quickly clone an example project:
-
-```shell
-npx giget@latest gh:cmeeg/phoria-examples/examples/<example_name> <target_dir>
-```
+The repository includes `examples/getting-started` for React and `examples/framework-multiple` for React, Svelte and Vue. These examples are standalone workspaces; run `pnpm install` and the example commands from their `WebApp` directory.
 
 > [!IMPORTANT]
-> You will need to replace:
-> * `<example_name>` with the directory name of the [example project you want to clone](https://github.com/CMeeg/phoria-examples/tree/main/examples)
-> * `<target_dir>` with the name of the local directory you want to clone the example project to
+> If you are starting from a clone of this repository, use one of the local examples. Their package scripts must be run from the example's `WebApp` directory.
 
 ## Manually add Phoria to an existing dotnet project
 
-Phoria can be added to any dotnet (>= v8) MVC or Razor Pages web app. We assume that you already have an existing dotnet web app that you want to add Phoria to, but for the purpose of this guide we will create a new web app and solution (imaginatively) called "Getting Started" and use that as our "existing project".
+Phoria can be added to any .NET 8 or .NET 10 MVC or Razor Pages web app. We assume that you already have an existing .NET web app that you want to add Phoria to, but for the purpose of this guide we will create a new web app and solution (imaginatively) called "Getting Started" and use that as our "existing project".
 
 You can substitute "Getting Started" for your own project / solution name wherever you see that referenced in the guide.
 
 > [!NOTE]
 > This guide will not cover some aspects of setting up a new project such as configuring Git or VS Code or linting or testing tools as it is assumed that you will add and configure these things as you go or when you're ready based on your own preferences.
 >
-> You can use the [getting-started](https://github.com/CMeeg/phoria-examples/tree/main/examples/getting-started) example project as a reference if you wish, which is a complete example of a project created using this guide.
+> You can use the local [`examples/getting-started`](../../examples/getting-started) project as a reference, which is a complete example of a project created using this guide.
 
 ### Prerequisites
 
 There is some prerequisite software you will need to have installed before you go any further:
 
-* **dotnet** - `v8` or higher
-* **Node.js** - `v18.17.1` or `v20.3.0`, `v22.0.0` or higher
+* **dotnet** - .NET SDK 10 or higher
+* **Node.js** - `v24.18.0` or higher
   * If you're not already, we recommend using [fnm](https://github.com/Schniz/fnm) or [nvm](https://github.com/nvm-sh/nvm) to manage Node installations
 * **Node package manager** - We recommend [pnpm](https://pnpm.io/), but npm will work just as well
 * **Code editor** - We recommend [VS Code](https://code.visualstudio.com/), but you can use any code editor you like
 * **Terminal** - You will need to be able to run CLI tools through a terminal of your choice
+
+> [!TIP]
+> On Linux, when you run the web app via `aspire run` the Aspire CLI verifies the [ASP.NET Core developer certificate](https://learn.microsoft.com/dotnet/core/tools/dotnet-dev-certs) on every start. That check only reports the certificate as trusted when `SSL_CERT_DIR` includes `~/.aspnet/dev-certs/trust`, so without it you will see a "Developer certificates may not be fully trusted" warning on each run. Add `export SSL_CERT_DIR="$HOME/.aspnet/dev-certs/trust"` to your shell profile and run `aspire certs trust` (or `dotnet dev-certs https --trust`) once to install the certificate into the stores. The warning is benign for the dev flow described in this guide, but the certificate is also what the Phoria Server's HTTPS listener (configured via the `dotnetDevCerts` Vite plugin below) uses to serve the web app over TLS.
 
 You will also need an existing dotnet web app. If you do not already have an existing dotnet web app then we recommend [cloning an example project](#clone-an-example-project) rather than following the rest of this guide, but if you still want to proceed you can create a new web app using the dotnet CLI:
 
 
 ```shell
 # Create a dotnet web app
-# Phoria supports dotnet 8 and 9
-dotnet new webapp --name WebApp --no-restore --framework net9.0 --output ./WebApp
+# Use the .NET 10 target for this guide. Phoria also supports .NET 8.
+dotnet new webapp --name WebApp --no-restore --framework net10.0 --output ./WebApp
 
 # Create a solution file
 dotnet new sln --name GettingStarted --output .
@@ -71,7 +68,7 @@ The first thing you will need to do is add [Vite](https://vite.dev/) to the repo
 
 ```shell
 # Create an `.nvmrc` file and use the Node version specified
-"v22.x" > .nvmrc
+"v24.x" > .nvmrc
 
 fnm use
 
@@ -86,7 +83,7 @@ corepack use pnpm
 # Add dependencies
 pnpm add @phoria/phoria @phoria/phoria-react react react-dom
 
-pnpm add -D @phoria/vite-plugin-dotnet-dev-certs @types/react @types/react-dom @vitejs/plugin-react typescript vite vite-tsconfig-paths
+pnpm add -D @phoria/vite-plugin-dotnet-dev-certs @types/react @types/react-dom @vitejs/plugin-react typescript vite
 ```
 
 Then you will need to make some manual adjustments to the generated `package.json` file:
@@ -102,12 +99,13 @@ import { phoriaReact } from "@phoria/phoria-react/vite"
 import { phoria } from "@phoria/phoria/vite"
 import { dotnetDevCerts } from "@phoria/vite-plugin-dotnet-dev-certs"
 import { defineConfig } from "vite"
-import tsconfigPaths from "vite-tsconfig-paths"
 
 export default defineConfig({
   publicDir: "public",
+  resolve: {
+    tsconfigPaths: true
+  },
   plugins: [
-    tsconfigPaths({ root: "../../" }),
     dotnetDevCerts(),
     phoria({ cwd: "WebApp" }),
     phoriaReact()
@@ -127,7 +125,6 @@ And finally a `tsconfig.json` file to the root of your repo:
 {
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "baseUrl": ".",
     "esModuleInterop": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
@@ -141,7 +138,7 @@ And finally a `tsconfig.json` file to the root of your repo:
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "~/*": ["WebApp/ui/src/*"]
+      "~/*": ["./WebApp/ui/src/*"]
     },
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -223,7 +220,6 @@ And add a separate TypeScript config file for the Phoria Server at the root of t
 ```json
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "esModuleInterop": true,
     "isolatedModules": true,
     "lib": ["ES2022"],
@@ -256,6 +252,7 @@ import {
   createPhoriaCsrRequestHandler,
   createPhoriaDevCsrRequestHandler,
   createPhoriaDevSsrRequestHandler,
+  createPhoriaViteDevServer,
   createPhoriaSsrRequestHandler,
   parsePhoriaAppSettings
 } from "@phoria/phoria/server"
@@ -277,14 +274,7 @@ const appsettings = await parsePhoriaAppSettings({ environment: dotnetEnv, cwd: 
 
 const viteDevServer = isProduction
   ? undefined
-  : await import("vite").then((vite) =>
-      vite.createServer({
-        appType: "custom",
-        server: {
-          middlewareMode: true
-        }
-      })
-    )
+  : await createPhoriaViteDevServer(import("vite"))
 
 // Create http server
 
@@ -364,15 +354,15 @@ function shutdown(signal: NodeJS.Signals) {
 
   void listener.close().then(() => {
     console.log("Server listener closed.")
-
     process.exit(0)
   })
 
-  // Force shutdown after 5 seconds
+  // Drop idle keep-alive connections so close() doesn't wait for them
+  listener.server.closeIdleConnections()
 
+  // Force shutdown after 5 seconds
   setTimeout(() => {
     console.error("Could not shutdown gracefully. Forcefully shutting down server.")
-
     process.exit(1)
   }, 5000)
 }
@@ -555,22 +545,36 @@ Add the following Tag Helper to `WebApp/Pages/Index.cshtml` at the bottom of the
 
 Now you can run your app and see Phoria in action.
 
-From your terminal run:
+The recommended development workflow uses an Aspire AppHost. From the directory containing `package.json`, run:
 
 ```shell
 # Add dev certs
 dotnet dev-certs https --trust
 
-# Start the Phoria Server
-pnpm run dev
-
-# Start the Phoria Web App
-# You will need to run this in a separate terminal instance/tab to the Phoria Server
-dotnet run --project WebApp/WebApp.csproj --launch-profile https
+# Start the Web App, Phoria Server with Vite HMR, and Aspire dashboard
+pnpm dev
 ```
 
+The Aspire dashboard URL is printed by `aspire run`; it shows structured logs and resource health for both the Web App and Phoria Server. Press `Ctrl+C` to stop the workflow.
+
+For a lighter-weight alternative without the dashboard, use two terminals:
+
+```shell
+# Terminal 1: start the Phoria Server with Vite HMR
+pnpm dev:server
+
+# Terminal 2: start the Phoria Web App with dotnet watch (hot reload)
+pnpm dev:webapp
+```
+
+Add a `dev:webapp` script to `package.json` that runs `dotnet watch` (for example, `"dev:webapp": "dotnet watch"` when the script runs from the WebApp directory). Running the web app with `dotnet watch` enables .NET hot reload: edits to C# or Razor files are applied in place without restarting the process, and `aspnetcore-browser-refresh.js` is injected into the page so the browser refreshes automatically. Response compression is disabled in development because it would prevent that script from being served. Vite HMR in Terminal 1 continues to handle changes to UI components.
+
+The Aspire workflow (`pnpm dev`) runs the web app with `dotnet run` rather than `dotnet watch` — Aspire's built-in `dotnet watch` support is restart-based and can be flaky, so the two-terminal flow is the recommended way to get in-place hot reload.
+
 > [!TIP]
-> The `dotnet run` command doesn't automatically launch the browser unfortunately, but you can find the URL for the web app in the terminal output or by looking in your `WebApp/Properties/launchSettings.json` file.
+> Neither command automatically launches the browser, but you can find the URL for the web app in the terminal output or by looking in your `WebApp/Properties/launchSettings.json` file.
+
+When using the two-terminal development workflow with a debugger, stopping the debugger stops only the .NET process. The Node development server runs independently, so stop it manually in the terminal where `pnpm dev:server` is running. Do not run the debugger against the sidecar production model while `Phoria:Server:Process` is configured: the host owns that Node process, and debugger termination can orphan it. Use the sibling Aspire preview workflow to integration-test graceful shutdown of the AppHost-owned Node process.
 
 Now you will be able to navigate to the web app in your browser and:
 
@@ -580,6 +584,15 @@ Now you will be able to navigate to the web app in your browser and:
   * The first time you run the app Vite may take a couple of seconds to optimise dependencies so you may see a delay before the component hydrates - you can see this happening in the terminal where you started the Phoria Server
 * Make a change to the `Counter.tsx` component to see HMR working
 
-### Next steps
+### Preview a production build
 
-If you're curious about how Phoria works in a production environment you can check out the [building for production](./building-for-production.md) guide.
+After building the production assets, use an Aspire AppHost to run the Web App and compiled Phoria Server together:
+
+```shell
+pnpm run build
+pnpm run preview
+```
+
+The `preview` script should be `aspire start --environment Preview` and should run from the WebApp directory. The AppHost uses `Aspire.AppHost.Sdk`, calls `DistributedApplication.CreateBuilder`, adds the Web App with `Projects.WebApp`, and adds the compiled Phoria Server with `AddJavaScriptApp`, using `WithRunScript("preview:server")`. The server command and arguments live in the WebApp package script, not in `appsettings.Preview.json`. Aspire's dashboard provides the local resource view and OpenTelemetry log output.
+
+If you're curious about how Phoria works in a production environment you can also check out the [building for production](./building-for-production.md) guide.
