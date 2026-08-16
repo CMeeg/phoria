@@ -19,7 +19,7 @@ Phase 2 server-robustness close-out have now addressed those baseline risks.
 As the completed phases landed, a backlog of follow-up items was collected in
 `TODO.md` (categorised by area: tests, examples, docs, canary workflow, DX &
 tooling, misc). Reviewing that inventory expanded the v1 milestone beyond the
-original Phase 3-5 plan: closing the remaining test gap (Svelte/Vue), a pre-1.0
+original post-baseline plan: closing the remaining test gap (Svelte/Vue), a pre-1.0
 beta publishing pipeline, a current and consistent docs set, and a polished
 examples catalog.
 
@@ -156,7 +156,7 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
    verification, a Docker base-image pin, and the `@meeg/vite-plugin-inspect-config`
    Vite-8 peer bump) fixed directly rather than filed as GitHub issues (`gh`
    unavailable). `ViteChunk.Name` is the one item *not* included here — it
-   stays deferred to Phase 6. Task-by-task detail:
+   stays deferred to Phase 7. Task-by-task detail:
    [`docs/superpowers/plans/2026-08-01-phase-1.5-close-out-deferred-issues.md`](superpowers/plans/2026-08-01-phase-1.5-close-out-deferred-issues.md).
 2. **Server robustness & production-readiness** — **complete.** The shutdown bug (including the `Process.Kill()` process-tree bug), the `StartServer`/`StopServer` semaphore race, undisposed `StreamPool`s, the unconditional `DangerousAcceptAnyServerCertificateValidator`, prod error handling, lifecycle hardening, hardened shutdown paths for the Node/Vite sidecar (signal handling, `run-p` replacement), opt-in OpenTelemetry logging, tracing, and metrics across the .NET host and Node/Vite sidecar, `.NET 10` memory-pool assessment, and deferred-issue close-out are complete. The memory-pool replacement remains deferred post-1.0. Task-by-task detail:
    [`docs/superpowers/plans/2026-08-01-phase-2-server-robustness.md`](superpowers/plans/2026-08-01-phase-2-server-robustness.md)
@@ -177,28 +177,33 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
    big-bang merge; examples install+build against published packages as a
    release gate, not per-PR CI (`TODO.md` `## Canary workflow`). Publishing
     uses trusted publishing (OIDC) for npm and NuGet (`NuGet/login@v1`). Design: [`docs/superpowers/specs/2026-08-15-canary-release-workflow-design.md`](superpowers/specs/2026-08-15-canary-release-workflow-design.md).
-5. **Docs & guides** — drift pass over READMEs, `docs/guides`, and
-   `ARCHITECTURE.md` against completed phases 0-4; flesh out placeholders;
+5. **Examples: parity** — bring the committed examples to parity with the
+   archived `phoria-examples` repository. Design:
+   [`docs/superpowers/specs/2026-08-16-examples-parity-design.md`](superpowers/specs/2026-08-16-examples-parity-design.md).
+   Task-by-task detail:
+   [`docs/superpowers/plans/2026-08-16-examples-parity.md`](superpowers/plans/2026-08-16-examples-parity.md).
+6. **Docs & guides** — drift pass over READMEs, `docs/guides`, and
+   `ARCHITECTURE.md` against completed phases 0-5; flesh out placeholders;
    human/agent writing-style consistency; document the deliberate
    `<outDir>/server` layout; HTTPS-in-Preview pros/cons decision and docs
-   (research in Phase 7). Sequenced before the remaining feature work so docs
-   stay current as features land; a final pass remains in Phase 10
+   (research in Phase 8). Sequenced before the remaining feature work so docs
+   stay current as features land; a final pass remains in Phase 11
    (`TODO.md` `## Docs`).
-6. **Vite bundling of .NET-referenced static assets** — includes a design spike
+7. **Vite bundling of .NET-referenced static assets** — includes a design spike
    first (riskiest unknown). `ViteChunk.Name` lands here (deferred from
    Phase 1.5).
-7. **DX & tooling** — tsx/tsconfig-paths native migration decision; npm-package
+8. **DX & tooling** — tsx/tsconfig-paths native migration decision; npm-package
    build review (type output via `vite-plugin-dts`, cjs vs ESM-only,
    `package.json` exports/entry points); vite dev certs plugin DX improvement +
    Linux verification (MacOS ratified via find-docs) (`TODO.md` `## Misc`,
    `## Vite dev certs plugin`).
-8. **Exploration spikes** — composition, streaming/Suspense, server actions,
+9. **Exploration spikes** — composition, streaming/Suspense, server actions,
    Deno adapters, and the props generator (TypeScript types → C# POCOs);
    timeboxed with go/no-go gates. Run before Examples so passing spikes can be
    demonstrated there.
-9. **Examples** — getting-started polish + new examples (v1/post-v1 subset
+10. **Examples** — getting-started polish + new examples (v1/post-v1 subset
    triaged at phase start) + giget fetch verification (`TODO.md` `## Examples`).
-10. **Release prep** — version reconciliation to `1.0.0`, docs pass, changesets,
+11. **Release prep** — version reconciliation to `1.0.0`, docs pass, changesets,
    GitHub milestone/issues, inline-TODO cleanup. NOTE: framework peer ranges on
     `@phoria/phoria` use a prerelease-aware lower bound such as
     `>=0.5.0-0 <2.0.0` during the first beta stream (to prevent a premature
@@ -236,7 +241,7 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
 ## Open questions (TODO)
 
 - TODO: Confirm the concrete mechanism/design for Vite bundling of
-  .NET-referenced assets (resolve in the Phase 6 spike).
+  .NET-referenced assets (resolve in the Phase 7 spike).
 - TODO: Decide go/no-go outcomes for each exploration spike (composition,
   streaming, server actions, Deno, props generator).
 - TODO: Decide the v1 vs post-v1 examples subset (triage at Examples-phase
