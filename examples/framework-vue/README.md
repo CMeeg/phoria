@@ -23,5 +23,5 @@ pnpm test:e2e
 The example can also be fetched directly with:
 
 ```bash
-pnpx giget gh:CMeeg/phoria/examples/framework-vue framework-vue
+pnpx giget gh:cmeeg/phoria/examples/framework-vue framework-vue
 ```
