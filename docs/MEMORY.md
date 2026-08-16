@@ -2,6 +2,11 @@
 
 Dated log of durable decisions made while shaping the project. Later entries supersede earlier exploratory choices where noted; implementation details belong in the architecture and milestone docs.
 
+## 2026-08-16 — Examples parity spec gap
+
+- Storybook 10.5.8 no longer publishes a compatible `@storybook/addon-essentials` package; its essentials features are in Storybook core. The parity plan nevertheless requires the addon package and an Essentials addon configuration. Task 9 uses Storybook core and documents the incompatibility, but the plan/spec must be reconciled before implementation can continue.
+- Approved reconciliation: keep Storybook 10 core-only essentials, remove the impossible addon dependency/configuration requirement, and document the rationale. Downgrading to Storybook 8 or using a 9.0 alpha was rejected because either violates the Storybook 10/Vite 8 requirements or introduces an unstable peer mismatch.
+
 ## 2026-07-26 — v1 milestone scoping
 
 - v1 = "stability + a few key features", not a full feature-complete vision — because the priority is a release the author can confidently talk about, not shipping every idea.

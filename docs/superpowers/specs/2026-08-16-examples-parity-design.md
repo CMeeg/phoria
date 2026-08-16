@@ -107,7 +107,7 @@ The client initially uses styled-components without a Babel transform plugin. A 
 
 ### Storybook
 
-`with-storybook` adds Storybook 10.x with `@storybook/react-vite`, a basic story set, and a Storybook build command. Its application e2e test remains the standard Phoria smoke test. Because Storybook currently has an open runtime regression with Vite 8.1.x/Rolldown, this example pins Vite to `~8.0.16`; the README records the reason and the condition for removing the pin.
+`with-storybook` adds Storybook 10.x with `@storybook/react-vite`, a basic story set, and a Storybook build command. Storybook 10 removed `@storybook/addon-essentials`; viewport, controls, interactions, and actions are provided by Storybook core, so the example does not install or list the incompatible 8.x addon package. Its application e2e test remains the standard Phoria smoke test. Because Storybook currently has an open runtime regression with Vite 8.1.x/Rolldown, this example pins Vite to `~8.0.16`; the README records the reason, the core-provided essentials behavior, and the condition for removing the pin.
 
 ## Documentation
 

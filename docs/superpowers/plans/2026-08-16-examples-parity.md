@@ -199,9 +199,9 @@ Each of `framework-react`, `framework-vue`, `framework-svelte`, `with-tailwind`,
 - Phoria server port: 5873.
 - Storybook build command: `pnpm build:storybook`.
 
-- [ ] **Step 1: Create the React example contract.** Copy the current React template and add Storybook 10 dependencies with `@storybook/react-vite` and `@storybook/addon-essentials`.
+- [ ] **Step 1: Create the React example contract.** Copy the current React template and add Storybook 10 dependencies with `@storybook/react-vite`; Storybook 10 provides the former essentials features through core, so do not install the incompatible `@storybook/addon-essentials` 8.x package.
 - [ ] **Step 2: Pin Vite locally.** Set this example's Vite dependency to `~8.0.16`; do not change Vite versions in other examples.
-- [ ] **Step 3: Configure Storybook.** Add the React Vite framework, stories under `WebApp/ui/src`, essentials addon, and a `viteFinal` that merges the app's Phoria/dotnet-dev-certs/Vite configuration without introducing a second application server.
+- [ ] **Step 3: Configure Storybook.** Add the React Vite framework, stories under `WebApp/ui/src`, and Storybook 10's core-provided essentials behavior, with a `viteFinal` that merges the app's Phoria/dotnet-dev-certs/Vite configuration without introducing a second application server.
 - [ ] **Step 4: Add the basic `Counter` stories.** Reuse the archived story structure, using `startAt: 5` for the application-facing default story.
 - [ ] **Step 5: Add scripts and README.** Add `storybook` and `build:storybook`; document the Vite pin, the Rolldown regression, and the condition for removing the pin.
 - [ ] **Step 6: Verify both surfaces.** Run `pnpm build:storybook`, `pnpm build`, and `EXAMPLES_E2E=with-storybook pnpm examples:e2e`.
