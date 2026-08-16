@@ -522,7 +522,7 @@ One `release.yml` runs on pushes to **both** `main` and `canary`; runtime `baseB
 
 ### Publishing security
 
-npm publishes use **trusted publishing (OIDC)**: the workflow carries an `id-token: write` permission and the npm CLI auto-detects GitHub OIDC during `changeset publish`, so no npm token exists in the repository or workflows and provenance is added automatically. The 2026-07-08 GAT 2FA-bypass deprecation removed the token alternative. NuGet still uses an API key secret (`NUGET_API_KEY`) via `scripts/dotnet/publish.js` — nuget.org has no OIDC equivalent. Branch protection on `main` and `canary` (require PRs + CI, restrict push to maintainers) means only a maintainer can trigger a publish.
+npm publishes use **trusted publishing (OIDC)**: the workflow carries an `id-token: write` permission and the npm CLI auto-detects GitHub OIDC during `changeset publish`, so no npm token exists in the repository or workflows and provenance is added automatically. The 2026-07-08 GAT 2FA-bypass deprecation removed the token alternative. NuGet also uses **trusted publishing (OIDC)**: `NuGet/login@v1` exchanges the workflow's OIDC token for a short-lived API key, which `scripts/dotnet/publish.js` passes to `dotnet nuget push`. No long-lived NuGet API key is required. Branch protection on `main` and `canary` (require PRs + CI, restrict push to maintainers) means only a maintainer can trigger a publish.
 
 ### Stable-cut runbook
 

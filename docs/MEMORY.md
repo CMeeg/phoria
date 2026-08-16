@@ -250,3 +250,8 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 - A brand-new npm package cannot be created by trusted publishing (OIDC), so its first version requires a maintainer bootstrap publish. That bootstrap must use `pnpm publish`, not plain `npm publish`, because pnpm literalizes workspace `catalog:` specifiers in the published manifest.
 - The manual `@phoria/opentelemetry@0.2.0-beta.0` publish left `catalog:` dependencies in the npm artifact and blocked example installs. The recovery republishes `0.2.0-beta.1` through the workflow's pnpm-based Changesets path; no source catalog literalization is needed.
 - After a publish recovery, verify the published manifest with `npm view <package>@<version> dependencies` before running the examples sync. The missing `@phoria/opentelemetry@0.2.0-beta.0` git tag belongs on the `5d99cde` release commit for history consistency.
+
+## 2026-08-16 - NuGet trusted publishing
+
+- NuGet.org supports GitHub Actions trusted publishing. The release workflow uses `NuGet/login@v1` with the `meeg` nuget.org profile name, exchanges the job's OIDC token for a short-lived API key, and passes that key to the existing `scripts/dotnet/publish.js` path through `NUGET_API_KEY`.
+- The NuGet trusted-publishing policy is tied to repository owner `CMeeg`, repository `phoria`, and workflow file `release.yml`; no GitHub Actions environment is configured. The long-lived `NUGET_API_KEY` GitHub secret should remain only until the OIDC publish is verified, then be removed.
