@@ -27,6 +27,7 @@ describe("with-styled-components e2e", () => {
   it("server-renders styled-components styles", async () => {
     const html = await getHtml()
     expect(html).toMatch(/<style data-styled="true" data-styled-version="[^"]+">/)
+    expect(html.indexOf("react-counter")).toBeLessThan(html.indexOf("<style data-styled"))
   })
 
   it("reports the Phoria server healthy via the health check", async () => {

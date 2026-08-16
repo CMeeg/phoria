@@ -22,6 +22,8 @@ describe("with-tailwind e2e", () => {
   it("server-renders the React counter", async () => {
     const html = await getHtml()
     expect(html).toContain("react-counter")
+    expect(html).toContain("motion-safe:animate-spin-slow")
+    expect(html).toContain("block mx-auto my-6")
   })
 
   it("renders Tailwind utility classes from Razor markup", async () => {
