@@ -7,7 +7,7 @@ The workspace root is `examples/with-workspace`, with the application in `apps/W
 ```bash
 pnpm install
 pnpm build
-pnpm dev
+pnpm --dir apps/WebApp dev
 ```
 
 The WebApp listens on port `5673` and the Phoria Server listens on port `5573`. The page registers the shared `Counter` component with `StartAt = 5`.
@@ -15,7 +15,7 @@ The WebApp listens on port `5673` and the Phoria Server listens on port `5573`. 
 Run the smoke test with:
 
 ```bash
-pnpm test:e2e
+pnpm --dir apps/WebApp test:e2e
 ```
 
 The example can also be fetched directly with:

@@ -16,9 +16,9 @@ describe("with-workspace e2e", () => {
 		expect(html).toMatch(/count is\s*(?:<!-- -->)?5/)
 	})
 
-	it("emits the island module script", async () => {
+	it("emits modulepreload directives for server-rendered islands", async () => {
 		const html = await getHtml()
-		expect(html).toMatch(/<script type="module" src="\/ui\/assets\/[^"]+\.js"><\/script>/)
+		expect(html).toMatch(/<link\s+rel="modulepreload"\s+crossorigin\s+href="\/ui\/assets\/[^"]+\.js">/)
 	})
 
 	it("reports the Phoria server healthy", async () => {
