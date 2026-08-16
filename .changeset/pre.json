@@ -10,5 +10,21 @@
     "@phoria/phoria-vue": "0.3.2",
     "@phoria/vite-plugin-dotnet-dev-certs": "0.2.1"
   },
-  "changesets": []
+  "changesets": [
+    "build-app-server-environment",
+    "decouple-h3-from-public-api",
+    "dotnet-10-xunit-v3",
+    "eager-rivers",
+    "graceful-server-process-stop",
+    "otel-observability-examples",
+    "quiet-island-styles-css-warning",
+    "quiet-otlp-requests",
+    "raise-node-and-pnpm",
+    "typescript-6-vite-plugin-dts-5",
+    "unavailable-server-policy",
+    "update-remaining-dependencies",
+    "vite-8-rolldown",
+    "vite-plugin-correctness",
+    "widen-phoria-peer-range"
+  ]
 }

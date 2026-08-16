@@ -1,5 +1,20 @@
 # @phoria/phoria
 
+## 0.5.0-beta.0
+
+### Minor Changes
+
+- c716413: The Phoria Server bundle is now built by the `phoria` plugin as a `server` environment. A separate `vite.server.config.ts` is no longer required. Framework plugins now scope their entire per-environment plugin instance (via `applyToEnvironment`) to the client and ssr environments — not just their `transform` hook, though `transform` is currently the only per-environment hook these plugins define.
+- c716413: `PhoriaIsland.create` now takes a `PhoriaIslandRequest` instead of an h3 `H3Event`. Request handler factories (`createPhoriaSsrRequestHandler`, `createPhoriaDevSsrRequestHandler`, `createPhoriaCsrRequestHandler`, `createPhoriaDevCsrRequestHandler`) return the new `PhoriaRequestHandler` type.
+- c716413: Require Vite 8. Peer dependency widened to ^8.0.0; vite-tsconfig-paths replaced by Vite's built-in resolve.tsconfigPaths.
+
+### Patch Changes
+
+- c716413: Raise minimum Node.js to ^20.19.0 || ^22.12.0 || >=24.0.0 and pnpm to 11
+- c716413: Build with TypeScript 6 and vite-plugin-dts 5
+- c716413: Update dependencies.
+- c716413: Preserve user rolldownOptions; stop copying publicDir into the SSR build.
+
 ## 0.4.2
 
 ### Patch Changes
