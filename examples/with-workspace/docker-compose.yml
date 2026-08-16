@@ -1,0 +1,11 @@
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: apps/WebApp/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      DOTNET_ENVIRONMENT: Production
+      NODE_ENV: production
+    ports:
+      - "8080:8080"

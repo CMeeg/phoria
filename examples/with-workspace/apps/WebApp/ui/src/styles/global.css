@@ -1,0 +1,29 @@
+:root {
+	font-family: Inter, system-ui, sans-serif;
+	color: #213547;
+	background: #f8fafc;
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+}
+
+body {
+	margin: 0;
+	min-width: 320px;
+	min-height: 100vh;
+}
+
+main {
+	max-width: 1280px;
+	margin: 0 auto;
+	padding: 2rem;
+	text-align: center;
+}
+
+button {
+	border: 1px solid transparent;
+	border-radius: 8px;
+	padding: 0.5rem 1rem;
+	font-size: 1rem;
+	cursor: pointer;
+}
