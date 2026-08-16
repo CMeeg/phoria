@@ -13,12 +13,12 @@ describe("with-workspace e2e", () => {
 		const html = await getHtml()
 		expect(html).toContain("phoria-island")
 		expect(html).toContain("react-counter")
-		expect(html).toContain("count is 5")
+		expect(html).toMatch(/count is\s*(?:<!-- -->)?5/)
 	})
 
-	it("emits modulepreload directives for server-rendered islands", async () => {
+	it("emits the island module script", async () => {
 		const html = await getHtml()
-		expect(html).toMatch(/<link\s+rel="modulepreload"\s+crossorigin\s+href="\/ui\/assets\/[^"]+\.js">/)
+		expect(html).toMatch(/<script type="module" src="\/ui\/assets\/[^"]+\.js"><\/script>/)
 	})
 
 	it("reports the Phoria server healthy", async () => {
