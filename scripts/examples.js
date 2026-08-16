@@ -137,21 +137,33 @@ function findExamples() {
 		return []
 	}
 
-	return readdirSync(dir)
-		.filter((name) => existsSync(join(dir, name, "WebApp", "package.json")))
-		.map((name) => join(dir, name, "WebApp"))
+	return readdirSync(dir).flatMap((name) => {
+		const exampleDir = join(dir, name)
+		const webAppDir = existsSync(join(exampleDir, "WebApp", "package.json"))
+			? join(exampleDir, "WebApp")
+			: existsSync(join(exampleDir, "apps", "WebApp", "package.json"))
+				? join(exampleDir, "apps", "WebApp")
+				: null
+
+		return webAppDir ? [{ name, exampleDir, webAppDir }] : []
+	})
 }
 
-function csprojPath(exampleDir) {
-	return join(exampleDir, "WebApp.csproj")
+function installDir(example) {
+	return existsSync(join(example.exampleDir, "pnpm-workspace.yaml")) ? example.exampleDir : example.webAppDir
+}
+
+function csprojPath(webAppDir) {
+	return join(webAppDir, "WebApp.csproj")
 }
 
 function packagesPropsPath(exampleDir) {
-	return resolve(exampleDir, "..", "Directory.Packages.props")
+	return join(exampleDir, "Directory.Packages.props")
 }
 
-function projectReference() {
-	return `<ProjectReference Include="../../../${dotnetPackage.dir}/${dotnetPackage.csproj}" />`
+function projectReference(webAppDir) {
+	const target = join(root, dotnetPackage.dir, dotnetPackage.csproj)
+	return `<ProjectReference Include="${relative(webAppDir, target)}" />`
 }
 
 function packageReference() {
@@ -162,17 +174,18 @@ function packageVersion(version) {
 	return `<PackageVersion Include="${dotnetPackage.name}" Version="${version}" />`
 }
 
-async function link(exampleDir) {
-	step(`🔗 Linking ${exampleDir}…`)
+async function link(example) {
+	const { webAppDir } = example
+	step(`🔗 Linking ${webAppDir}…`)
 
-	const pkgPath = join(exampleDir, "package.json")
+	const pkgPath = join(webAppDir, "package.json")
 	const pkg = await readJson(pkgPath)
 
 	for (const [name, dir] of Object.entries(jsPackages)) {
 		const section = pkg.dependencies?.[name] ? "dependencies" : pkg.devDependencies?.[name] ? "devDependencies" : null
 
 		if (section) {
-			pkg[section][name] = `file:../../../${dir}`
+			pkg[section][name] = `file:${relative(webAppDir, join(root, dir))}`
 		}
 	}
 
@@ -184,25 +197,25 @@ async function link(exampleDir) {
 		await literalizeCatalogDeps(join(root, dir, "package.json"), catalog)
 	}
 
-	const csproj = await readFile(csprojPath(exampleDir), "utf8")
+	const csproj = await readFile(csprojPath(webAppDir), "utf8")
 
-	if (csproj.includes(projectReference())) {
-		info(`🔗 ${exampleDir}: already linked`)
+	if (csproj.includes(projectReference(webAppDir))) {
+		info(`🔗 ${webAppDir}: already linked`)
 	} else {
 		const match = csproj.match(/<PackageReference Include="Phoria" \/>/)
 
 		if (!match) {
-			throw new Error(`No Phoria PackageReference found in ${csprojPath(exampleDir)}`)
+			throw new Error(`No Phoria PackageReference found in ${csprojPath(webAppDir)}`)
 		}
 
-		await writeFile(csprojPath(exampleDir), csproj.replace(match[0], projectReference()))
+		await writeFile(csprojPath(webAppDir), csproj.replace(match[0], projectReference(webAppDir)))
 	}
 
-	await run("pnpm install", exampleDir)
-	await run("dotnet restore WebApp.csproj", exampleDir)
+	await run("pnpm install", installDir(example))
+	await run("dotnet restore WebApp.csproj", webAppDir)
 
 	success(
-		`Linked ${exampleDir} to local packages (file: refs, catalog literalized).\n` +
+		`Linked ${webAppDir} to local packages (file: refs, catalog literalized).\n` +
 			`Run \`pnpm build\` at the repo root first. After every rebuild, run \`pnpm examples:refresh\` to refresh the hard links (a plain \`pnpm install\` does not).\n` +
 			`Run \`pnpm examples:sync\` before committing.`
 	)
@@ -210,25 +223,27 @@ async function link(exampleDir) {
 
 let workspaceBuilt = false
 
-async function refresh(exampleDir) {
+async function refresh(example) {
+	const { webAppDir } = example
 	if (!workspaceBuilt) {
 		step("🔨 Building workspace packages…")
 		await run("pnpm build")
 		workspaceBuilt = true
 	}
 
-	step(`🔄 Refreshing hard links for ${exampleDir}…`)
+	step(`🔄 Refreshing hard links for ${webAppDir}…`)
 
-	await run("pnpm install --force", exampleDir)
-	success(`Refreshed hard links for ${exampleDir}.`)
+	await run("pnpm install --force", installDir(example))
+	success(`Refreshed hard links for ${webAppDir}.`)
 }
 
-async function sync(exampleDir) {
-	step(`↩️ Restoring ${exampleDir} to its committed state…`)
+async function sync(example) {
+	const { exampleDir, webAppDir } = example
+	step(`↩️ Restoring ${webAppDir} to its committed state…`)
 
 	await restorePackagesFromHead()
 
-	const pkgPath = join(exampleDir, "package.json")
+	const pkgPath = join(webAppDir, "package.json")
 	const headPkg = JSON.parse(await getHead(pkgPath))
 	const pkg = await readJson(pkgPath)
 	let usedRegistryFallback = false
@@ -247,8 +262,8 @@ async function sync(exampleDir) {
 
 	await writeJson(pkgPath, pkg)
 
-	const csproj = await readFile(csprojPath(exampleDir), "utf8")
-	const headCsproj = await getHead(csprojPath(exampleDir))
+	const csproj = await readFile(csprojPath(webAppDir), "utf8")
+	const headCsproj = await getHead(csprojPath(webAppDir))
 	const headRef =
 		headCsproj.match(/<ProjectReference Include="[^"]+" \/>/)?.[0] ??
 		headCsproj.match(/<PackageReference Include="Phoria"(?: Version="[^"]+")? \/>/)?.[0]
@@ -257,11 +272,11 @@ async function sync(exampleDir) {
 		csproj.match(/<PackageReference Include="Phoria" \/>/)?.[0]
 
 	if (!headRef) {
-		throw new Error(`HEAD has no Phoria reference; cannot restore ${exampleDir}`)
+		throw new Error(`HEAD has no Phoria reference; cannot restore ${webAppDir}`)
 	}
 
 	if (currentRef && currentRef !== headRef) {
-		await writeFile(csprojPath(exampleDir), csproj.replace(currentRef, headRef))
+		await writeFile(csprojPath(webAppDir), csproj.replace(currentRef, headRef))
 	}
 
 	const propsPath = packagesPropsPath(exampleDir)
@@ -279,7 +294,7 @@ async function sync(exampleDir) {
 		await writeFile(propsPath, props.replace(currentPv, ""))
 	}
 
-	const lockPath = join(exampleDir, "pnpm-lock.yaml")
+	const lockPath = join(installDir(example), "pnpm-lock.yaml")
 	await run(`git checkout -- ${relative(root, lockPath)}`)
 	const lockfile = await readFile(lockPath, "utf8")
 	const lockNeedsUpdate = Object.entries(jsPackages).some(([name]) =>
@@ -292,7 +307,7 @@ async function sync(exampleDir) {
 	if (usedRegistryFallback || lockNeedsUpdate) {
 		info("Skipped frozen install because the restored package dependency is newer than the committed example lockfile.")
 	} else {
-		await run("pnpm install --frozen-lockfile", exampleDir)
+		await run("pnpm install --frozen-lockfile", installDir(example))
 	}
 
 	// Running root-level pnpm commands (e.g. `pnpm build`) while the packages'
@@ -305,15 +320,16 @@ async function sync(exampleDir) {
 		info("Restored the root pnpm-lock.yaml (it was modified by link-induced catalog: churn).")
 	}
 
-	success(`Restored ${exampleDir} to its committed state.`)
+	success(`Restored ${webAppDir} to its committed state.`)
 }
 
-async function check(exampleDir) {
-	step(`🔎 Checking ${exampleDir}…`)
+async function check(example) {
+	const { exampleDir, webAppDir } = example
+	step(`🔎 Checking ${webAppDir}…`)
 
 	const problems = []
 
-	const pkgPath = join(exampleDir, "package.json")
+	const pkgPath = join(webAppDir, "package.json")
 	const pkg = await readJson(pkgPath)
 
 	for (const [name] of Object.entries(jsPackages)) {
@@ -326,10 +342,10 @@ async function check(exampleDir) {
 		}
 	}
 
-	const csproj = await readFile(csprojPath(exampleDir), "utf8")
+	const csproj = await readFile(csprojPath(webAppDir), "utf8")
 
-	if (csproj.includes(projectReference())) {
-		problems.push(`${csprojPath(exampleDir)}: uses a Phoria ProjectReference — use a PackageReference`)
+	if (csproj.includes(projectReference(webAppDir))) {
+		problems.push(`${csprojPath(webAppDir)}: uses a Phoria ProjectReference — use a PackageReference`)
 	}
 
 	const props = await readFile(packagesPropsPath(exampleDir), "utf8")
@@ -339,17 +355,18 @@ async function check(exampleDir) {
 	}
 
 	if (problems.length) {
-		error(`${exampleDir}: found ${problems.length} problem(s):\n${problems.join("\n")}`)
+		error(`${webAppDir}: found ${problems.length} problem(s):\n${problems.join("\n")}`)
 		process.exitCode = 1
 	} else {
-		success(`${exampleDir}: OK`)
+		success(`${webAppDir}: OK`)
 	}
 }
 
-async function bump(exampleDir) {
-	step(`⬆️ Bumping ${exampleDir}…`)
+async function bump(example) {
+	const { exampleDir, webAppDir } = example
+	step(`⬆️ Bumping ${webAppDir}…`)
 
-	const pkgPath = join(exampleDir, "package.json")
+	const pkgPath = join(webAppDir, "package.json")
 	const pkg = await readJson(pkgPath)
 	const versions = []
 
@@ -367,16 +384,16 @@ async function bump(exampleDir) {
 	await writeJson(pkgPath, pkg)
 
 	const { version: dotnetVersion } = await readJson(join(root, dotnetPackage.dir, "package.json"))
-	const csproj = await readFile(csprojPath(exampleDir), "utf8")
-	const ref = csproj.includes(projectReference())
-		? projectReference()
+	const csproj = await readFile(csprojPath(webAppDir), "utf8")
+	const ref = csproj.includes(projectReference(webAppDir))
+		? projectReference(webAppDir)
 		: csproj.match(/<PackageReference Include="Phoria" \/>/)?.[0]
 
 	if (!ref) {
-		throw new Error(`No Phoria reference found in ${csprojPath(exampleDir)}`)
+		throw new Error(`No Phoria reference found in ${csprojPath(webAppDir)}`)
 	}
 
-	await writeFile(csprojPath(exampleDir), csproj.replace(ref, packageReference()))
+	await writeFile(csprojPath(webAppDir), csproj.replace(ref, packageReference()))
 
 	const propsPath = packagesPropsPath(exampleDir)
 	const props = await readFile(propsPath, "utf8")
@@ -388,9 +405,9 @@ async function bump(exampleDir) {
 		await writeFile(propsPath, props.replace(/<ItemGroup>/, `<ItemGroup>\n\t\t${versionLine}`))
 	}
 
-	await run("pnpm install --no-frozen-lockfile", exampleDir)
+	await run("pnpm install --no-frozen-lockfile", installDir(example))
 
-	success(`Bumped ${exampleDir} to ${versions.join(", ")} (registry refs).`)
+	success(`Bumped ${webAppDir} to ${versions.join(", ")} (registry refs).`)
 }
 
 const modes = { link, sync, check, bump, refresh }
@@ -401,6 +418,6 @@ if (!modes[mode]) {
 	process.exit(1)
 }
 
-for (const exampleDir of findExamples()) {
-	await modes[mode](exampleDir)
+for (const example of findExamples()) {
+	await modes[mode](example)
 }
