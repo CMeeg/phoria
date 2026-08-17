@@ -250,3 +250,10 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 - Local examples e2e runs all discovered examples by default. The examples-sync workflow uses the quota-bounded allow-list `getting-started,framework-multiple,with-workspace`; ports for the seven new examples are 5173, 5273, 5473, 5673, 5773, 5873, and 5973 respectively.
 - `with-tailwind` uses Tailwind v4.2.2+ through `@tailwindcss/vite`. `with-styled-components` uses the existing `renderComponent` seam with `ServerStyleSheet`; no framework API change is required. `with-storybook` pins Vite to `~8.0.16` until the Vite 8.1.x/Rolldown Storybook regression is fixed.
 - Add per-example READMEs, an `examples/README.md` index, and a contributor checklist; archive the old repository only after parity reaches `main`.
+
+## 2026-08-17 — Task 8 component-path decisions confirmed
+
+- Workspace component transforms require explicit `workspacePackages` opt-in; package inference and marker files remain rejected so unrelated dependencies are not transformed.
+- The component-path wire format is globally root-relative with no leading slash and matches the SSR manifest key; the .NET preload helper retains `TrimStart('/')` for compatibility but no longer strips the configured Vite root.
+- Shape A is implemented: `@phoria/phoria/vite` owns the shared `createPhoriaFrameworkPlugin` shell, while React, Svelte, and Vue remain thin framework-specific composers.
+- React-first sequencing proved direct workspace-package registration through the `with-workspace` e2e path before the behavior was mirrored to Svelte and Vue.

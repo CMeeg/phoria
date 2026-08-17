@@ -201,13 +201,17 @@ A component entry's `loader` is either:
 
 #### The `__phoriaComponentPath` mechanism
 
-The **framework** Vite plugins inject a literal export into each component module at build/dev time (via a `transform` hook using `MagicString`):
+Each framework package's `./vite` entry composes its official framework plugin with the shared `createPhoriaFrameworkPlugin` factory exported by `@phoria/phoria/vite`. The factory owns the environment hooks, workspace-package resolution, and component-path transform; the framework packages provide their framework-specific include/exclude globs, optimized dependencies, and SSR external.
+
+The transform injects a literal export into each component module at build/dev time (via `MagicString`). The value is the consuming Vite root-relative module key, normalized with `/` separators and without a leading slash:
 
 ```ts
-export const __phoriaComponentPath = "/src/components/Counter/Counter.tsx";
+export const __phoriaComponentPath = "src/components/Counter/Counter.tsx";
 ```
 
-`importComponent` picks this off the loaded module namespace and attaches it to the `PhoriaIslandComponent.componentPath`. The framework SSR service bubbles it into its render result, the SSR router emits it as the `x-phoria-island-path` response header, and the .NET side stores it as `island.ComponentPath` — where `PhoriaIslandPreloadTagHelper` uses it to look up the island's modules in the `ssr-manifest.json`. This is the seam that ties a server-rendered island to its preloaded client chunks.
+The factory applies only to the `client` and `ssr` environments, never the Phoria Server `server` environment. Normal component filters continue to exclude `node_modules/**`; application-owned workspace packages are included explicitly with `workspacePackages: ["@phoriaexamples/ui"]`. Configured packages are resolved from `node_modules` by walking upward from the configured cwd and realpath-resolved, so linked package modules can be matched using the same paths Vite uses.
+
+`importComponent` picks the export off the loaded module namespace and attaches it to `PhoriaIslandComponent.componentPath`. The framework SSR service bubbles it into its render result, the SSR router emits it as the `x-phoria-island-path` response header, and the .NET side stores it as `island.ComponentPath`. `PhoriaIslandPreloadTagHelper` uses that value directly, after trimming any legacy leading slash, as the key into the `ssr-manifest.json`; it no longer strips the configured Vite root. This root-relative manifest-key format supports both app-root modules such as `src/components/Counter/Counter.tsx` and workspace modules such as `../../../packages/ui/dist/index.js`.
 
 #### Client runtime (`src/client/`)
 
@@ -268,8 +272,8 @@ Each framework package (`@phoria/phoria-react`, `@phoria/phoria-svelte`, `@phori
 The framework Vite plugins all do the same three things:
 
 1. **Wrap the framework's own Vite plugin** — `react()` from `@vitejs/plugin-react`, `svelte()` from `@sveltejs/vite-plugin-svelte`, `vue()` from `@vitejs/plugin-vue` (passing `react: false` / `svelte: false` / `vue: false` opts out).
-2. **Inject `__phoriaComponentPath`** — a `transform` hook matches component source files (`**/*.jsx`/`**/*.tsx`, `**/*.svelte`, `**/*.vue`, excluding `node_modules/**`), strips the `cwd` prefix from the module id, and appends `export const __phoriaComponentPath = "…";` via `MagicString`.
-3. **Apply only to the right environments** — `applyToEnvironment` returns `environment.name === "client" || environment.name === "ssr"`. This guard is mandatory: the `server` environment's bundle must **not** be transformed with `__phoriaComponentPath` or the framework's JSX/Svelte/Vue processing.
+2. **Configure the shared Phoria factory** — `createPhoriaFrameworkPlugin` receives the framework's component filter and runtime-specific Vite settings. Set `workspacePackages` explicitly when application-owned island components are imported directly from workspace packages; ordinary dependencies remain excluded.
+3. **Compose environment-specific behavior** — the shared factory injects the root-relative `__phoriaComponentPath` export in `client` and `ssr`, while `applyToEnvironment` prevents both the shared transform and framework processing from affecting the `server` environment.
 
 Their `config` hooks register the `ssr` environment and pre-bundle runtimes via `optimizeDeps.include` (`["react", "react-dom/client"]`, `["svelte"]`, `["vue"]`); their `configEnvironment` hooks externalize `@phoria/phoria-<framework>/server` from the `ssr` environment. **Svelte additionally externalizes `svelte` itself** so that the Vite-transformed component and the renderer share a single `svelte/internal/server` instance (a duplicated module-level `ssr_context` would crash `push_element` reading `null`).
 
@@ -461,7 +465,7 @@ camelCase property names, nulls omitted, `UnsafeRelaxedJsonEscaping` (props live
 
 ### The `__phoriaComponentPath` chain
 
-framework plugin `transform` → module export → `importComponent` → SSR result `componentPath` → `x-phoria-island-path` header → .NET `island.ComponentPath` → `ssr-manifest.json` lookup → modulepreload/stylesheet links. A break anywhere in this chain (e.g. the framework plugin not applying to the `ssr` environment) silently drops preloads.
+framework-specific composer → shared `createPhoriaFrameworkPlugin` → `client`/`ssr` transform → root-relative module export → `importComponent` → framework SSR result `componentPath` → `x-phoria-island-path` header → .NET `island.ComponentPath` → `TrimStart('/')` → direct `ssr-manifest.json` key lookup → modulepreload/stylesheet links. A break anywhere in this chain, such as omitting an application-owned package from `workspacePackages` or not transforming the `ssr` environment, silently drops preloads.
 
 ### Invariants worth remembering
 

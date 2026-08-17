@@ -77,7 +77,7 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@phoria/phoria": ">=0.5.0-0 <2.0.0",
+		"@phoria/phoria": ">=0.6.0-0 <2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"svelte": "^5.46.4",
 		"vite": "^8.0.0"
