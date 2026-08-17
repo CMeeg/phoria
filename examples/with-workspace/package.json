@@ -3,6 +3,7 @@
   "private": true,
   "packageManager": "pnpm@11.17.0",
   "scripts": {
+    "dev": "pnpm --filter @phoriaexamples/ui build && pnpm --filter with-workspace dev",
     "build": "pnpm --filter @phoriaexamples/ui build && pnpm --filter with-workspace build",
     "check": "pnpm --filter @phoriaexamples/ui build && pnpm --filter @phoriaexamples/ui check && pnpm --filter with-workspace check",
     "lint": "pnpm --filter @phoriaexamples/ui lint && pnpm --filter with-workspace lint"
