@@ -43,10 +43,18 @@ function mergeOptimizeDeps(config: UserConfig, entries: string[]) {
 
 function configureSsrExternal(options: EnvironmentOptions, entries: string[]) {
 	options.resolve ??= {}
-	if (Array.isArray(options.resolve.external)) {
-		options.resolve.external = Array.from(new Set([...options.resolve.external, ...entries]))
-	} else if (typeof options.resolve.external === "undefined") {
-		options.resolve.external = entries
+	const existingExternal = options.resolve.external as unknown
+
+	if (Array.isArray(existingExternal)) {
+		options.resolve.external = Array.from(new Set([...existingExternal, ...entries]))
+	} else if (existingExternal === undefined || existingExternal === true) {
+		if (existingExternal === undefined) {
+			options.resolve.external = entries
+		}
+	} else {
+		const externalFunction = typeof existingExternal === "function" ? existingExternal : () => false
+		;(options.resolve as { external?: unknown }).external = (source: string, importer?: string, isResolved?: boolean) =>
+			entries.includes(source) || Boolean(externalFunction(source, importer, isResolved))
 	}
 }
 
@@ -84,20 +92,23 @@ function createPhoriaFrameworkPlugin(options: PhoriaFrameworkPluginOptions): Plu
 		applyToEnvironment(environment) {
 			return environment.name === "client" || environment.name === "ssr"
 		},
-		transform(code, id) {
-			const cleanId = cleanModuleId(id)
-			const normalizedId = normalizePath(cleanId)
-			if (normalizedId.includes("/node_modules/")) {
+		transform(this: { environment?: { name: string } } | undefined, code, id) {
+			if (this?.environment?.name === "server") {
 				return
 			}
+			const cleanId = cleanModuleId(id)
+			const normalizedId = normalizePath(cleanId)
 			const realId = existsSync(cleanId) ? normalizePath(realpathSync(cleanId)) : normalizedId
+			if (realId.includes("/node_modules/")) {
+				return
+			}
 			const isWorkspaceModule = workspaceDirectories.some((directory) => isWithin(normalizePath(directory), realId))
 
 			if (!isWorkspaceModule && !filter(normalizedId)) {
 				return
 			}
 
-			const componentPath = normalizePath(relative(root, cleanId))
+			const componentPath = normalizePath(relative(root, realId))
 			const source = new MagicString(code)
 			source.append(`\n\nexport const __phoriaComponentPath = ${JSON.stringify(componentPath)};`)
 

@@ -1,6 +1,6 @@
 import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { dirname, join, relative } from "node:path"
+import { join, relative } from "node:path"
 import type { EnvironmentOptions, Plugin, UserConfig } from "vite"
 import { afterEach, describe, expect, it } from "vitest"
 import { createPhoriaFrameworkPlugin, resolvePackageDir } from "./framework"
@@ -35,6 +35,7 @@ type FrameworkHooks = {
 	configResolved: (config: { root: string }) => void
 	applyToEnvironment: (environment: { name: string }) => boolean
 	transform: (
+		this: unknown,
 		code: string,
 		id: string
 	) => { code: string; map: unknown } | undefined | Promise<{ code: string; map: unknown } | undefined>
@@ -85,26 +86,25 @@ describe("createPhoriaFrameworkPlugin", () => {
 
 	it("uses the configured Vite root when cwd is different", async () => {
 		const fixture = await createFixture()
-		const root = join(fixture.directory, "nested", "ui")
-		await mkdir(dirname(root), { recursive: true })
-		await mkdir(root, { recursive: true })
+		const root = fixture.directory
 		const plugin = createPlugin(fixture, { cwd: fixture.root })
 		await plugin.config({}, { command: "serve", mode: "development" })
 		plugin.configResolved({ root } as never)
 
-		const result = await plugin.transform("export default 1", join(root, "src/App.tsx"))
+		const result = await plugin.transform("export default 1", join(fixture.root, "src/App.tsx"))
 
-		expect(result?.code).toContain('export const __phoriaComponentPath = "src/App.tsx";')
+		expect(result?.code).toContain('export const __phoriaComponentPath = "app/src/App.tsx";')
 	})
 
-	it("transforms opted-in workspace source and dist modules using real paths", async () => {
+	it("transforms opted-in workspace source and dist modules from symlinked IDs", async () => {
 		const fixture = await createFixture()
 		const plugin = createPlugin(fixture)
 		await plugin.config({}, { command: "build", mode: "production" })
 		plugin.configResolved({ root: fixture.root } as never)
 
-		const source = await plugin.transform("export default 1", join(fixture.workspace, "src/Widget.tsx?direct"))
-		const dist = await plugin.transform("export default 1", join(fixture.workspace, "dist/index.js#hash"))
+		const symlinkedWorkspace = join(fixture.root, "node_modules", "@workspace", "ui")
+		const source = await plugin.transform("export default 1", join(symlinkedWorkspace, "src/Widget.tsx?direct"))
+		const dist = await plugin.transform("export default 1", join(symlinkedWorkspace, "dist/index.js#hash"))
 
 		expect(source?.code).toContain(
 			`export const __phoriaComponentPath = "${normalize(relative(fixture.root, join(fixture.workspace, "src/Widget.tsx")))}";`
@@ -132,13 +132,35 @@ describe("createPhoriaFrameworkPlugin", () => {
 	it("merges optimize dependencies without duplicates and configures SSR externals", async () => {
 		const fixture = await createFixture()
 		const plugin = createPlugin(fixture)
-		const config = { optimizeDeps: { include: ["custom", "framework-runtime"] } }
+		const config: UserConfig = { optimizeDeps: { include: ["custom", "framework-runtime"] } }
 		await plugin.config(config, { command: "serve", mode: "development" })
 		const environment: EnvironmentOptions = { resolve: { external: ["custom-external"] } }
 		plugin.configEnvironment("ssr", environment, { command: "serve", mode: "development" })
 
 		expect(config.optimizeDeps?.include).toEqual(["custom", "framework-runtime"])
+		expect(config.environments?.ssr).toEqual({})
 		expect(environment.resolve?.external).toEqual(["custom-external", "test-framework/server"])
+	})
+
+	it("preserves non-array SSR external configuration while applying requested entries", async () => {
+		const fixture = await createFixture()
+		const plugin = createPlugin(fixture)
+
+		const allExternal: EnvironmentOptions = { resolve: { external: true } }
+		plugin.configEnvironment("ssr", allExternal, { command: "build", mode: "production" })
+		expect(allExternal.resolve?.external).toBe(true)
+
+		const selectiveExternal: EnvironmentOptions = { resolve: { external: (() => false) as never } }
+		plugin.configEnvironment("ssr", selectiveExternal, { command: "build", mode: "production" })
+		const external = selectiveExternal.resolve?.external as unknown as (source: string) => boolean
+		expect(external("test-framework/server")).toBe(true)
+		expect(external("other-module")).toBe(false)
+
+		const disabledExternal: EnvironmentOptions = { resolve: { external: false as never } }
+		plugin.configEnvironment("ssr", disabledExternal, { command: "build", mode: "production" })
+		const disabled = disabledExternal.resolve?.external as unknown as (source: string) => boolean
+		expect(disabled("test-framework/server")).toBe(true)
+		expect(disabled("other-module")).toBe(false)
 	})
 
 	it("applies only to client and SSR environments", async () => {
@@ -148,6 +170,9 @@ describe("createPhoriaFrameworkPlugin", () => {
 		expect(plugin.applyToEnvironment({ name: "client" } as never)).toBe(true)
 		expect(plugin.applyToEnvironment({ name: "ssr" } as never)).toBe(true)
 		expect(plugin.applyToEnvironment({ name: "server" } as never)).toBe(false)
+		expect(
+			await plugin.transform.call({ environment: { name: "server" } }, "code", join(fixture.root, "src/App.tsx"))
+		).toBeUndefined()
 	})
 })
 
