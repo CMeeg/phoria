@@ -96,6 +96,9 @@ function createPhoriaFrameworkPlugin(options: PhoriaFrameworkPluginOptions): Plu
 			if (this?.environment?.name === "server") {
 				return
 			}
+			if (/[?&]type=style(?:[&#]|$)/.test(id)) {
+				return
+			}
 			const cleanId = cleanModuleId(id)
 			const normalizedId = normalizePath(cleanId)
 			const realId = existsSync(cleanId) ? normalizePath(realpathSync(cleanId)) : normalizedId

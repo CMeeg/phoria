@@ -84,6 +84,19 @@ describe("createPhoriaFrameworkPlugin", () => {
 		expect(result?.map).toBeDefined()
 	})
 
+	it("leaves Vue virtual style modules untouched", async () => {
+		const fixture = await createFixture()
+		const plugin = createPlugin(fixture, { include: ["**/*.vue"] })
+		plugin.configResolved({ root: fixture.root } as never)
+
+		const result = await plugin.transform(
+			".counter-button { color: red; }",
+			`${join(fixture.root, "src/counter-button.vue")}?vue&type=style&lang.css`
+		)
+
+		expect(result).toBeUndefined()
+	})
+
 	it("uses the configured Vite root when cwd is different", async () => {
 		const fixture = await createFixture()
 		const root = fixture.directory
