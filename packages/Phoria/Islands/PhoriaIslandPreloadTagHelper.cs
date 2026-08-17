@@ -45,8 +45,6 @@ public class PhoriaIslandPreloadTagHelper(
 
 		IViteSsrManifest ssrManifest = ssrManifestReader.ReadSsrManifest();
 
-		string rootPath = options.Root.TrimStart('/');
-
 		HashSet<string> seenFiles = [];
 
 		foreach (PhoriaIsland island in scopedContext.Islands)
@@ -57,14 +55,6 @@ public class PhoriaIslandPreloadTagHelper(
 			}
 
 			string componentPath = island.ComponentPath.TrimStart('/');
-
-			// We then need to remove the base path to get the island's module ID
-
-			if (!string.IsNullOrEmpty(rootPath)
-				&& componentPath.StartsWith(rootPath, StringComparison.InvariantCulture))
-			{
-				componentPath = componentPath[rootPath.Length..].TrimStart('/');
-			}
 
 			// Now we can see if the module exists in the SSR manifest
 
