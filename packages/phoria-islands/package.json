@@ -64,10 +64,12 @@
 		"test:coverage": "vitest run --coverage"
 	},
 	"dependencies": {
+		"@rollup/pluginutils": "catalog:",
 		"defu": "catalog:",
 		"destr": "catalog:",
 		"empathic": "catalog:",
 		"h3": "catalog:",
+		"magic-string": "catalog:",
 		"mime": "^4.1.0"
 	},
 	"devDependencies": {
