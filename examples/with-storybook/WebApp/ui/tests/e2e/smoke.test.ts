@@ -21,7 +21,7 @@ describe("with-storybook e2e", () => {
 
   it("server-renders the React counter", async () => {
     const html = await getHtml()
-    expect(html).toContain("react-counter")
+    expect(html).toContain("motion-safe:animate-spin-slow")
   })
 
   it("reports the Phoria server healthy via the health check", async () => {

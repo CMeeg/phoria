@@ -10,7 +10,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="card">
+      <div className="p-8">
         <Story />
       </div>
     ),

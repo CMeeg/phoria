@@ -54,7 +54,7 @@
 		"formatter": { "enabled": true }
 	},
 	"css": {
-		"parser": { "cssModules": true },
+		"parser": { "cssModules": true, "tailwindDirectives": true },
 		"linter": { "enabled": true },
 		"formatter": { "enabled": true }
 	}
