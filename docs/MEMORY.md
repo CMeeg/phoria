@@ -7,6 +7,18 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 - Storybook 10.5.8 no longer publishes a compatible `@storybook/addon-essentials` package; its essentials features are in Storybook core. The parity plan nevertheless requires the addon package and an Essentials addon configuration. Task 9 uses Storybook core and documents the incompatibility, but the plan/spec must be reconciled before implementation can continue.
 - Approved reconciliation: keep Storybook 10 core-only essentials, remove the impossible addon dependency/configuration requirement, and document the rationale. Downgrading to Storybook 8 or using a 9.0 alpha was rejected because either violates the Storybook 10/Vite 8 requirements or introduces an unstable peer mismatch.
 
+## 2026-08-16 — Workspace package component paths
+
+- Directly registering a component from a workspace package currently renders but loses production preloads. The framework transform excludes `node_modules/**`, and its cwd-relative path format does not match root-relative, base-stripped SSR manifest keys for modules resolved outside the WebApp root. The app-root re-export shim works because it restores the existing `__phoriaComponentPath` chain. Detailed cause, constraints, and candidate directions are documented in [`docs/2026-08-16-component-path-for-workspace-packages.md`](2026-08-16-component-path-for-workspace-packages.md).
+
+## 2026-08-16 — Workspace component-path implementation decisions
+
+- Chose an explicit `workspacePackages: string[]` opt-in over package inference or marker files because the behavior is predictable, discoverable, and avoids transforming unrelated external modules.
+- Adopted a root-relative, no-leading-slash manifest-key wire format globally. The .NET preload helper therefore removes its legacy `Root` prefix strip while retaining `TrimStart('/')` for existing values.
+- Approved Shape A: move the complete shared framework-plugin shell into `@phoria/phoria/vite` as `createPhoriaFrameworkPlugin`, leaving React, Svelte, and Vue as thin framework-specific composers. This centralizes the subtle workspace resolution and transform logic, removes duplicated dependencies, and provides one deep test suite in core.
+- Tighten framework peer lower bounds to the core minor that ships the factory, preventing a new framework plugin from resolving against a core package without the factory export.
+- Sequence React first, prove the direct workspace import through the `with-workspace` e2e test, then mirror the implementation to Svelte and Vue.
+
 ## 2026-07-26 — v1 milestone scoping
 
 - v1 = "stability + a few key features", not a full feature-complete vision — because the priority is a release the author can confidently talk about, not shipping every idea.

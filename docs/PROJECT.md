@@ -265,6 +265,9 @@ Detailed tasks live in the implementation plan; this is the agreed sequence.
   exists (DX & tooling).
 - TODO: Keep giget as the way to consume examples, or something better
   (Examples phase).
+- TODO: Remove the `with-workspace` app-side re-export shim by making
+  `__phoriaComponentPath` and SSR manifest lookup work for opted-in workspace
+  packages. See [`docs/2026-08-16-component-path-for-workspace-packages.md`](2026-08-16-component-path-for-workspace-packages.md).
 - TODO: Approach for human/agent writing-style consistency in docs (Docs
   phase).
 - POST-V1: docs website (a Phoria app on Render) — deferred.
