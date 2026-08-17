@@ -1,15 +1,37 @@
-import { normalize } from "node:path"
+import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { normalize, relative } from "node:path"
 import react from "@vitejs/plugin-react"
-import type { Plugin } from "vite"
-import { describe, expect, it } from "vitest"
+import type { Plugin, UserConfig } from "vite"
+import { afterEach, describe, expect, it } from "vitest"
 import { phoriaReact } from "./plugin"
 
+const temporaryDirectories: string[] = []
+
 type FrameworkPlugin = Plugin & {
-	config: (config: object, env: object) => void
+	config: (config: UserConfig, env: object) => void
 	configEnvironment: (name: string, options: object, env: object) => void
 	configResolved: (config: { root: string }) => void
 	transform: (this: unknown, code: string, id: string) => { code: string } | undefined
 }
+
+async function createWorkspaceFixture() {
+	const directory = await mkdtemp(`${tmpdir()}/phoria-react-`)
+	temporaryDirectories.push(directory)
+	const root = `${directory}/app`
+	const workspace = `${directory}/workspace-ui`
+
+	await mkdir(`${root}/node_modules/@workspace`, { recursive: true })
+	await mkdir(`${workspace}/src`, { recursive: true })
+	await writeFile(`${workspace}/src/Widget.ts`, "export default 1")
+	await symlink(workspace, `${root}/node_modules/@workspace/ui`, "dir")
+
+	return { root, workspace, packageName: "@workspace/ui" }
+}
+
+afterEach(async () => {
+	await Promise.all(temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })))
+})
 
 function getFrameworkPlugin(options?: Parameters<typeof phoriaReact>[0]) {
 	const plugins = phoriaReact(options) as Plugin[]
@@ -74,6 +96,18 @@ describe("phoria-react plugin", () => {
 		expect(plugin.transform("code", "/tmp/custom-root/src/Hello.tsx")).toBeUndefined()
 		expect(plugin.transform("code", "/tmp/custom-root/src/Hello.custom")?.code).toContain(
 			'export const __phoriaComponentPath = "src/Hello.custom";'
+		)
+	})
+
+	it("forwards workspacePackages so opted-in workspace modules are transformed", async () => {
+		const fixture = await createWorkspaceFixture()
+		const plugin = getFrameworkPlugin({ cwd: fixture.root, workspacePackages: [fixture.packageName] })
+		plugin.configResolved({ root: fixture.root })
+
+		const transformed = plugin.transform("export default 1", `${fixture.root}/node_modules/@workspace/ui/src/Widget.ts`)
+
+		expect(transformed?.code).toContain(
+			`export const __phoriaComponentPath = "${normalize(relative(fixture.root, `${fixture.workspace}/src/Widget.ts`))}";`
 		)
 	})
 })
