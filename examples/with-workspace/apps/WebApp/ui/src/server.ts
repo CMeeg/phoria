@@ -51,6 +51,13 @@ if (viteDevServer) {
 				: undefined
 			: viteDevServer.config.server.host
 	listenOptions.port = viteDevServer.config.server.port
+
+	if (viteDevServer.config.server?.https) {
+		listenOptions.https = {
+			cert: viteDevServer.config.server.https.cert?.toString(),
+			key: viteDevServer.config.server.https.key?.toString()
+		}
+	}
 } else {
 	listenOptions.hostname = appsettings.server.host
 	listenOptions.port = appsettings.server.port ?? 5573

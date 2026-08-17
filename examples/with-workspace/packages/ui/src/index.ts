@@ -1,2 +1,2 @@
-export type { CounterProps } from "./counter"
-export { Counter } from "./counter"
+export type { CounterProps } from "./components/counter/counter"
+export { Counter } from "./components/counter/counter"

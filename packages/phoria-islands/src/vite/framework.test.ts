@@ -97,6 +97,18 @@ describe("createPhoriaFrameworkPlugin", () => {
 		expect(result).toBeUndefined()
 	})
 
+	it("leaves workspace CSS modules untouched", async () => {
+		const fixture = await createFixture()
+		const cssPath = join(fixture.workspace, "src/styles.css")
+		await writeFile(cssPath, ":root { color: red; }")
+		const plugin = createPlugin(fixture)
+		plugin.configResolved({ root: fixture.root } as never)
+
+		const result = await plugin.transform(":root { color: red; }", cssPath)
+
+		expect(result).toBeUndefined()
+	})
+
 	it("uses the configured Vite root when cwd is different", async () => {
 		const fixture = await createFixture()
 		const root = fixture.directory

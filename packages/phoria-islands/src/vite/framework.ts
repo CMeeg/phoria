@@ -3,6 +3,7 @@ import { dirname, join, relative, resolve } from "node:path"
 import { createFilter, normalizePath } from "@rollup/pluginutils"
 import MagicString from "magic-string"
 import type { EnvironmentOptions, Plugin, UserConfig } from "vite"
+import { isCSSRequest } from "vite"
 
 type CreateFilterParams = Parameters<typeof createFilter>
 
@@ -96,7 +97,7 @@ function createPhoriaFrameworkPlugin(options: PhoriaFrameworkPluginOptions): Plu
 			if (this?.environment?.name === "server") {
 				return
 			}
-			if (/[?&]type=style(?:[&#]|$)/.test(id)) {
+			if (isCSSRequest(id)) {
 				return
 			}
 			const cleanId = cleanModuleId(id)
