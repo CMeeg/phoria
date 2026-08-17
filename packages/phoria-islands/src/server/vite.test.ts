@@ -75,5 +75,45 @@ describe("createPhoriaDevSsrRequestHandler", () => {
 		expect(response.status).toBe(200)
 		expect(await response.text()).toContain("<span>Counter</span>")
 		expect(response.headers.get("x-phoria-island-framework")).toBe("react")
+		expect(response.headers.get("x-phoria-island-path")).toBeNull()
+	})
+
+	it("emits the workspace manifest component path from the dev server's SSR runner", async () => {
+		const { registerSsrComponentFramework } = await import("../../tests/utilities/register-fakes")
+		const { createPhoriaDevSsrRequestHandler } = await import("./routing")
+
+		registerSsrComponentFramework("react", "<span>Counter</span>", "../../../packages/ui/dist/index.js")
+
+		const settings = createPhoriaAppSettings()
+		const serverEntry = {
+			renderPhoriaIsland: (island: {
+				render: () => Promise<{ framework: string; html: string; componentPath?: string }>
+			}) => island.render()
+		}
+		const server = {
+			environments: {
+				ssr: {
+					runner: {
+						import: (id: string) => {
+							if (id !== settings.ssrEntry) {
+								throw new Error(`Unexpected SSR runner import: ${id}`)
+							}
+
+							return serverEntry
+						}
+					}
+				}
+			},
+			_vite: { isRunnableDevEnvironment: () => true }
+		} as never
+
+		const app = createApp({ onError: () => {} })
+		app.use(createPhoriaDevSsrRequestHandler(server, settings))
+		const handler = toWebHandler(app)
+
+		const response = await handler(new Request("http://localhost/ssr/render/Counter", { method: "POST" }), {})
+
+		expect(response.status).toBe(200)
+		expect(response.headers.get("x-phoria-island-path")).toBe("../../../packages/ui/dist/index.js")
 	})
 })
