@@ -4,13 +4,13 @@
 	ViewData["Title"] = "Home page";
 }
 
-<div class="inline-block">
+<div>
 	<a href="https://github.com/CMeeg/phoria" target="_blank" rel="noreferrer">
-		<img src="~/img/phoria.svg" class="h-32 max-w-none" alt="Phoria logo" />
+		<img src="~/img/phoria.svg" class="h-32 inline max-w-none" alt="Phoria logo" />
 	</a>
 </div>
-<h1 class="my-16 font-bold">Phoria Islands</h1>
-<div class="rounded-lg bg-white p-8 shadow-lg dark:bg-neutral-900">
-	<phoria-island component="Counter" client="Client.Load" props="new { StartAt = 5 }"></phoria-island>
+<h1 class="font-bold my-16">Phoria Islands</h1>
+<div class="p-8">
+ 	<phoria-island component="Counter" client="Client.Load" props="new { StartAt = 5 }"></phoria-island>
 </div>
 <p class="text-neutral-500">Click on the logos to learn more</p>

@@ -1,40 +1,50 @@
 import { useState } from "react"
-import { styled } from "styled-components"
+import { keyframes, styled } from "styled-components"
 import reactLogo from "/react.svg"
 
 export interface CounterProps {
   startAt?: number
 }
 
-const CounterContainer = styled.div`
-  padding: 2rem;
-  border: 1px solid #646cff;
-  border-radius: 8px;
+const spin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 `
 
-const CounterButton = styled.button`
-  padding: 0.75rem 1.25rem;
-  border: 1px solid #646cff;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #213547;
-  cursor: pointer;
+const Logo = styled.img`
+  &:hover {
+    filter: drop-shadow(0 0 2em #61dafbaa);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: ${spin} infinite 20s linear;
+  }
+`
+
+const Button = styled.button<{ $count?: number }>`
+  display: block;
+  margin: auto;
+  opacity: ${({ $count }) => (($count ?? 0) % 2 === 0 ? "1" : "0.8")};
 `
 
 export function Counter({ startAt }: CounterProps) {
   const [count, setCount] = useState(startAt ?? 0)
 
   return (
-    <CounterContainer className="react-counter">
+    <div>
       <a href="https://react.dev" target="_blank" rel="noreferrer">
-        <img src={reactLogo} className="logo react" alt="React logo" />
+        <Logo src={reactLogo} className="logo" alt="React logo" />
       </a>
-      <CounterButton type="button" onClick={() => setCount((count) => count + 1)}>
+      <Button type="button" $count={count} onClick={() => setCount((count) => count + 1)}>
         count is {count}
-      </CounterButton>
+      </Button>
       <p>
         Edit <code>ui/src/components/counter/counter.tsx</code> to test HMR
       </p>
-    </CounterContainer>
+    </div>
   )
 }

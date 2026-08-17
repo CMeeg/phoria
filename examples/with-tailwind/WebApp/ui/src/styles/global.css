@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@source "../../../Pages";
-@source "../../../ui";
+@import "tailwindcss" source(none);
+@source "../../../Pages/";
+@source "../../../ui/";
 
 @layer base {
   :root {
