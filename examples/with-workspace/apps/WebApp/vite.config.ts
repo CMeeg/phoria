@@ -6,5 +6,5 @@ import { defineConfig } from "vite"
 
 export default defineConfig({
 	resolve: { tsconfigPaths: true },
-	plugins: [dotnetDevCerts(), phoria(), phoriaReact(), inspectConfig()]
+	plugins: [dotnetDevCerts(), phoria(), phoriaReact({ workspacePackages: ["@phoriaexamples/ui"] }), inspectConfig()]
 })

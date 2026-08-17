@@ -3,7 +3,7 @@ import { registerComponents } from "@phoria/phoria"
 registerComponents({
 	Counter: {
 		loader: {
-			module: () => import("./counter"),
+			module: () => import("@phoriaexamples/ui"),
 			component: (module) => module.Counter
 		},
 		framework: "react"
