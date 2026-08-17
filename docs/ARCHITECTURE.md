@@ -273,7 +273,7 @@ The framework Vite plugins all do the same three things:
 
 1. **Wrap the framework's own Vite plugin** — `react()` from `@vitejs/plugin-react`, `svelte()` from `@sveltejs/vite-plugin-svelte`, `vue()` from `@vitejs/plugin-vue` (passing `react: false` / `svelte: false` / `vue: false` opts out).
 2. **Configure the shared Phoria factory** — `createPhoriaFrameworkPlugin` receives the framework's component filter and runtime-specific Vite settings. Set `workspacePackages` explicitly when application-owned island components are imported directly from workspace packages; ordinary dependencies remain excluded.
-3. **Compose environment-specific behavior** — the shared factory injects the root-relative `__phoriaComponentPath` export in `client` and `ssr`, while `applyToEnvironment` prevents both the shared transform and framework processing from affecting the `server` environment.
+3. **Compose environment-specific behavior** — the shared factory injects the root-relative `__phoriaComponentPath` export in `client` and `ssr`; its `applyToEnvironment` guard limits that shared component-path transform to those environments. The separately composed official framework plugin remains governed by its own Vite behavior.
 
 Their `config` hooks register the `ssr` environment and pre-bundle runtimes via `optimizeDeps.include` (`["react", "react-dom/client"]`, `["svelte"]`, `["vue"]`); their `configEnvironment` hooks externalize `@phoria/phoria-<framework>/server` from the `ssr` environment. **Svelte additionally externalizes `svelte` itself** so that the Vite-transformed component and the renderer share a single `svelte/internal/server` instance (a duplicated module-level `ssr_context` would crash `push_element` reading `null`).
 

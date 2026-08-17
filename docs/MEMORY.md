@@ -9,7 +9,7 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 
 ## 2026-08-16 — Workspace package component paths
 
-- Directly registering a component from a workspace package currently renders but loses production preloads. The framework transform excludes `node_modules/**`, and its cwd-relative path format does not match root-relative, base-stripped SSR manifest keys for modules resolved outside the WebApp root. The app-root re-export shim works because it restores the existing `__phoriaComponentPath` chain. Detailed cause, constraints, and candidate directions are documented in [`docs/2026-08-16-component-path-for-workspace-packages.md`](2026-08-16-component-path-for-workspace-packages.md).
+- Historical context, resolved by Task 8: directly registering a component from a workspace package rendered but lost production preloads because the framework transform excluded `node_modules/**` and its cwd-relative path format did not match root-relative SSR manifest keys for modules resolved outside the WebApp root. The app-root re-export shim worked because it restored the `__phoriaComponentPath` chain. Direct imports now work for explicitly opted-in workspace packages; the original cause, constraints, and candidate directions are documented in [`docs/2026-08-16-component-path-for-workspace-packages.md`](2026-08-16-component-path-for-workspace-packages.md).
 
 ## 2026-08-16 — Workspace component-path implementation decisions
 
