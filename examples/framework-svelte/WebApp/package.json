@@ -35,7 +35,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.5",
-    "@meeg/vite-plugin-inspect-config": "~0.3.0",
     "@phoria/vite-plugin-dotnet-dev-certs": "^0.3.0-beta.0",
     "@sveltejs/vite-plugin-svelte": "^7.2.0",
     "@types/node": "^24.13.3",

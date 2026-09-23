@@ -1,4 +1,3 @@
-import { inspectConfig } from "@meeg/vite-plugin-inspect-config"
 import { phoria } from "@phoria/phoria/vite"
 import { phoriaSvelte } from "@phoria/phoria-svelte/vite"
 import { dotnetDevCerts } from "@phoria/vite-plugin-dotnet-dev-certs"
@@ -8,5 +7,5 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
-  plugins: [dotnetDevCerts(), phoria(), phoriaSvelte(), inspectConfig()],
+  plugins: [dotnetDevCerts(), phoria(), phoriaSvelte()],
 })

@@ -48,9 +48,6 @@ importers:
       '@biomejs/biome':
         specifier: ^2.5.5
         version: 2.5.7
-      '@meeg/vite-plugin-inspect-config':
-        specifier: ~0.3.0
-        version: 0.3.0(vite@8.0.16(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)(yaml@2.9.0))
       '@phoria/vite-plugin-dotnet-dev-certs':
         specifier: ^0.3.0-beta.0
         version: 0.3.0-beta.0(vite@8.0.16(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)(yaml@2.9.0))
@@ -773,12 +770,6 @@ packages:
 
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
-
-  '@meeg/vite-plugin-inspect-config@0.3.0':
-    resolution: {integrity: sha512-QhnDSEbCmF62G+f6eYn7ztg0eqR+1PI8clIBka01x1OeVCUO1Q66pdCH72N1ffE8z/tVh+NwHn38DdVoHs+66Q==}
-    engines: {node: '>=22.12.0'}
-    peerDependencies:
-      vite: ^6.0.0 || ^7.0.0 || ^8.0.0
 
   '@napi-rs/wasm-runtime@1.2.3':
     resolution: {integrity: sha512-UMduMbqO5s5zF2NkNacMT/yK5Y5QiKvWr2+50bzIIxFDwVJ2h49b+oyjaCGPhJxd2/gC2x39EHv/gHVuu36x2Q==}
@@ -3495,10 +3486,6 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@js-sdsl/ordered-map@4.4.2': {}
-
-  '@meeg/vite-plugin-inspect-config@0.3.0(vite@8.0.16(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)(yaml@2.9.0))':
-    dependencies:
-      vite: 8.0.16(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.8)(yaml@2.9.0)
 
   '@napi-rs/wasm-runtime@1.2.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
