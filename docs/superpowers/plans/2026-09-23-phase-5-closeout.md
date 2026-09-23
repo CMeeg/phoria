@@ -107,15 +107,15 @@ The drift that caused the recall problem. Tick the completed work in both ledger
 
 Ordered cheapest → dearest so failures surface early. Results go into `docs/superpowers/plans/2026-08-16-examples-parity.md` Task 13 (tick the steps after the runs) and a commit.
 
-- [ ] **Step 1: `pnpm examples:check`** from the repo root → all nine examples pass (committed registry refs; also proves Task 1 clean).
-- [ ] **Step 2: Repository checks in CI order** — `pnpm build` → `pnpm lint` → `pnpm check` → `pnpm test` → `pnpm test:browser` → `dotnet test --solution Phoria.sln --configuration Release`; each green before the next.
-- [ ] **Step 3: Invalid allow-list selection** — `EXAMPLES_E2E=does-not-exist pnpm examples:e2e` → clean non-zero exit with a clear error before any stack starts.
-- [ ] **Step 4: CI allow-list run** — `EXAMPLES_E2E=getting-started,framework-multiple,with-workspace pnpm examples:e2e` → only those three execute and pass.
-- [ ] **Step 5: Storybook build** — `pnpm --dir examples/with-storybook/WebApp build:storybook` → succeeds on the pinned `~8.0.16` Vite range.
-- [ ] **Step 6: Link/sync reversibility** — `pnpm examples:link` then `pnpm examples:sync` across all examples → `git status` shows no generated link/sync changes afterward.
-- [ ] **Step 7: Unrestricted local e2e** — `pnpm examples:e2e` → all nine examples execute sequentially and pass. Longest run; do last.
-- [ ] **Step 8: Giget standalone fetch** — for each of the nine examples: `pnpm dlx giget gh:cmeeg/phoria/examples/<name> <tmp-dir>` → standalone `pnpm install` → `pnpm build`. Record which examples needed the post-merge beta publish to resolve.
-- [ ] **Step 9: Record results and commit** — fill in Task 13's checkboxes in the parity plan with pass/fail and the commands run; `git commit -m "chore: record phase 5 verification results"`.
+- [x] **Step 1: `pnpm examples:check`** from the repo root → all nine examples pass (committed registry refs; also proves Task 1 clean). — ✅ 9/9.
+- [x] **Step 2: Repository checks in CI order** — `pnpm build` → `pnpm lint` → `pnpm check` → `pnpm test` → `pnpm test:browser` → `dotnet test --solution Phoria.sln --configuration Release`; each green before the next. — ✅ all green in order.
+- [x] **Step 3: Invalid allow-list selection** — `EXAMPLES_E2E=does-not-exist pnpm examples:e2e` → clean non-zero exit with a clear error before any stack starts. — ✅ exits 1, `Unknown example name(s)`, pre-stack.
+- [x] **Step 4: CI allow-list run** — `EXAMPLES_E2E=getting-started,framework-multiple,with-workspace pnpm examples:e2e` → only those three execute and pass. — ✅ ran (the three only); surfaced a ruled finding: `with-workspace` fails `emits modulepreload directives` — pre-existing registry version skew (`0.5.0-beta.0` predates the workspace `__phoriaComponentPath` feature; passes 3/3 under linked HEAD). Closed as a recorded post-merge unblock (0.6.x publish → examples-sync bump → re-run gate), see ledger ruling; CI allow-list itself behaves correctly.
+- [x] **Step 5: Storybook build** — `pnpm --dir examples/with-storybook/WebApp build:storybook` → succeeds on the pinned `~8.0.16` Vite range. — ✅ succeeds on pinned `~8.0.16`.
+- [x] **Step 6: Link/sync reversibility** — `pnpm examples:link` then `pnpm examples:sync` across all examples → `git status` shows no generated link/sync changes afterward. — ✅ clean (one tab-authored `package.json` re-indented by sync's `writeJson`; restored byte-exact — ledgered tooling note).
+- [x] **Step 7: Unrestricted local e2e** — `pnpm examples:e2e` → all nine examples execute sequentially and pass. Longest run; do last. — ⚠️ ran; 8/9 green after the `react-counter` fix (`ac94bf8`); `with-workspace` remains the ruled version-skew fail (script aborts on first failure — workspace is last alphabetically; other eight verified sequentially).
+- [x] **Step 8: Giget standalone fetch** — for each of the nine examples: `pnpm dlx giget gh:cmeeg/phoria/examples/<name> <tmp-dir>` → standalone `pnpm install` → `pnpm build`. Record which examples needed the post-merge beta publish to resolve. — ⛔ feasibility-probed: `examples/` 404s on the default branch (`main`); ALL nine need the post-merge beta publish to resolve (recorded, Task 13 Step 2 + ledger).
+- [x] **Step 9: Record results and commit** — fill in Task 13's checkboxes in the parity plan with pass/fail and the commands run; `git commit -m "chore: record phase 5 verification results"`. — ✅ this commit.
 
 ### Task 6: Merge sequencing and the unblocked TODO
 

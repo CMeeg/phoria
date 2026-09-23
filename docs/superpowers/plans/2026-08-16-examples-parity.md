@@ -258,14 +258,14 @@ Each of `framework-react`, `framework-vue`, `framework-svelte`, `with-tailwind`,
 **Files:**
 - No source changes expected; verification only.
 
-- [ ] **Step 1: Check committed package references.** Run `pnpm examples:check` and confirm all nine examples pass.
-- [ ] **Step 2: Verify standalone consumption.** Fetch each committed example with giget into a temporary directory, run standalone `pnpm install`, and run `pnpm build`.
-- [ ] **Step 3: Run unrestricted local e2e.** Run `pnpm examples:e2e` and confirm all nine examples execute sequentially.
-- [ ] **Step 4: Run the CI allow-list.** Run `EXAMPLES_E2E=getting-started,framework-multiple,with-workspace pnpm examples:e2e`.
-- [ ] **Step 5: Verify invalid selection.** Run `EXAMPLES_E2E=does-not-exist pnpm examples:e2e` and confirm a clear non-zero failure before any stack starts.
-- [ ] **Step 6: Run repository checks.** Run `pnpm build`, `pnpm lint`, `pnpm check`, and `pnpm test` in the repository's required order.
-- [ ] **Step 7: Build Storybook separately.** Run `pnpm build:storybook` from `examples/with-storybook/WebApp` and confirm the pinned Vite build succeeds.
-- [ ] **Step 8: Verify link/sync reversibility.** Run `pnpm examples:link` followed by `pnpm examples:sync` across all examples and confirm `git status` shows no generated link/sync changes.
+- [x] **Step 1: Check committed package references.** Run `pnpm examples:check` and confirm all nine examples pass. — ✅ PASS (all nine; committed registry refs intact).
+- [ ] **Step 2: Verify standalone consumption.** Fetch each committed example with giget into a temporary directory, run standalone `pnpm install`, and run `pnpm build`. — ⛔ BLOCKED PRE-MERGE: `examples/` returns 404 from the GitHub contents API on the default branch (`main`) — nothing is fetchable until parity reaches `main`. Deferred to Task 6 Step 3 (prod testing against published betas); README giget paths (`gh:cmeeg/phoria/examples/<name>`) resolve post-merge.
+- [ ] **Step 3: Run unrestricted local e2e.** Run `pnpm examples:e2e` and confirm all nine examples execute sequentially. — ❌ RAN, 8/9 PASS: framework-multiple, framework-react, framework-svelte, framework-vue, getting-started, with-storybook, with-styled-components, with-tailwind all green; `with-workspace` fails its `emits modulepreload directives` assertion (pre-existing version skew — registry `0.5.0-beta.0` predates the workspace `__phoriaComponentPath` feature; the same e2e passes under linked HEAD). Script aborts on first failure, so with-workspace must run last in any re-run.
+- [ ] **Step 4: Run the CI allow-list.** Run `EXAMPLES_E2E=getting-started,framework-multiple,with-workspace pnpm examples:e2e`. — ⚠️ RAN, 2/3 PASS: getting-started and framework-multiple green; `with-workspace` fails the same modulepreload assertion (version skew above; the CI gate for with-workspace re-runs green after the post-merge `0.6.x` publish + `chore/examples-sync-*` bump).
+- [x] **Step 5: Verify invalid selection.** Run `EXAMPLES_E2E=does-not-exist pnpm examples:e2e` and confirm a clear non-zero failure before any stack starts. — ✅ PASS (exits 1 with `Unknown example name(s)` before any stack).
+- [x] **Step 6: Run repository checks.** Run `pnpm build`, `pnpm lint`, `pnpm check`, and `pnpm test` in the repository's required order. — ✅ PASS (build, lint, check, test, test:browser, `dotnet test --solution Phoria.sln --configuration Release` all green in CI order).
+- [x] **Step 7: Build Storybook separately.** Run `pnpm build:storybook` from `examples/with-storybook/WebApp` and confirm the pinned Vite build succeeds. — ✅ PASS (succeeds on pinned `~8.0.16`).
+- [x] **Step 8: Verify link/sync reversibility.** Run `pnpm examples:link` followed by `pnpm examples:sync` across all examples and confirm `git status` shows no generated link/sync changes. — ✅ PASS (clean tree after full link → refresh → sync cycle; note: `examples:sync`'s `writeJson` re-indents a tab-authored `package.json` — with-workspace is the only one using tabs — restored with `git checkout` for a byte-exact tree).
 
 ## Risks and Mitigations
 
