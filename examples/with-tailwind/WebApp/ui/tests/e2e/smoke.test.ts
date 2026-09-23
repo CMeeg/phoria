@@ -21,7 +21,7 @@ describe("with-tailwind e2e", () => {
 
   it("server-renders the React counter", async () => {
     const html = await getHtml()
-    expect(html).toContain("react-counter")
+    expect(html).toMatch(/count is\s*(?:<!-- -->)?5/)
     expect(html).toContain("motion-safe:animate-spin-slow")
     expect(html).toContain("block mx-auto my-6")
   })

@@ -21,13 +21,13 @@ describe("with-styled-components e2e", () => {
 
   it("server-renders the React counter", async () => {
     const html = await getHtml()
-    expect(html).toContain("react-counter")
+    expect(html).toMatch(/count is\s*(?:<!-- -->)?5/)
   })
 
   it("server-renders styled-components styles", async () => {
     const html = await getHtml()
     expect(html).toMatch(/<style data-styled="true" data-styled-version="[^"]+">/)
-    expect(html.indexOf("react-counter")).toBeLessThan(html.indexOf("<style data-styled"))
+    expect(html.indexOf("count is")).toBeLessThan(html.indexOf("<style data-styled"))
   })
 
   it("reports the Phoria server healthy via the health check", async () => {
