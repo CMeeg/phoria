@@ -35,7 +35,7 @@ export function Counter({ startAt }: CounterProps) {
   const [count, setCount] = useState(startAt ?? 0)
 
   return (
-    <div>
+    <div className="react-counter">
       <a href="https://react.dev" target="_blank" rel="noreferrer">
         <Logo src={reactLogo} className="logo" alt="React logo" />
       </a>

@@ -9,7 +9,7 @@ export function Counter({ startAt }: CounterProps) {
   const [count, setCount] = useState(startAt ?? 0)
 
   return (
-    <div>
+    <div className="react-counter">
       <a href="https://react.dev" target="_blank" rel="noreferrer" className="hover:drop-shadow-[0_0_2em_#61dafbaa]">
         <img
           src={reactLogo}
