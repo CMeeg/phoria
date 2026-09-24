@@ -1,6 +1,6 @@
 {
 	"$schema": "https://turbo.build/schema.json",
-	"globalPassThroughEnv": ["NUGET_API_KEY", "FORCE_COLOR", "NO_COLOR"],
+	"globalPassThroughEnv": ["NUGET_API_KEY", "FORCE_COLOR", "NO_COLOR", "PHORIA_EXAMPLES_REGISTRY_TIMEOUT_MS"],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],

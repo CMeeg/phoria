@@ -410,6 +410,94 @@ async function bump(example) {
 	success(`Bumped ${webAppDir} to ${versions.join(", ")} (registry refs).`)
 }
 
+const registryBudgetMs = Number(process.env.PHORIA_EXAMPLES_REGISTRY_TIMEOUT_MS) || 15 * 60 * 1000
+const registryPollIntervalMs = Math.min(15_000, registryBudgetMs / 4)
+const registryCheckTimeoutMs = 10_000
+
+function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function isJsVersionPublished(name, version) {
+	// pnpm resolves caveat against the abbreviated packument, which the CDN caches separately from the full
+	// packument that `npm view` reads. Poll the same document pnpm reads so a green check means an install
+	// can actually resolve the version.
+	const url = `https://registry.npmjs.org/${name.replace("/", "%2f")}`
+	const headers = { accept: "application/vnd.npm.install-v1+json" }
+
+	try {
+		const response = await fetch(url, { headers, signal: AbortSignal.timeout(registryCheckTimeoutMs) })
+
+		if (!response.ok) {
+			return false
+		}
+
+		const packument = await response.json()
+		return Boolean(packument.versions?.[version])
+	} catch {
+		return false
+	}
+}
+
+async function isDotnetVersionPublished(version) {
+	const url = `https://api.nuget.org/v3-flatcontainer/phoria/${version}/phoria.${version}.nupkg`
+
+	try {
+		const response = await fetch(url, { signal: AbortSignal.timeout(registryCheckTimeoutMs) })
+		return response.ok
+	} catch {
+		return false
+	}
+}
+
+async function waitForRegistry() {
+	const targets = []
+
+	for (const [name, dir] of Object.entries(jsPackages)) {
+		const { version } = await readJson(join(root, dir, "package.json"))
+		targets.push({ name, version, visible: () => isJsVersionPublished(name, version) })
+	}
+
+	const { version: dotnetVersion } = await readJson(join(root, dotnetPackage.dir, "package.json"))
+	targets.push({
+		name: dotnetPackage.name,
+		version: dotnetVersion,
+		visible: () => isDotnetVersionPublished(dotnetVersion)
+	})
+
+	const startedAt = Date.now()
+	step("⏳ Waiting for the bumped versions to appear on the npm and NuGet registries…")
+
+	let missing = targets
+
+	for (let attempt = 1; Date.now() - startedAt < registryBudgetMs; attempt++) {
+		missing = (await Promise.all(targets.map(async (target) => ((await target.visible()) ? null : target)))).filter(
+			Boolean
+		)
+
+		if (missing.length === 0) {
+			success("All bumped versions are visible on their registries.")
+			return
+		}
+
+		const waitMs = Math.min(registryPollIntervalMs, registryBudgetMs - (Date.now() - startedAt))
+
+		if (waitMs > 0) {
+			info(
+				`⏳ Still missing ${missing.map((t) => `${t.name}@${t.version}`).join(", ")} (attempt ${attempt}, ${Math.round((Date.now() - startedAt) / 1000)}s elapsed)…`
+			)
+			await sleep(waitMs)
+		}
+	}
+
+	error(
+		`Registry propagation poll timed out after ${Math.round((Date.now() - startedAt) / 1000)}s. Still missing: ` +
+			`${missing.map((t) => `${t.name}@${t.version}`).join(", ")}. ` +
+			"Re-run this workflow once the versions are visible (npm usually propagates in under 2 minutes; NuGet indexing can take longer)."
+	)
+	process.exit(1)
+}
+
 const modes = { link, sync, check, bump, refresh }
 const mode = process.argv[2]
 
@@ -418,6 +506,12 @@ if (!modes[mode]) {
 	process.exit(1)
 }
 
-for (const example of findExamples()) {
+const examples = findExamples()
+
+if (mode === "bump" && examples.length > 0) {
+	await waitForRegistry()
+}
+
+for (const example of examples) {
 	await modes[mode](example)
 }

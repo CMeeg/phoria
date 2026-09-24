@@ -82,6 +82,7 @@ jobs:
 
       - name: Open examples-sync pull request
         if: steps.changesets.outputs.hasChangesets == 'false'
+        timeout-minutes: 30
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EXAMPLES_BRANCH: chore/examples-sync-${{ github.ref_name }}-${{ github.sha }}
