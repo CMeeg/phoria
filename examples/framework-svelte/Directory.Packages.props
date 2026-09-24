@@ -16,7 +16,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageVersion Include="Phoria" Version="0.5.0-beta.0" />
+		<PackageVersion Include="Phoria" Version="0.5.0-beta.1" />
 	</ItemGroup>
 
 </Project>
