@@ -1,5 +1,11 @@
 # phoria-dotnet
 
+## 0.5.0-beta.1
+
+### Patch Changes
+
+- c1e4ee6: Support root-relative component paths and production preloads for explicitly opted-in workspace packages.
+
 ## 0.5.0-beta.0
 
 ### Minor Changes

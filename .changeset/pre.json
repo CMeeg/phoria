@@ -12,6 +12,7 @@
   },
   "changesets": [
     "build-app-server-environment",
+    "component-path-workspace-packages",
     "decouple-h3-from-public-api",
     "dotnet-10-xunit-v3",
     "eager-rivers",

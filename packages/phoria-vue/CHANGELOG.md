@@ -1,5 +1,16 @@
 # @phoria/phoria-vue
 
+## 0.4.0-beta.1
+
+### Minor Changes
+
+- c1e4ee6: Support root-relative component paths and production preloads for explicitly opted-in workspace packages.
+
+### Patch Changes
+
+- Updated dependencies [c1e4ee6]
+  - @phoria/phoria@0.5.0-beta.1
+
 ## 0.4.0-beta.0
 
 ### Minor Changes
