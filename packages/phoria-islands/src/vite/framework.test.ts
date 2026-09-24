@@ -1,9 +1,17 @@
+import fs from "node:fs"
 import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, relative } from "node:path"
 import type { EnvironmentOptions, Plugin, UserConfig } from "vite"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { createPhoriaFrameworkPlugin, resolvePackageDir } from "./framework"
+
+vi.mock("node:fs", async () => {
+	const actual = (await vi.importActual<Record<string, unknown>>("node:fs")) as Record<string, unknown>
+	const realpathSync = vi.fn(actual.realpathSync as typeof fs.realpathSync)
+	const mocked = { ...actual, realpathSync }
+	return { ...mocked, default: mocked }
+})
 
 const temporaryDirectories: string[] = []
 
@@ -186,6 +194,40 @@ describe("createPhoriaFrameworkPlugin", () => {
 		const disabled = disabledExternal.resolve?.external as unknown as (source: string) => boolean
 		expect(disabled("test-framework/server")).toBe(true)
 		expect(disabled("other-module")).toBe(false)
+	})
+
+	it("merges string and RegExp SSR externals with framework entries", async () => {
+		const fixture = await createFixture()
+		const plugin = createPlugin(fixture)
+
+		const stringExternal: EnvironmentOptions = { resolve: { external: "react" as never } }
+		plugin.configEnvironment("ssr", stringExternal, { command: "build", mode: "production" })
+		expect(stringExternal.resolve?.external).toEqual(["react", "test-framework/server"])
+
+		const regexpExternal: EnvironmentOptions = { resolve: { external: /^node:/ as never } }
+		plugin.configEnvironment("ssr", regexpExternal, { command: "build", mode: "production" })
+		expect(regexpExternal.resolve?.external).toEqual([/^node:/, "test-framework/server"])
+	})
+
+	it("rejects unsupported SSR external shapes instead of silently dropping them", async () => {
+		const fixture = await createFixture()
+		const plugin = createPlugin(fixture)
+
+		expect(() =>
+			plugin.configEnvironment("ssr", { resolve: { external: 42 as never } }, { command: "build", mode: "production" })
+		).toThrow(/Unsupported resolve\.external/)
+	})
+
+	it("avoids realpath filesystem calls for modules already within the app root", async () => {
+		const fixture = await createFixture()
+		const plugin = createPlugin(fixture)
+		await plugin.config({}, { command: "serve", mode: "development" })
+		plugin.configResolved({ root: fixture.root } as never)
+		vi.mocked(fs.realpathSync).mockClear()
+
+		await plugin.transform("export default 1", join(fixture.root, "src/App.tsx"))
+
+		expect(fs.realpathSync).not.toHaveBeenCalled()
 	})
 
 	it("applies only to client and SSR environments", async () => {

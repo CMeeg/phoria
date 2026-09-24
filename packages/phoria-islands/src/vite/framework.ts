@@ -46,17 +46,39 @@ function configureSsrExternal(options: EnvironmentOptions, entries: string[]) {
 	options.resolve ??= {}
 	const existingExternal = options.resolve.external as unknown
 
-	if (Array.isArray(existingExternal)) {
-		options.resolve.external = Array.from(new Set([...existingExternal, ...entries]))
-	} else if (existingExternal === undefined || existingExternal === true) {
-		if (existingExternal === undefined) {
-			options.resolve.external = entries
-		}
-	} else {
-		const externalFunction = typeof existingExternal === "function" ? existingExternal : () => false
+	if (typeof existingExternal === "function") {
 		;(options.resolve as { external?: unknown }).external = (source: string, importer?: string, isResolved?: boolean) =>
-			entries.includes(source) || Boolean(externalFunction(source, importer, isResolved))
+			entries.includes(source) || Boolean(existingExternal(source, importer, isResolved))
+		return
 	}
+
+	if (existingExternal === true) {
+		return
+	}
+
+	if (existingExternal === undefined) {
+		options.resolve.external = entries
+		return
+	}
+
+	if (existingExternal === false) {
+		;(options.resolve as { external?: unknown }).external = (source: string) => entries.includes(source)
+		return
+	}
+
+	const existingEntries = Array.isArray(existingExternal)
+		? existingExternal
+		: typeof existingExternal === "string" || existingExternal instanceof RegExp
+			? [existingExternal]
+			: null
+
+	if (existingEntries === null) {
+		throw new Error(
+			`Unsupported resolve.external value: ${typeof existingExternal} (expected string, RegExp, array, function, boolean, or undefined)`
+		)
+	}
+
+	options.resolve.external = Array.from(new Set([...existingEntries, ...entries]))
 }
 
 function isWithin(directory: string, path: string) {
@@ -102,7 +124,12 @@ function createPhoriaFrameworkPlugin(options: PhoriaFrameworkPluginOptions): Plu
 			}
 			const cleanId = cleanModuleId(id)
 			const normalizedId = normalizePath(cleanId)
-			const realId = existsSync(cleanId) ? normalizePath(realpathSync(cleanId)) : normalizedId
+			const realId =
+				isWithin(root, normalizedId) && !normalizedId.includes("/node_modules/")
+					? normalizedId
+					: existsSync(cleanId)
+						? normalizePath(realpathSync(cleanId))
+						: normalizedId
 			if (realId.includes("/node_modules/")) {
 				return
 			}
