@@ -10,7 +10,14 @@ RUN pnpm install --frozen-lockfile
 
 COPY apps/WebApp/ apps/WebApp/
 COPY packages/ui/ packages/ui/
-RUN pnpm --filter @phoriaexamples/ui build && pnpm --filter with-workspace build:islands && pnpm prune --prod
+# pnpm deploy produces a self-contained /src/deploy: the app files (ui/dist via the
+# package "files" whitelist) plus an isolated production node_modules with the
+# @phoriaexamples/ui workspace dependency installed as a file: copy in its own
+# virtual store. --legacy is required because pnpm 11 refuses non-injected workspace
+# deps (ERR_PNPM_DEPLOY_NONINJECTED_WORKSPACE); the legacy layout is verified
+# self-contained (no symlinks escape the deploy directory).
+RUN pnpm --filter @phoriaexamples/ui build && pnpm --filter with-workspace build:islands \
+	&& pnpm --filter with-workspace --prod deploy --legacy /src/deploy
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dotnet-build
 WORKDIR /src
@@ -26,9 +33,7 @@ ENV ASPNETCORE_URLS=http://+:8080 \
     NODE_ENV=production
 
 COPY --from=dotnet-build /app/publish ./
-COPY --from=ui-build /src/apps/WebApp/ui/dist ./ui/dist
-COPY --from=ui-build /src/node_modules ./node_modules
-COPY --from=ui-build /src/apps/WebApp/package.json ./package.json
+COPY --from=ui-build /src/deploy ./
 COPY --from=ui-build /usr/local/bin/node /usr/local/bin/node
 
 EXPOSE 8080
