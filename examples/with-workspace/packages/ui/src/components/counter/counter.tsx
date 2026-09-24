@@ -18,7 +18,7 @@ export function Counter({ startAt }: CounterProps) {
 				count is {count}
 			</button>
 			<p>
-				Edit <code>packages/ui/src/counter.tsx</code> to test HMR
+				Edit <code>packages/ui/src/components/counter/counter.tsx</code> to test HMR
 			</p>
 		</div>
 	)

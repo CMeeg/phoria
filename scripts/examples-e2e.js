@@ -108,7 +108,15 @@ async function waitForHealthy(url, processFailure, timeoutMs = 90_000) {
 }
 
 async function testExample({ name, exampleDir, webAppDir }) {
-	const { webAppPort } = exampleConfigs[name]
+	const exampleConfig = exampleConfigs[name]
+
+	if (!exampleConfig) {
+		throw new Error(
+			`No e2e contract configured for example "${name}". Add a "${name}" entry to exampleConfigs in scripts/examples-e2e.js.`
+		)
+	}
+
+	const { webAppPort } = exampleConfig
 	const installDir = existsSync(join(exampleDir, "pnpm-workspace.yaml")) ? exampleDir : webAppDir
 	const environment = {
 		ASPNETCORE_ENVIRONMENT: "Preview",
