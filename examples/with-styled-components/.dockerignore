@@ -1,0 +1,9 @@
+.git
+.gitignore
+WebApp/node_modules
+WebApp/ui/dist
+WebApp/bin
+WebApp/obj
+WebApp/.vite
+WebApp/*.user
+WebApp/*.suo

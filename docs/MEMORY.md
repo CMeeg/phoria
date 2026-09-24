@@ -2,6 +2,23 @@
 
 Dated log of durable decisions made while shaping the project. Later entries supersede earlier exploratory choices where noted; implementation details belong in the architecture and milestone docs.
 
+## 2026-08-16 — Examples parity spec gap
+
+- Storybook 10.5.8 no longer publishes a compatible `@storybook/addon-essentials` package; its essentials features are in Storybook core. The parity plan nevertheless requires the addon package and an Essentials addon configuration. Task 9 uses Storybook core and documents the incompatibility, but the plan/spec must be reconciled before implementation can continue.
+- Approved reconciliation: keep Storybook 10 core-only essentials, remove the impossible addon dependency/configuration requirement, and document the rationale. Downgrading to Storybook 8 or using a 9.0 alpha was rejected because either violates the Storybook 10/Vite 8 requirements or introduces an unstable peer mismatch.
+
+## 2026-08-16 — Workspace package component paths
+
+- Historical context, resolved by Task 8: directly registering a component from a workspace package rendered but lost production preloads because the framework transform excluded `node_modules/**` and its cwd-relative path format did not match root-relative SSR manifest keys for modules resolved outside the WebApp root. The app-root re-export shim worked because it restored the `__phoriaComponentPath` chain. Direct imports now work for explicitly opted-in workspace packages; the original cause, constraints, and candidate directions are documented in [`docs/2026-08-16-component-path-for-workspace-packages.md`](2026-08-16-component-path-for-workspace-packages.md).
+
+## 2026-08-16 — Workspace component-path implementation decisions
+
+- Chose an explicit `workspacePackages: string[]` opt-in over package inference or marker files because the behavior is predictable, discoverable, and avoids transforming unrelated external modules.
+- Adopted a root-relative, no-leading-slash manifest-key wire format globally. The .NET preload helper therefore removes its legacy `Root` prefix strip while retaining `TrimStart('/')` for existing values.
+- Approved Shape A: move the complete shared framework-plugin shell into `@phoria/phoria/vite` as `createPhoriaFrameworkPlugin`, leaving React, Svelte, and Vue as thin framework-specific composers. This centralizes the subtle workspace resolution and transform logic, removes duplicated dependencies, and provides one deep test suite in core.
+- Tighten framework peer lower bounds to the core minor that ships the factory, preventing a new framework plugin from resolving against a core package without the factory export.
+- Sequence React first, prove the direct workspace import through the `with-workspace` e2e test, then mirror the implementation to Svelte and Vue.
+
 ## 2026-07-26 — v1 milestone scoping
 
 - v1 = "stability + a few key features", not a full feature-complete vision — because the priority is a release the author can confidently talk about, not shipping every idea.
@@ -223,3 +240,20 @@ Dated log of durable decisions made while shaping the project. Later entries sup
 - Added `.github/workflows/canary-to-main.yml`, a checkout-free required check for PRs targeting `main`. It allows `canary`, `changeset-release/*`, and `chore/examples-sync-*`; other head branches fail with an explicit error.
 - The check is required only on `main`, in addition to the existing CI checks. It is intentionally not required on `canary`, where feature PRs land.
 - The workflow is first merged into `canary`, then a `canary` to `main` PR is opened and left parked. The check can then be selected in the `main` branch rule without merging the stable cut. Until the guard file reaches `main`, other PRs targeting `main` remain blocked with an expected-but-unreported status; merging the parked cut makes the guard report explicit failures for disallowed sources.
+
+## 2026-08-16 — Examples parity design
+
+- Split the Examples phase: parity with the archived `phoria-examples` repository is a new Phase 5 before Docs; the existing new-example scope moves to Phase 10 after Docs, Vite assets, DX/tooling, and exploration.
+- Parity includes all seven missing examples: `framework-react`, `framework-vue`, `framework-svelte`, `with-workspace`, `with-tailwind`, `with-styled-components`, and `with-storybook`.
+- Rebuild parity examples on the current AppHost/Aspire, OpenTelemetry, standalone-workspace, and e2e template. Reuse useful old content but remove obsolete Lerna/Nx and root-package markers.
+- `with-workspace` uses `apps/WebApp` plus `packages/ui` under a root pnpm workspace. Existing examples keep `WebApp/`; example tooling must discover both layouts and derive relative package, project-reference, and lockfile paths.
+- Local examples e2e runs all discovered examples by default. The examples-sync workflow uses the quota-bounded allow-list `getting-started,framework-multiple,with-workspace`; ports for the seven new examples are 5173, 5273, 5473, 5673, 5773, 5873, and 5973 respectively.
+- `with-tailwind` uses Tailwind v4.2.2+ through `@tailwindcss/vite`. `with-styled-components` uses the existing `renderComponent` seam with `ServerStyleSheet`; no framework API change is required. `with-storybook` pins Vite to `~8.0.16` until the Vite 8.1.x/Rolldown Storybook regression is fixed.
+- Add per-example READMEs, an `examples/README.md` index, and a contributor checklist; archive the old repository only after parity reaches `main`.
+
+## 2026-08-17 — Task 8 component-path decisions confirmed
+
+- Workspace component transforms require explicit `workspacePackages` opt-in; package inference and marker files remain rejected so unrelated dependencies are not transformed.
+- The component-path wire format is globally root-relative with no leading slash and matches the SSR manifest key; the .NET preload helper retains `TrimStart('/')` for compatibility but no longer strips the configured Vite root.
+- Shape A is implemented: `@phoria/phoria/vite` owns the shared `createPhoriaFrameworkPlugin` shell, while React, Svelte, and Vue remain thin framework-specific composers.
+- React-first sequencing proved direct workspace-package registration through the `with-workspace` e2e path before the behavior was mirrored to Svelte and Vue.

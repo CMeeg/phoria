@@ -130,6 +130,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 
 ### Markdown & prose
 
+- Use British English spelling in prose and commit messages (for example, `centralise`, not `centralize`).
 - **Don't hard-wrap prose with line breaks** — write each paragraph as an unbroken line and let the reader's editor/viewer soft-wrap it. Applies to `docs/*.md`, `AGENTS.md`, and any other plain-text docs.
 - Markdown structure still follows normal conventions: block elements (headings, tables, fenced code blocks) go on their own lines, and each list item — including nested items and continuation prose — stays on a single line.
 

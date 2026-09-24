@@ -1,6 +1,8 @@
 import { isAbsolute, join } from "node:path"
 import type { BuildEnvironmentOptions, EnvironmentOptions, PluginOption, UserConfig } from "vite"
 import { type PhoriaAppSettings, parsePhoriaAppSettings } from "~/server/appsettings"
+import type { PhoriaFrameworkPluginOptions } from "./framework"
+import { createPhoriaFrameworkPlugin } from "./framework"
 
 const pluginName = "phoria"
 
@@ -206,5 +208,5 @@ function phoriaPlugin(options?: Partial<PhoriaPluginOptions>): PluginOption {
 	}
 }
 
-export type { PhoriaPluginOptions }
-export { phoriaPlugin as phoria }
+export type { PhoriaFrameworkPluginOptions, PhoriaPluginOptions }
+export { createPhoriaFrameworkPlugin, phoriaPlugin as phoria }

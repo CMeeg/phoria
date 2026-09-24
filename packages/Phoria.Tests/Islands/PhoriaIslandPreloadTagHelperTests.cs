@@ -13,6 +13,52 @@ namespace Phoria.Tests.Islands;
 public class PhoriaIslandPreloadTagHelperTests
 {
 	[Fact]
+	public void Process_WorkspacePackageComponentPath_EmitsModulepreloadLinks()
+	{
+		// Arrange
+		IViteSsrManifest manifest = new ViteSsrManifest(new Dictionary<string, string[]>
+		{
+			["../../../packages/ui/dist/index.js"] = ["assets/index-abc123.js"]
+		});
+
+		var serverMonitor = new StubServerMonitor(PhoriaServerMode.Production);
+		var scopedContext = new StubScopedContext(
+			new PhoriaIsland
+			{
+				ComponentName = "WorkspacePackage",
+				ComponentPath = "/../../../packages/ui/dist/index.js",
+				Framework = "react"
+			});
+		var manifestReader = new StubManifestReader(manifest);
+		var options = Options.Create(new PhoriaOptions { Root = "../../../packages", Base = "/ui" });
+		var urlHelperFactory = new StubUrlHelperFactory(new StubUrlHelper());
+		var tagHelper = new PhoriaIslandPreloadTagHelper(
+			serverMonitor,
+			scopedContext,
+			manifestReader,
+			options,
+			urlHelperFactory);
+
+		tagHelper.ViewContext = new ViewContext();
+
+		var context = new TagHelperContext(
+			new TagHelperAttributeList(),
+			new Dictionary<object, object?>(),
+			Guid.NewGuid().ToString("N"));
+		var output = new TagHelperOutput(
+			"phoria-island-preload",
+			new TagHelperAttributeList(),
+			(childContent, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
+
+		// Act
+		tagHelper.Process(context, output);
+
+		// Assert
+		string html = output.Content.GetContent();
+		Assert.Contains("rel=\"modulepreload\" crossorigin href=\"/ui/assets/index-abc123.js\"", html);
+	}
+
+	[Fact]
 	public void Process_ProductionMode_EmitsModulepreloadLinks()
 	{
 		// Arrange

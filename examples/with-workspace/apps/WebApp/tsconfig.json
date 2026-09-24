@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"allowImportingTsExtensions": true,
+		"esModuleInterop": true,
+		"isolatedModules": true,
+		"jsx": "react-jsx",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"noEmit": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedSideEffectImports": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"paths": { "~/*": ["./ui/src/*"] },
+		"skipLibCheck": true,
+		"strict": true,
+		"target": "ES2022",
+		"types": ["node", "vite/client"],
+		"verbatimModuleSyntax": true
+	},
+	"include": ["ui/src/**/*.ts", "ui/src/**/*.d.ts", "ui/src/**/*.tsx", "vite.config.ts"]
+}
