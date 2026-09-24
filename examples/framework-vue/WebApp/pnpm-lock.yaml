@@ -24,14 +24,14 @@ importers:
         specifier: ^1.43.0
         version: 1.43.0
       '@phoria/opentelemetry':
-        specifier: ^0.2.0-beta.1
-        version: 0.2.0-beta.1(@phoria/phoria@0.5.0-beta.0(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)))(supports-color@10.2.2)
+        specifier: ^0.2.0-beta.2
+        version: 0.2.0-beta.2(@phoria/phoria@0.5.0-beta.1(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)))(supports-color@10.2.2)
       '@phoria/phoria':
-        specifier: ^0.5.0-beta.0
-        version: 0.5.0-beta.0(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
+        specifier: ^0.5.0-beta.1
+        version: 0.5.0-beta.1(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
       '@phoria/phoria-vue':
-        specifier: ^0.4.0-beta.0
-        version: 0.4.0-beta.0(@phoria/phoria@0.5.0-beta.0(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)))(@vitejs/plugin-vue@6.0.8(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3)))(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3))
+        specifier: ^0.4.0-beta.1
+        version: 0.4.0-beta.1(@phoria/phoria@0.5.0-beta.1(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)))(@vitejs/plugin-vue@6.0.8(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3)))(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3))
       h3:
         specifier: ^1.15.11
         version: 1.15.11
@@ -833,23 +833,23 @@ packages:
     bundledDependencies:
       - napi-wasm
 
-  '@phoria/opentelemetry@0.2.0-beta.1':
-    resolution: {integrity: sha512-QtOZbcTYfy3oYz4uX0lUjyxFYinRRZZUUnuT0LOc4QMrG58ihWZH0Bter2fCLzZ1pnjTTezeQ0qmVx6dgnJFNw==}
+  '@phoria/opentelemetry@0.2.0-beta.2':
+    resolution: {integrity: sha512-U8oYLpAB2nsYld2NARnPvBeM8A97dKJLNlX0Cmj5w2OCMFjW5lt1D3/8WQsRA+Mq++Jv3HAG132RcJwuAnatSQ==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
     peerDependencies:
       '@phoria/phoria': '>=0.5.0-0 <2.0.0'
 
-  '@phoria/phoria-vue@0.4.0-beta.0':
-    resolution: {integrity: sha512-2KxrHfWEr0VINbG31tNloHuaxu2gKb/T7+uwhzuS1O/RgNEhSIuVSFv5fdmzqSl7Yzp2czaDpP4XJDaiFtsGIA==}
+  '@phoria/phoria-vue@0.4.0-beta.1':
+    resolution: {integrity: sha512-xoARbOWDm09ru5jNEFuV6pfm9Y1EA+bjej27vY6KIqQqVyklg/ESpvGrzo8aPSYon8pAeTlquKSTWlBQX4w/AQ==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
     peerDependencies:
-      '@phoria/phoria': '>=0.5.0-0 <2.0.0'
+      '@phoria/phoria': '>=0.5.0-beta.1'
       '@vitejs/plugin-vue': ^6.0.0
       vite: ^8.0.0
       vue: ^3.0.0
 
-  '@phoria/phoria@0.5.0-beta.0':
-    resolution: {integrity: sha512-h+yyyVLObIFDRZ4JVL0U8k6l1Kskuliq2vEGQ2EvMDkj0SaCZuuybWSBlmYVanypEmGw7qu2wzrPy7or3z/1mg==}
+  '@phoria/phoria@0.5.0-beta.1':
+    resolution: {integrity: sha512-xP54nrKYZCvhSCCalH+2mmGCN4Q0mXI3KlqoQLXuIN20UuAmDWw6YHksDAzmvnhEI1P3kF/7lWDenhls14H/ug==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
     peerDependencies:
       vite: ^8.0.0
@@ -2580,7 +2580,7 @@ snapshots:
       is-glob: 4.0.3
       picomatch: 4.0.5
 
-  '@phoria/opentelemetry@0.2.0-beta.1(@phoria/phoria@0.5.0-beta.0(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)))(supports-color@10.2.2)':
+  '@phoria/opentelemetry@0.2.0-beta.2(@phoria/phoria@0.5.0-beta.1(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)))(supports-color@10.2.2)':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.221.0
@@ -2593,7 +2593,7 @@ snapshots:
       '@opentelemetry/sdk-metrics': 2.10.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-node': 0.221.0(@opentelemetry/api@1.9.1)(supports-color@10.2.2)
       '@opentelemetry/sdk-trace-base': 2.10.0(@opentelemetry/api@1.9.1)
-      '@phoria/phoria': 0.5.0-beta.0(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
+      '@phoria/phoria': 0.5.0-beta.1(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
       defu: 6.1.7
       destr: 2.0.5
       empathic: 2.0.1
@@ -2601,25 +2601,25 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@phoria/phoria-vue@0.4.0-beta.0(@phoria/phoria@0.5.0-beta.0(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)))(@vitejs/plugin-vue@6.0.8(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3)))(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3))':
+  '@phoria/phoria-vue@0.4.0-beta.1(@phoria/phoria@0.5.0-beta.1(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)))(@vitejs/plugin-vue@6.0.8(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3)))(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3))':
     dependencies:
-      '@phoria/phoria': 0.5.0-beta.0(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
-      '@rollup/pluginutils': 5.4.0
+      '@phoria/phoria': 0.5.0-beta.1(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
       '@vitejs/plugin-vue': 6.0.8(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3))
-      magic-string: 1.2.0
       vite: 8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)
       vue: 3.5.41(typescript@6.0.3)
-    transitivePeerDependencies:
-      - rollup
 
-  '@phoria/phoria@0.5.0-beta.0(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))':
+  '@phoria/phoria@0.5.0-beta.1(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))':
     dependencies:
+      '@rollup/pluginutils': 5.4.0
       defu: 6.1.7
       destr: 2.0.5
       empathic: 2.0.1
       h3: 1.15.11
+      magic-string: 1.2.0
       mime: 4.1.0
       vite: 8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)
+    transitivePeerDependencies:
+      - rollup
 
   '@phoria/vite-plugin-dotnet-dev-certs@0.3.0-beta.0(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))':
     dependencies:
