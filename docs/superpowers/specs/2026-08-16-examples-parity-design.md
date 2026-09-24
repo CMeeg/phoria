@@ -101,7 +101,7 @@ The old examples' components, pages, and explanatory content are reused where st
 
 ### Styled Components
 
-`with-styled-components` remains a React example and uses the existing `renderComponent` option on `PhoriaIsland.render`. Its server entry wraps the component in `ServerStyleSheet` and `StyleSheetManager`, renders to a string, and prepends `sheet.getStyleTags()` to the rendered HTML. This avoids coupling the example to the Node-stream-specific styled-components interleaving API.
+`with-styled-components` remains a React example and uses the existing `renderComponent` option on `PhoriaIsland.render`. Its server entry wraps the component in `ServerStyleSheet` and `StyleSheetManager`, renders to a string, and appends `sheet.getStyleTags()` to the rendered HTML. This avoids coupling the example to the Node-stream-specific styled-components interleaving API.
 
 The client initially uses styled-components without a Babel transform plugin. A plugin is only added if verification finds a real hydration or class-name mismatch. The e2e smoke test verifies that server-rendered style tags are present.
 

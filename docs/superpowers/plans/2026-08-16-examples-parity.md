@@ -177,11 +177,11 @@ Each of `framework-react`, `framework-vue`, `framework-svelte`, `with-tailwind`,
 **Interfaces:**
 - WebApp/e2e port: 5873.
 - Phoria server port: 5773.
-- SSR adapter consumes `PhoriaIsland.render({ renderComponent })` and returns the same SSR result with style tags prepended to `html`.
+- SSR adapter consumes `PhoriaIsland.render({ renderComponent })` and returns the same SSR result with style tags appended to `html`.
 
 - [x] **Step 1: Create the React example contract.** Copy the current React template and add `styled-components` with its matching TypeScript types if required by the selected package version.
 - [x] **Step 2: Convert the `Counter` styling.** Register the application island as `Counter` with `StartAt = 5`; use styled-components for the visible counter/button styles. The smoke test asserts the server-rendered counter state (`count is 5`) and the server-rendered `<style data-styled>` block — no marker class in the markup.
-- [x] **Step 3: Implement the server adapter.** Use `isReactIsland`, `ServerStyleSheet`, `StyleSheetManager`, and `renderToString`; render non-React islands through `island.render()` and return `{ ...result, html: sheet.getStyleTags() + result.html }` for React islands; always call `sheet.seal()` in `finally`.
+- [x] **Step 3: Implement the server adapter.** Route React islands through `island.render({ renderComponent: renderWithStyledComponents })` (non-React islands through `island.render()`); the adapter renders `island.component` with `renderToString` inside `StyleSheetManager` and returns `html + sheet.getStyleTags()` (style tags appended to `html`); always call `sheet.seal()` in `finally`.
 - [x] **Step 4: Update entry and TypeScript configuration.** Rename the SSR entry to `.tsx`, update `phoria.ssrEntry`, and enable React JSX in the Node TypeScript config.
 - [x] **Step 5: Add SSR style assertions.** Assert that the page contains a `style[data-styled]` tag and the React counter markup; do not add a Babel transform unless verification finds a real hydration/class-name mismatch.
 - [x] **Step 6: Set ports and README.** Use 5773/5873 and document the example-local SSR adapter and the no-Babel-plugin default.
