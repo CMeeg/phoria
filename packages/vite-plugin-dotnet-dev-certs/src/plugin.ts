@@ -154,6 +154,5 @@ function dotnetDevCertsPlugin(options?: Partial<DotnetDevCertsPluginOptions>): P
 	}
 }
 
-export { dotnetDevCertsPlugin as dotnetDevCerts }
-
 export type { DotnetDevCertsPluginOptions }
+export { dotnetDevCertsPlugin as dotnetDevCerts }

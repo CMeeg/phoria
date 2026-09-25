@@ -44,7 +44,7 @@ Hydrates the component when the specified CSS media query is matched.
 
 ### `Client.Only`
 
-Hydrates the component only on the client and does not server render the component. Hydration will occur immediately on page load, similar to `Client.Load`.
+Renders the component only on the client and does not server render it. Client-side rendering occurs immediately on page load, similar to `Client.Load`, but it mounts into an empty island instead of hydrating server-rendered markup.
 
 ```html
 <phoria-island component="Counter" client="Client.Only"></phoria-island>

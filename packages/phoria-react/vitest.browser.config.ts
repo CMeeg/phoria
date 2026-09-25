@@ -1,9 +1,12 @@
 import react from "@vitejs/plugin-react"
-import tsconfigPaths from "vite-tsconfig-paths"
+import { playwright } from "@vitest/browser-playwright"
 import { defineConfig } from "vitest/config"
 
 export default defineConfig({
-	plugins: [tsconfigPaths(), react()],
+	plugins: [react()],
+	resolve: {
+		tsconfigPaths: true
+	},
 	optimizeDeps: {
 		include: ["react", "react-dom/client"]
 	},
@@ -11,8 +14,8 @@ export default defineConfig({
 		include: ["src/**/*.browser.test.tsx"],
 		browser: {
 			enabled: true,
-			provider: "playwright",
 			headless: true,
+			provider: playwright(),
 			instances: [{ browser: "chromium" }]
 		}
 	}

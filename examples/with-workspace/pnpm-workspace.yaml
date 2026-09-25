@@ -1,0 +1,14 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+allowBuilds:
+  '@biomejs/biome': true
+  esbuild: true
+  protobufjs: true
+
+minimumReleaseAgeExclude:
+  - '@phoria/opentelemetry@0.2.0-beta.1 || 0.2.0-beta.2'
+  - '@phoria/phoria-react@0.5.0-beta.0 || 0.5.0-beta.1'
+  - '@phoria/phoria@0.5.0-beta.0 || 0.5.0-beta.1'
+  - '@phoria/vite-plugin-dotnet-dev-certs@0.3.0-beta.0'

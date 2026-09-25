@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Phoria.Logging;
+using EventId = Phoria.Logging.EventId;
 
 namespace Phoria.Server;
 
@@ -21,9 +21,13 @@ public sealed class PhoriaServerMonitor
 
 	private readonly ILogger<PhoriaServerMonitor> logger;
 	private readonly PhoriaOptions options;
-	private readonly IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory;
+	private readonly Func<HttpClient> createHealthCheckClient;
+	private readonly bool logHealthChecks;
 	private SemaphoreSlim? semaphore;
 	private PeriodicTimer? periodicTimer;
+	private Task? monitoringTask;
+	private CancellationTokenSource? monitoringCancellation;
+	private TaskCompletionSource firstHealthy = CreateFirstHealthySource();
 
 	public PhoriaServerStatus ServerStatus { get; private set; }
 
@@ -36,43 +40,100 @@ public sealed class PhoriaServerMonitor
 	public PhoriaServerMonitor(
 		ILogger<PhoriaServerMonitor> logger,
 		IOptions<PhoriaOptions> options,
-		IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory)
+		IPhoriaServerHttpClientFactory phoriaServerHttpClientFactory,
+		IOptions<PhoriaObservabilityOptions> observabilityOptions)
+		: this(logger, options, phoriaServerHttpClientFactory.CreateClient, observabilityOptions)
+	{
+	}
+
+	internal PhoriaServerMonitor(
+		ILogger<PhoriaServerMonitor> logger,
+		IOptions<PhoriaOptions> options,
+		IPhoriaServerHealthCheckHttpClientFactory phoriaServerHealthCheckHttpClientFactory,
+		IOptions<PhoriaObservabilityOptions> observabilityOptions)
+		: this(logger, options, phoriaServerHealthCheckHttpClientFactory.CreateHealthCheckClient, observabilityOptions)
+	{
+	}
+
+	private PhoriaServerMonitor(
+		ILogger<PhoriaServerMonitor> logger,
+		IOptions<PhoriaOptions> options,
+		Func<HttpClient> createHealthCheckClient,
+		IOptions<PhoriaObservabilityOptions> observabilityOptions)
 	{
 		this.logger = logger;
 		this.options = options.Value;
-		this.phoriaServerHttpClientFactory = phoriaServerHttpClientFactory;
+		this.createHealthCheckClient = createHealthCheckClient;
+		logHealthChecks = observabilityOptions.Value.LogHealthChecks;
 
 		ServerStatus = CreateUnknownServerStatus();
 	}
 
 	public async Task StartMonitoring(CancellationToken cancellationToken)
 	{
-		if (periodicTimer != null)
+		if (monitoringTask != null)
 		{
+			await WaitForFirstHealthy(cancellationToken);
 			return;
 		}
 
 		semaphore = new(1, 1);
+		firstHealthy = CreateFirstHealthySource();
+		monitoringCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+		monitoringTask = MonitorAsync(monitoringCancellation.Token);
 
-		// Make an initial health check
+		await WaitForFirstHealthy(cancellationToken);
+	}
 
-		await CheckHealth();
-
-		// Start a periodic health check
-
-		periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.HealthCheckInterval));
-
-		while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
+	private async Task WaitForFirstHealthy(CancellationToken cancellationToken)
+	{
+		if (options.Server.StartupTimeout > 0)
 		{
-			await CheckHealth();
+			try
+			{
+				await firstHealthy.Task.WaitAsync(
+					TimeSpan.FromSeconds(options.Server.StartupTimeout),
+					cancellationToken);
+			}
+			catch (TimeoutException)
+			{
+				logger.LogServerStartupTimeout(ServerStatus.Url, options.Server.StartupTimeout);
+				throw;
+			}
+		}
+		else
+		{
+			await firstHealthy.Task.WaitAsync(cancellationToken);
 		}
 	}
 
-	private async Task CheckHealth()
+	private async Task MonitorAsync(CancellationToken cancellationToken)
 	{
-		if (await semaphore!.WaitAsync(0))
+		try
 		{
-			using HttpClient httpClient = phoriaServerHttpClientFactory.CreateClient();
+			await CheckHealth(cancellationToken);
+			periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.HealthCheckInterval));
+
+			while (await periodicTimer.WaitForNextTickAsync(cancellationToken))
+			{
+				await CheckHealth(cancellationToken);
+			}
+		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			firstHealthy.TrySetCanceled(cancellationToken);
+		}
+		catch (Exception ex)
+		{
+			firstHealthy.TrySetException(ex);
+		}
+	}
+
+	private async Task CheckHealth(CancellationToken cancellationToken)
+	{
+		if (await semaphore!.WaitAsync(0, cancellationToken))
+		{
+			using HttpClient httpClient = createHealthCheckClient();
 
 			using var timeout = new CancellationTokenSource(
 				TimeSpan.FromSeconds(options.Server.HealthCheckTimeout)
@@ -80,36 +141,64 @@ public sealed class PhoriaServerMonitor
 
 			try
 			{
-				HttpResponseMessage response = await httpClient.GetAsync(HealthCheckUrl, timeout.Token);
+				using CancellationTokenSource linkedTimeout = CancellationTokenSource.CreateLinkedTokenSource(
+					cancellationToken,
+					timeout.Token);
+				HttpResponseMessage response = await httpClient.GetAsync(HealthCheckUrl, linkedTimeout.Token);
 
 				if (response.IsSuccessStatusCode)
 				{
-					PhoriaHealthCheckResult? result = await response.Content.ReadFromJsonAsync<PhoriaHealthCheckResult>(jsonDeserializeOptions);
+					PhoriaHealthCheckResult? result = await response.Content.ReadFromJsonAsync<PhoriaHealthCheckResult>(jsonDeserializeOptions, cancellationToken);
 
 					if (result != null)
 					{
-						logger.LogServerIsHealthy(ServerStatus.Url);
+						if (logHealthChecks || ServerStatus.Health != PhoriaServerHealth.Healthy)
+						{
+							logger.LogServerIsHealthy(ServerStatus.Url);
+						}
 
 						ServerStatus = CreateHealthyServerStatus(result);
+						firstHealthy.TrySetResult();
 
 						return;
 					}
 				}
 
-				logger.LogServerIsUnhealthy(ServerStatus.Url);
+			LogServerIsUnhealthy();
 
-				ServerStatus = CreateUnhealthyServerStatus();
-			}
-			catch (Exception ex)
-			{
-				logger.LogServerIsUnhealthy(ServerStatus.Url, ex);
+			ServerStatus = CreateUnhealthyServerStatus();
+		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			throw;
+		}
+		catch (Exception ex)
+		{
+			LogServerIsUnhealthy(ex);
 
-				ServerStatus = CreateUnhealthyServerStatus();
-			}
+			ServerStatus = CreateUnhealthyServerStatus();
+		}
 			finally
 			{
 				semaphore.Release();
 			}
+		}
+	}
+
+	private void LogServerIsUnhealthy(Exception? exception = null)
+	{
+		if (!logHealthChecks && ServerStatus.Health == PhoriaServerHealth.Unhealthy)
+		{
+			return;
+		}
+
+		if (firstHealthy.Task.IsCompletedSuccessfully)
+		{
+			logger.LogServerIsUnhealthy(ServerStatus.Url, exception);
+		}
+		else
+		{
+			logger.LogServerIsNotReadyYet(ServerStatus.Url);
 		}
 	}
 
@@ -121,25 +210,40 @@ public sealed class PhoriaServerMonitor
 		Url = options.GetServerUrl()
 	};
 
-	private PhoriaServerStatus CreateUnhealthyServerStatus() => new()
+	private PhoriaServerStatus CreateUnhealthyServerStatus()
 	{
-		Health = PhoriaServerHealth.Unhealthy,
-		Url = options.GetServerUrl()
-	};
+		PhoriaServerStatus last = ServerStatus;
+		return new()
+		{
+			Health = PhoriaServerHealth.Unhealthy,
+			Mode = last.Mode,
+			Frameworks = last.Frameworks,
+			Url = options.GetServerUrl()
+		};
+	}
 
 	private PhoriaServerStatus CreateUnknownServerStatus() => new()
 	{
 		Url = options.GetServerUrl()
 	};
 
-	public Task StopMonitoring()
+	public async Task StopMonitoring()
 	{
+		monitoringCancellation?.Cancel();
+
+		if (monitoringTask is not null)
+		{
+			await monitoringTask;
+		}
+
 		Dispose();
 
 		semaphore = null;
 		periodicTimer = null;
+		monitoringTask = null;
+		monitoringCancellation?.Dispose();
+		monitoringCancellation = null;
 
-		return Task.CompletedTask;
 	}
 
 	public void Dispose()
@@ -147,6 +251,9 @@ public sealed class PhoriaServerMonitor
 		semaphore?.Dispose();
 		periodicTimer?.Dispose();
 	}
+
+	private static TaskCompletionSource CreateFirstHealthySource() =>
+		new(TaskCreationOptions.RunContinuationsAsynchronously);
 }
 
 internal sealed record PhoriaHealthCheckResult
@@ -158,19 +265,36 @@ internal sealed record PhoriaHealthCheckResult
 internal static partial class PhoriaServerMonitorLogMessages
 {
 	[LoggerMessage(
-		EventId = EventFeature.Server + 2,
+		EventId = EventId.Server.ServerIsHealthy,
 		Message = "Phoria server at {Url} is healthy.",
 		Level = LogLevel.Debug)]
 	internal static partial void LogServerIsHealthy(
 		this ILogger logger,
 		string url);
 
+	[LoggerMessage(
+		EventId = EventId.Server.ServerIsNotReadyYet,
+		Message = "Phoria server at {Url} is not ready yet.",
+		Level = LogLevel.Debug)]
+	internal static partial void LogServerIsNotReadyYet(
+		this ILogger logger,
+		string url);
+
 	private static readonly Action<ILogger, string, Exception?> logServerIsUnhealthy = LoggerMessage.Define<string>(
 		LogLevel.Error,
-		EventFeature.Server + 3,
+		EventId.Server.ServerIsUnhealthy,
 		"Phoria server at {Url} is unhealthy.");
 	internal static void LogServerIsUnhealthy(
 		this ILogger logger,
 		string url,
 		Exception? exception = null) => logServerIsUnhealthy(logger, url, exception);
+
+	[LoggerMessage(
+		EventId = EventId.Server.ServerStartupTimeout,
+		Message = "Phoria server at {Url} did not become healthy within the {Seconds} second startup timeout.",
+		Level = LogLevel.Error)]
+	internal static partial void LogServerStartupTimeout(
+		this ILogger logger,
+		string url,
+		int seconds);
 }

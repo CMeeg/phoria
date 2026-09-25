@@ -1,101 +1,39 @@
-import { createFilter, normalizePath } from "@rollup/pluginutils"
+import { createPhoriaFrameworkPlugin, type PhoriaFrameworkPluginOptions } from "@phoria/phoria/vite"
 import { type Options as SvelteOptions, svelte } from "@sveltejs/vite-plugin-svelte"
-import MagicString from "magic-string"
-import type { EnvironmentOptions, PluginOption } from "vite"
+import type { PluginOption } from "vite"
 
 const pluginName = "phoria-svelte"
 
-const environment = {
-	client: "client",
-	ssr: "ssr"
-} as const
-
-type CreateFilterParams = Parameters<typeof createFilter>
-
-interface PhoriaSveltePluginOptions {
-	include: CreateFilterParams[0]
-	exclude: CreateFilterParams[1]
-	cwd: string
+interface PhoriaSveltePluginOptions
+	extends Omit<PhoriaFrameworkPluginOptions, "name" | "optimizeDeps" | "ssrExternal"> {
 	svelte?: SvelteOptions | false
 }
 
 const defaultOptions: PhoriaSveltePluginOptions = {
 	include: ["**/*.svelte"],
 	exclude: "node_modules/**",
-	cwd: process.cwd()
-}
-
-function setSsrEnvironment(options: EnvironmentOptions) {
-	const external = ["@phoria/phoria-svelte/server"]
-
-	options.resolve ??= {}
-
-	if (typeof options.resolve.external === "undefined") {
-		options.resolve.external = external
-	} else if (Array.isArray(options.resolve.external)) {
-		options.resolve.external.push(...external)
-	}
-}
-
-function phoriaSveltePlugin(options?: Partial<PhoriaSveltePluginOptions>): PluginOption {
-	const opts = { ...defaultOptions, ...options }
-
-	const filter = createFilter(opts.include, opts.exclude)
-
-	const cwd = normalizePath(opts.cwd)
-	const cwdRegex = new RegExp(`^${cwd}`, "i")
-
-	// TODO: Maybe also add the client and server imports to client and server entries?
-
-	return {
-		name: pluginName,
-		config: (config) => {
-			config.environments ??= {}
-			config.environments[environment.ssr] ??= {}
-		},
-		configEnvironment(name, options) {
-			if (name === environment.ssr) {
-				setSsrEnvironment(options)
-			}
-		},
-		transform(code, id) {
-			if (!filter(id)) {
-				return
-			}
-
-			// Remove the cwd from the start of the path
-
-			const path = id.replace(cwdRegex, "")
-
-			// Add the path to the module as named export
-
-			const s = new MagicString(code)
-			s.append(`\n\nexport const __phoriaComponentPath = "${path}";`)
-
-			// Generate the source map and return the transformed code
-
-			const map = s.generateMap({
-				source: id,
-				file: `${id}.map`,
-				includeContent: true
-			})
-
-			return {
-				code: s.toString(),
-				map
-			}
-		}
-	}
+	cwd: process.cwd(),
+	workspacePackages: []
 }
 
 function phoriaSvelte(options?: Partial<PhoriaSveltePluginOptions>): PluginOption {
+	const opts = { ...defaultOptions, ...options }
 	const plugins: PluginOption = options?.svelte !== false ? [...svelte(options?.svelte)] : []
 
-	plugins.push(phoriaSveltePlugin(options))
+	plugins.push(
+		createPhoriaFrameworkPlugin({
+			name: pluginName,
+			include: opts.include,
+			exclude: opts.exclude,
+			cwd: opts.cwd,
+			workspacePackages: opts.workspacePackages,
+			optimizeDeps: ["svelte"],
+			ssrExternal: ["@phoria/phoria-svelte/server", "svelte"]
+		})
+	)
 
 	return plugins
 }
 
-export { phoriaSvelte }
-
 export type { PhoriaSveltePluginOptions }
+export { phoriaSvelte }

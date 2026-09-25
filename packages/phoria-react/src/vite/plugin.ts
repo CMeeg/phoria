@@ -1,103 +1,40 @@
-import { createFilter, normalizePath } from "@rollup/pluginutils"
+import { createPhoriaFrameworkPlugin, type PhoriaFrameworkPluginOptions } from "@phoria/phoria/vite"
 import react, { type Options as ViteReactPluginOptions } from "@vitejs/plugin-react"
-import MagicString from "magic-string"
-import type { EnvironmentOptions, PluginOption } from "vite"
+import type { PluginOption } from "vite"
 
 const pluginName = "phoria-react"
 
-const environment = {
-	client: "client",
-	ssr: "ssr"
-} as const
+export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude">
 
-export type ReactOptions = Pick<ViteReactPluginOptions, "include" | "exclude" | "babel">
-
-type CreateFilterParams = Parameters<typeof createFilter>
-
-interface PhoriaReactPluginOptions {
-	include: CreateFilterParams[0]
-	exclude: CreateFilterParams[1]
-	cwd: string
+interface PhoriaReactPluginOptions extends Omit<PhoriaFrameworkPluginOptions, "name" | "optimizeDeps" | "ssrExternal"> {
 	react?: ReactOptions | false
 }
 
 const defaultOptions: PhoriaReactPluginOptions = {
 	include: ["**/*.jsx", "**/*.tsx"],
 	exclude: "node_modules/**",
-	cwd: process.cwd()
-}
-
-function setSsrEnvironment(options: EnvironmentOptions) {
-	const external = ["@phoria/phoria-react/server"]
-
-	options.resolve ??= {}
-
-	if (typeof options.resolve.external === "undefined") {
-		options.resolve.external = external
-	} else if (Array.isArray(options.resolve.external)) {
-		options.resolve.external.push(...external)
-	}
-}
-
-function phoriaReactPlugin(options?: Partial<PhoriaReactPluginOptions>): PluginOption {
-	const opts = { ...defaultOptions, ...options }
-
-	const filter = createFilter(opts.include, opts.exclude)
-
-	const cwd = normalizePath(opts.cwd)
-	const cwdRegex = new RegExp(`^${cwd}`, "i")
-
-	// TODO: Maybe also add the client and server imports to client and server entries?
-
-	return {
-		name: pluginName,
-		config: (config) => {
-			config.environments ??= {}
-			config.environments[environment.ssr] ??= {}
-		},
-		configEnvironment(name, options) {
-			if (name === environment.ssr) {
-				setSsrEnvironment(options)
-			}
-		},
-		transform(code, id) {
-			if (!filter(id)) {
-				return
-			}
-
-			// Remove the cwd from the start of the path
-
-			const path = id.replace(cwdRegex, "")
-
-			// Add the path to the module as named export
-
-			const s = new MagicString(code)
-			s.append(`\n\nexport const __phoriaComponentPath = "${path}";`)
-
-			// Generate the source map and return the transformed code
-
-			const map = s.generateMap({
-				source: id,
-				file: `${id}.map`,
-				includeContent: true
-			})
-
-			return {
-				code: s.toString(),
-				map
-			}
-		}
-	}
+	cwd: process.cwd(),
+	workspacePackages: []
 }
 
 function phoriaReact(options?: Partial<PhoriaReactPluginOptions>): PluginOption {
+	const opts = { ...defaultOptions, ...options }
 	const plugins: PluginOption = options?.react !== false ? [...react(options?.react)] : []
 
-	plugins.push(phoriaReactPlugin(options))
+	plugins.push(
+		createPhoriaFrameworkPlugin({
+			name: pluginName,
+			include: opts.include,
+			exclude: opts.exclude,
+			cwd: opts.cwd,
+			workspacePackages: opts.workspacePackages,
+			optimizeDeps: ["react", "react-dom/client"],
+			ssrExternal: ["@phoria/phoria-react/server"]
+		})
+	)
 
 	return plugins
 }
 
-export { phoriaReact }
-
 export type { PhoriaReactPluginOptions }
+export { phoriaReact }

@@ -1,6 +1,7 @@
 // Copyright (c) 2024 Daniil Sokolyuk.
 // Licensed under the MIT License, See LICENCE in the project root for license information.
 
+using System.Diagnostics;
 using Microsoft.IO;
 
 namespace Phoria.IO;
@@ -23,7 +24,7 @@ public sealed class StreamPool
 			BlockSize = blockSize,
 			LargeBufferMultiple = largeBufferMultiple,
 			MaximumBufferSize = maximumBufferSize,
-			GenerateCallStacks = true,
+			GenerateCallStacks = Debugger.IsAttached,
 			AggressiveBufferReturn = true,
 			MaximumLargePoolFreeBytes = largeBufferMultiple * 4,
 			MaximumSmallPoolFreeBytes = 250 * blockSize

@@ -19,6 +19,8 @@ public class PhoriaIslandEntryStylesTagHelper(
 {
 	private readonly PhoriaOptions options = options.Value;
 
+	protected override bool WarnWhenCssChunksMissing => false;
+
 	public override void Process(TagHelperContext context, TagHelperOutput output)
 	{
 		output.TagName = "link";

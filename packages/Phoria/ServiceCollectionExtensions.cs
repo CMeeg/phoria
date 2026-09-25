@@ -1,7 +1,8 @@
 using System.Net.Http.Headers;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Phoria.Islands;
 using Phoria.Server;
@@ -15,19 +16,14 @@ public static class ServiceCollectionExtensions
 		this IServiceCollection services,
 		Action<PhoriaOptions>? configure = null)
 	{
-		// Create options from appsettings first
+		services.AddOptions<PhoriaOptions>()
+			.BindConfiguration(PhoriaOptions.SectionName)
+			.Configure(configure ?? (_ => { }));
 
-		IServiceProvider serviceProvider = services.BuildServiceProvider();
-		IConfiguration configuration = serviceProvider.GetRequiredService<IConfiguration>();
+		services.AddOptions<PhoriaObservabilityOptions>()
+			.BindConfiguration(PhoriaObservabilityOptions.SectionName);
 
-		var options = new PhoriaOptions();
-		configuration.GetSection(PhoriaOptions.SectionName).Bind(options);
-
-		// Then set options from the configure action
-
-		configure?.Invoke(options);
-
-		return services.AddSingleton(Options.Create(options)).ConfigureServices();
+		return services.ConfigureServices();
 	}
 
 	private static IServiceCollection ConfigureServices(this IServiceCollection services)
@@ -39,25 +35,24 @@ public static class ServiceCollectionExtensions
 			services.AddHttpClient();
 		}
 
-		// Add an HttpClient for the Phoria Server
+		// Add HttpClients for the Phoria Server and its health monitor
 
-		services.AddHttpClient(PhoriaServerHttpClientFactory.HttpClientName)
-			.ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
-			{
-				ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-			})
-			.ConfigureHttpClient((services, client) =>
-				client.DefaultRequestHeaders.Accept.Add(
-					new MediaTypeWithQualityHeaderValue("*/*", 0.1)
-				)
-			);
+		services.AddPhoriaServerHttpClient(PhoriaServerHttpClientFactory.HttpClientName);
+		services.AddPhoriaServerHttpClient(PhoriaServerHttpClientFactory.HealthCheckHttpClientName);
+		services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<LoggerFilterOptions>, PhoriaHttpClientLoggingFilter>());
 
 		// Add Server services
 
 		services.TryAddScoped<IViteDevServerHmrProxy, ViteDevServerHmrProxy>();
-		services.TryAddSingleton<IPhoriaServerHttpClientFactory, PhoriaServerHttpClientFactory>();
+		services.TryAddSingleton<PhoriaServerHttpClientFactory>();
+		services.TryAddSingleton<IPhoriaServerHttpClientFactory>(services => services.GetRequiredService<PhoriaServerHttpClientFactory>());
+		services.TryAddSingleton<IPhoriaServerHealthCheckHttpClientFactory>(services => services.GetRequiredService<PhoriaServerHttpClientFactory>());
 		services.TryAddSingleton<IPhoriaServerProcess, PhoriaServerProcess>();
-		services.TryAddSingleton<IPhoriaServerMonitor, PhoriaServerMonitor>();
+		services.TryAddSingleton<IPhoriaServerMonitor>(services => new PhoriaServerMonitor(
+			services.GetRequiredService<ILogger<PhoriaServerMonitor>>(),
+			services.GetRequiredService<IOptions<PhoriaOptions>>(),
+			services.GetRequiredService<IPhoriaServerHealthCheckHttpClientFactory>(),
+			services.GetRequiredService<IOptions<PhoriaObservabilityOptions>>()));
 		services.AddHostedService<PhoriaServerProcessService>();
 		services.AddHostedService<PhoriaServerMonitorService>();
 
@@ -74,5 +69,31 @@ public static class ServiceCollectionExtensions
 		services.TryAddScoped<IPhoriaIslandComponentFactory, PhoriaIslandComponentFactory>();
 
 		return services;
+	}
+
+	private static IHttpClientBuilder AddPhoriaServerHttpClient(this IServiceCollection services, string name) =>
+		services.AddHttpClient(name)
+			.ConfigurePrimaryHttpMessageHandler(services => new HttpClientHandler
+			{
+				ServerCertificateCustomValidationCallback = services.GetRequiredService<IHostEnvironment>().IsDevelopment()
+					? HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+					: null
+			})
+			.ConfigureHttpClient((_, client) =>
+				client.DefaultRequestHeaders.Accept.Add(
+					new MediaTypeWithQualityHeaderValue("*/*", 0.1)
+				));
+
+	private sealed class PhoriaHttpClientLoggingFilter(IOptions<PhoriaObservabilityOptions> observabilityOptions)
+		: IConfigureOptions<LoggerFilterOptions>
+	{
+		public void Configure(LoggerFilterOptions options)
+		{
+			options.Rules.Add(new LoggerFilterRule(
+				providerName: null,
+				categoryName: $"System.Net.Http.HttpClient.{PhoriaServerHttpClientFactory.HealthCheckHttpClientName}",
+				logLevel: observabilityOptions.Value.LogHealthChecks ? LogLevel.Information : LogLevel.Warning,
+				filter: null));
+		}
 	}
 }

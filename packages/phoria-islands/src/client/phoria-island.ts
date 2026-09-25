@@ -1,7 +1,7 @@
 import type { PhoriaIslandProps } from "~/phoria-island"
 import { getComponent, getCsrService } from "~/register"
 import { csrMountMode } from "./csr"
-import { type PhoriaIslandClientDirective, idle, media, visible } from "./directives"
+import { idle, media, type PhoriaIslandClientDirective, visible } from "./directives"
 
 const directives = new Map<string, PhoriaIslandClientDirective>()
 directives.set("client:load", async (mount) => await mount())

@@ -65,15 +65,14 @@ async function importComponent<F extends string, T>(
 	}
 }
 
-export { importComponent }
-
 export type {
 	PhoriaIslandComponent,
-	PhoriaIslandComponentEntry,
 	PhoriaIslandComponentDefaultModule,
 	PhoriaIslandComponentDefaultModuleLoader,
+	PhoriaIslandComponentEntry,
 	PhoriaIslandComponentLoader,
 	PhoriaIslandComponentModule,
 	PhoriaIslandComponentModuleLoader,
 	PhoriaIslandProps
 }
+export { importComponent }

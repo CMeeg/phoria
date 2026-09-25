@@ -19,7 +19,7 @@ This guide will walk you through both methods of creating Phoria Island componen
 ## Create the UI component
 
 > [!IMPORTANT]
-> For the purpose of this guide we will assume that you have created your Phoria app using one of the [example projects](./getting-started.md#clone-an-example-project) and the sample code is based on the `framework-react` example.
+> For the purpose of this guide we will assume that you have created your Phoria app using one of the [example projects](./getting-started.md#clone-an-example-project) and the sample code is based on the React setup in `examples/getting-started`.
 > 
 > The same principles apply to any Phoria project, but you may need to adjust the code samples or file paths to suit your own project.
 

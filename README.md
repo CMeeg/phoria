@@ -1,37 +1,39 @@
 <div align="center">
   <p><img width="120" height="133" src="./docs/assets/phoria.svg" alt="Phoria logo"></p>
   <h1>Phoria<br><br></h1>
-  <p>🏝️ <i>Islands architecture for dotnet powered by Vite</i> ⚡</p>
+  <p>🏝️ <i>Islands architecture for .NET powered by Vite</i> ⚡</p>
   <p><hr></p>
 </div>
 
-Phoria allows you to easily and efficiently render [islands of interactivity](https://docs.astro.build/en/concepts/islands/) using [React](https://react.dev/), [Svelte](https://svelte.dev/) or [Vue](https://vuejs.org/) within your dotnet web app (Razor Pages or MVC) using both Client Side Rendering (CSR) and Server Side Rendering (SSR).
+Phoria renders [islands of interactivity](https://docs.astro.build/en/concepts/islands/) using [React](https://react.dev/), [Svelte](https://svelte.dev/) or [Vue](https://vuejs.org/) inside .NET Razor Pages or MVC applications with both Client Side Rendering (CSR) and Server Side Rendering (SSR).
 
-* ⚡ Built around [Vite](https://vite.dev/), which means you can enjoy a first class development experience, lightning fast HMR and access to its expansive plugin catalogue and ecosystem
-* 🏝️ Easily and efficiently render islands using any supported UI framework (or frameworks)
-* 🌊 Client Side Rendering and support for multiple client hydration strategies via client directives such as on load, on idle, on visible and on match media query
-* 🔋 Server Side Rendering of Islands within your dotnet web app (Razor Pages or MVC) views
-* 📦 Easily pass props from your dotnet web app to your Islands
-* ⚙️ Shared configuration between dotnet and Vite using standard dotnet `appsettings.json` files and `dotnet dev-certs`
+* ⚡ Built around [Vite](https://vite.dev/) with HMR and access to its plugin ecosystem
+* 🏝️ Use one or multiple supported UI frameworks in the same .NET application
+* 🌊 Choose client-only rendering or hydration with `load`, `idle`, `visible` and media-query directives
+* 🔋 Server-render islands from Razor Pages or MVC views
+* 📦 Pass typed .NET data to islands as serialized props
+* ⚙️ Share configuration between .NET and Vite through `appsettings.json`
+* 🩺 Monitor the Phoria Server with health checks and choose graceful degradation or fail-fast behavior
+* 📈 Add optional OpenTelemetry logging, tracing and metrics to the Node sidecar and example applications
 
 ![Screenshot showing a Phoria Island TagHelper being used in a dotnet Razor Pages app to render a React component](./docs/assets/intro.png)
 
 ## Getting started
 
-The quickest way to get started is to clone an example project using [giget](https://unjs.io/packages/giget):
+The repository includes two standalone examples:
 
-* React: `npx giget@latest gh:cmeeg/phoria-examples/examples/framework-react <target_dir>`
-* Svelte: `npx giget@latest gh:cmeeg/phoria-examples/examples/framework-svelte <target_dir>`
-* Vue: `npx giget@latest gh:cmeeg/phoria-examples/examples/framework-vue <target_dir>`
+* [`examples/getting-started`](./examples/getting-started) demonstrates React.
+* [`examples/framework-multiple`](./examples/framework-multiple) demonstrates React, Svelte and Vue together.
 
-> [!IMPORTANT]
-> You will need to replace:
-> * `<target_dir>` with the name of the local directory you want to clone the example project to
+Examples are standalone workspaces. Run their commands from the example's `WebApp` directory:
 
-Or feel free to choose any one of the [other examples available](https://github.com/CMeeg/phoria-examples/tree/main/examples).
+```shell
+cd examples/getting-started/WebApp
+pnpm install
+pnpm dev
+```
 
-> [!TIP]
-> Please see the [Getting started](./docs/guides/getting-started.md) guide for a complete guide to getting up and running with Phoria including how to [add Phoria to an existing dotnet project](./docs/guides/getting-started.md#manually-add-phoria-to-an-existing-dotnet-project).
+See the [Getting started guide](./docs/guides/getting-started.md) to add Phoria to an existing .NET project.
 
 ## Usage
 
@@ -42,7 +44,7 @@ Or feel free to choose any one of the [other examples available](https://github.
 * [Deployment](./docs/guides/deployment.md)
 
 > [!NOTE]
-> The Usage documentation is a work in progress and will be expanded on in time. If there is something missing that needs clarification while it is being worked on, or if you have an idea or request for documentation, please raise an issue.
+> The guides cover the current setup and runtime model. If something is unclear or missing, please raise an issue.
 
 ## About Phoria
 

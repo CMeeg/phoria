@@ -4,7 +4,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
-using Phoria.Logging;
+using EventId = Phoria.Logging.EventId;
 using Phoria.Server;
 
 namespace Phoria.Vite;
@@ -178,19 +178,19 @@ public sealed class ViteSsrManifestReader(
 internal static partial class ViteSsrManifestReaderLogMessages
 {
 	[LoggerMessage(
-		EventId = EventFeature.Vite + 4,
+		EventId = EventId.Vite.SsrManifestFileWontBeRead,
 		Message = "The SSR manifest file won't be read because the vite development service is enabled. The service will always return null files",
 		Level = LogLevel.Information)]
 	internal static partial void LogSsrManifestFileWontBeRead(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = EventFeature.Vite + 5,
+		EventId = EventId.Vite.DetectedChangeInSsrManifest,
 		Message = "Detected change in Vite SSR manifest - refreshing",
 		Level = LogLevel.Information)]
 	internal static partial void LogDetectedChangeInSsrManifest(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = EventFeature.Vite + 6,
+		EventId = EventId.Vite.SsrManifestFileNotFound,
 		Message = "The SSR manifest file was not found. Has the build process been executed?",
 		Level = LogLevel.Error)]
 	internal static partial void LogSsrManifestFileNotFound(this ILogger logger);

@@ -10,17 +10,27 @@
 	},
 	"type": "module",
 	"scripts": {
-		"lerna": "lerna",
-		"publish": "changeset publish && lerna run publish",
-		"test": "lerna run test",
-		"test:browser": "lerna run test:browser",
+		"build": "turbo run build",
+		"check": "turbo run check",
+		"examples:bump": "node scripts/examples.js bump",
+		"examples:check": "node scripts/examples.js check",
+		"examples:e2e": "node scripts/examples-e2e.js",
+		"examples:link": "node scripts/examples.js link",
+		"examples:refresh": "node scripts/examples.js refresh",
+		"examples:sync": "node scripts/examples.js sync",
+		"lint": "turbo run lint",
+		"publish": "changeset publish && pnpm --filter phoria-dotnet run publish",
+		"test": "turbo run test",
+		"test:browser": "turbo run test:browser",
+		"test:coverage": "turbo run test:coverage",
 		"version": "changeset version && pnpm install --no-frozen-lockfile"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
-		"@changesets/cli": "^2.27.11",
-		"lerna": "^8.1.9",
-		"playwright": "catalog:"
+		"@biomejs/biome": "^2.5.5",
+		"@changesets/cli": "^2.31.1",
+		"@codecov/bundle-analyzer": "^2.0.1",
+		"playwright": "catalog:",
+		"turbo": "^2.10.7"
 	},
-	"packageManager": "pnpm@9.15.0+sha512.76e2379760a4328ec4415815bcd6628dee727af3779aaa4c914e3944156c4299921a89f976381ee107d41f12cfa4b66681ca9c718f0668fa0831ed4c6d8ba56c"
+	"packageManager": "pnpm@11.17.0+sha512.cca3cea332ad254bb84145f966d19f4879615210346fc92c79a047f23a0d7b3cca3c3792f0076ba1f1831d277efbcf0a9119b31a9a60eca7fb3d6231f331ef72"
 }
