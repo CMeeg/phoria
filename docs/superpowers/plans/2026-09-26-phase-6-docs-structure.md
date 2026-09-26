@@ -20,7 +20,7 @@
 - **The `#canary` aside appears in exactly two places** — the root `README.md` trialist block and the `## Catalog` of `examples/README.md`. Not in the nine per-example READMEs.
 - **A package's documentation lives in its README, or in a `docs` folder inside the package** — one file per topic, linked from that README, not shipped in the published artefact. Never a single page placed ad hoc beside a source file.
 - **Docs are written assuming the current branch is `main`.** An unqualified `giget` ref resolves the repository's default branch, and `examples/` is not on `main` until the `canary` → `main` cut — which is the final step of the overall task, not of this plan.
-- **`gh` is unavailable in this environment.** The ten `giget` references cannot be verified against `main` from an agent session; that is step 6 of the stable-cut runbook, run by the maintainer performing the cut.
+- **`gh` is unavailable in this environment, and no plan in this slice can perform the cut.** Two consequences, and they are different things. First, the ten `giget` references cannot be verified against `main` from an agent session; that is step 6 of the stable-cut runbook, run by the maintainer performing the cut. Second, **the `canary` → `main` cut itself is outside this plan and outside Plan B** — it is the final step of the overall task, it needs `gh` to open and merge the pull requests, and it is therefore a human action with no plan behind it. See `## What no plan covers` at the end of this document.
 
 ## Review Focus
 
@@ -62,7 +62,7 @@ Recorded here rather than appended to `docs/MEMORY.md`, because this planning se
 
 **Modified — 6 files.** `docs/guides/getting-started.md` (loses five ranges, gains the trialist route, keeps a documented overlap), `README.md` (trialist block replaces the inline pnpm commands; flat index becomes journey-shaped), `docs/guides/creating-phoria-island-components.md` (its register section yields to the canonical guide), `CONTRIBUTING.md` (trigger + runbook step 6), `AGENTS.md` (trigger + a phase-number fix), `docs/ARCHITECTURE.md` (recipe link, runbook step 6, drift pass).
 
-**Modified outside the repository — 1 file.** The `writing-plans` skill at `/home/meeg/.local/share/opencode/packages/superpowers/skills/writing-plans/SKILL.md`. This is the record that actually makes the step appear in new plans, but it is a global tool installation: it is not in this repository, is not version-controlled with it, and will not appear in any commit. Task 1 Step 3 handles it and says so.
+**Modified outside the repository — 1 file, and it will not survive a machine change.** The `writing-plans` skill at `~/.local/share/opencode/packages/superpowers/skills/writing-plans/SKILL.md`. Its plan template is what makes the documentation-review step appear in new plans without anyone remembering it, which is the difference between a convention and a habit. It is a global tool installation: not in this repository, not in any commit, not reviewable in a diff, and gone if the tool installation is rebuilt. **The slice does not depend on it** — `CONTRIBUTING.md` and `AGENTS.md` carry the guarantee; this raises the floor. But its loss is a silent regression across every project on the machine, not just this one, so Task 1 Step 3 treats it as a reportable user action and this plan is the durable record of what was applied.
 
 **Not modified.** The nine `examples/*/README.md` (Plan B). The 18 existing plan documents (historical records; the spec rules them out of scope). `docs/PROJECT.md`.
 
@@ -223,11 +223,18 @@ Then fix a known drift in the same file. `AGENTS.md:144` reads:
 
 `docs/PROJECT.md:206` is `11. **Release prep** — version reconciliation to `1.0.0`, docs pass, changesets,` — the `1.0.0` reconciliation is Phase 11, not Phase 10 (Phase 10 is "Examples"). Change `(Phase 10)` to `(Phase 11)`.
 
-- [ ] **Step 3: Update the `writing-plans` skill so the step appears in new plans**
+- [ ] **Step 3: Record the requirement in the `writing-plans` skill — a machine-local change, and a non-gating one**
 
-This is the record that actually makes the requirement visible to plan authors. **It lives in a global tool installation, not in this repository** — it is not version-controlled here, will not appear in any commit, and must be reported to the user as a local-only change.
+The requirement is recorded in **three** places, and they are not equal. Keeping that distinction straight is the point of this step.
 
-In `/home/meeg/.local/share/opencode/packages/superpowers/skills/writing-plans/SKILL.md`, add to the `## Plan Document Header` template, after the `**Spec:**` block and before `## Global Constraints`:
+| Layer | Where | Versioned? | Committed? | Survives a new machine? |
+| --- | --- | --- | --- | --- |
+| **1 — the guarantee** | `CONTRIBUTING.md` `## Documentation` (Step 1) and `AGENTS.md` `## Documentation review` (Step 2) | yes, in this repository | yes | yes |
+| **2 — the safety net** | the `writing-plans` skill's plan template | no — a global tool install | no | **no** |
+
+**The slice's guarantee is Layer 1. Layer 2 raises the floor; nothing depends on it.** If Layer 2 is lost, a new plan still gets a documentation review when the author is reading this repository's conventions, and a plan author following the template without it is the case Layer 2 exists to catch. Losing Layer 2 degrades; it does not break.
+
+Update Layer 2 at `~/.local/share/opencode/packages/superpowers/skills/writing-plans/SKILL.md` (on this machine, `/home/meeg/.local/share/...`). In the `## Plan Document Header` template, add after the `**Spec:**` block and before `## Global Constraints`:
 
 ```markdown
 ## Documentation Review
@@ -239,7 +246,7 @@ is mandatory; a plan without it is incomplete. Required by CONTRIBUTING.md
 `## Documentation`.]
 ```
 
-And add a matching step to the `## Self-Review` checklist as item 0:
+And add to the `## Self-Review` checklist as item 0:
 
 ```markdown
 **0. Documentation review:** does the plan carry a `## Documentation Review`
@@ -247,7 +254,21 @@ section naming the documents it checked? If the work changed no public
 surface, does the section say so and give the reason?
 ```
 
-If that file does not exist on this machine, skip the step and record in the task's commit message that the global convention could not be updated — the two in-repository records (`CONTRIBUTING.md`, `AGENTS.md`) still stand on their own.
+**This change is not committed and cannot be.** It lives in a global tool installation, so it appears in no commit, is not reviewable in a diff, and is **lost the moment this machine's tool installation is rebuilt**. That is a deliberate trade — the alternative is a machine-local edit nobody can see — but it means someone must re-apply it, and the cost of forgetting is a silent regression in every future project, not just this one.
+
+**This plan is the durable record of that change**, which is why the snippets above are inlined rather than described. To re-apply on a new machine, find the file and paste:
+
+```bash
+ls ~/.local/share/opencode/packages/superpowers/skills/writing-plans/SKILL.md
+```
+
+If the path does not exist, the skills are installed elsewhere — locate it rather than creating a stray copy:
+
+```bash
+find ~ -path '*superpowers/skills/writing-plans/SKILL.md' 2>/dev/null
+```
+
+**Report Layer 2 to the user in the task's summary, not only in the commit message**, because it is the one change in this task that leaves no trace in the repository. Then record in `docs/MEMORY.md` that Layer 2 was applied on this machine on this date, so a later session can tell "never applied" from "applied and then lost".
 
 - [ ] **Step 4: Verify both repository records name the requirement**
 
@@ -266,12 +287,30 @@ git diff --stat AGENTS.md CONTRIBUTING.md
 
 Expected: the peer-dependency bullet now reads `(Phase 11)`, the `docs/PROJECT.md Phase 4` reference at `:152` is untouched, and `git diff --stat` shows two files changed with no deletions beyond the replaced `## Documentation` paragraph.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Verify Layer 2, and report its state to the user**
+
+Layer 2 is the only change in this task that leaves no trace in the repository, so verify it explicitly and say so out loud:
+
+```bash
+skill=~/.local/share/opencode/packages/superpowers/skills/writing-plans/SKILL.md
+if [ -f "$skill" ]; then
+  grep -c "Documentation Review" "$skill"
+else
+  echo "Layer 2 target not at the expected path — locate it before editing"
+  find ~ -path '*superpowers/skills/writing-plans/SKILL.md' 2>/dev/null
+fi
+```
+
+Expected: a count of `2` — the `## Documentation Review` block in the plan-document template, and the item 0 self-review check. A count of `0` means the edit did not land. **Whichever way this goes, report it to the user in your summary, and record in `docs/MEMORY.md` whether Layer 2 was applied on this machine and on what date**, so a later session can tell "never applied" from "applied and then lost by a rebuild".
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add CONTRIBUTING.md AGENTS.md
 git commit -m "docs: make the documentation review a named requirement in every plan"
 ```
+
+Note what is **not** in that `git add`: the skill edit. It cannot be committed, and pretending otherwise would leave a maintainer believing the safety net is version-controlled when it is not.
 
 ---
 
@@ -1585,6 +1624,20 @@ git commit -m "docs: record the Phase 6 docs structure sequencing decisions"
 - [ ] **Step 5: Hand off to Plan B**
 
 Plan B — `2026-09-26-phase-6-readme-sweep` — covers the seven package READMEs and the nine example READMEs. It depends on this plan's trialist path existing, because each example README's `## Try it` section is the per-file instance of what Task 8 built once in `README.md`. Plan B also carries the nine per-example `giget` reference repairs and the three framework package README links to the recipe from Task 10.
+
+---
+
+## What no plan covers
+
+Four things sit outside this plan and outside Plan B. They are listed here because each one is invisible from inside a task list, and each has a real cost if it is forgotten. The first two are the ones most likely to evaporate.
+
+1. **The `canary` → `main` cut.** This is the final step of the overall Phase 6 task, and no plan can execute it: `gh` is unavailable in this environment, so the version pull request cannot be opened or merged from an agent session. It is a maintainer action following the numbered runbook in `CONTRIBUTING.md` — which Task 11 extends with step 6. Until it happens, `examples/` is absent from `main`, and the ten `giget` references stay unverifiable regardless of how correct they are. **Executing this plan does not finish Phase 6.**
+
+2. **Re-applying the `writing-plans` skill edit on a new machine.** Task 1 Step 3 edits a global tool installation: unversioned, uncommitted, unreviewable, and destroyed by a tool-installation rebuild. `CONTRIBUTING.md` and `AGENTS.md` are the durable guarantee, so nothing in this slice breaks — but the safety net is gone, silently, and across every project on the machine. The snippets are inlined in Task 1 Step 3 precisely so restoring it needs no recollection.
+
+3. **Whether the trigger worked.** The mechanism this slice installs is unenforced and its efficacy is unproven. The convention already existed in `CONTRIBUTING.md` and demonstrably did not prevent six phases of drift. Giving it a trigger is a better bet than restating it, but nothing here reports whether it helped, and the honest position is that this stays unknown until the next phase's work has been under way for a while. Review it at that boundary rather than treating it as settled.
+
+4. **Plan B.** The sixteen-file README sweep, and the nine per-example `giget` repairs deferred to it. It waits on this plan's trialist path existing, because each example README's `## Try it` section is the per-file instance of what Task 8 builds once.
 
 ---
 
