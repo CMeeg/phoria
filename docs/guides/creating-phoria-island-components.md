@@ -52,7 +52,7 @@ export { Counter }
 
 ## Register the UI component
 
-You will then need to [register the component](./component-register.md) so that your Phoria Island's know where to import it from. Edit the file `WebApp/ui/src/components/register.ts`:
+Register the component so Phoria knows where to find it and how to render it. The register's shape, its key/renderer pairing, and multi-framework registers are covered in the [component register guide](./component-register.md); the code for this guide follows.
 
 ```ts
 import { registerComponents } from "@phoria/phoria"
@@ -67,24 +67,6 @@ registerComponents({
   }
 })
 ```
-
-This tells Phoria to register a component using the name `Counter`, which can be imported from `./Counter/Counter.tsx` using a named export `Counter`, and it uses the `react` framework.
-
-If your component uses a default export you can register it like this instead:
-
-```ts
-import { registerComponents } from "@phoria/phoria"
-
-registerComponents({
-  Counter: {
-    loader: () => import("./Counter/Counter.tsx"),
-    framework: "react"
-  }
-})
-```
-
-> [!TIP]
-> The object passed to `registerComponents` can be used to register multiple components so as you add components that you want to use in Phoria Islands you can just keep adding them here.
 
 ## Render the UI component with the `PhoriaIslandTagHelper`
 

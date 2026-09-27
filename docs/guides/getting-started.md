@@ -39,7 +39,6 @@ There is some prerequisite software you will need to have installed before you g
 
 You will also need an existing dotnet web app. If you do not already have an existing dotnet web app then we recommend [cloning an example project](#clone-an-example-project) rather than following the rest of this guide, but if you still want to proceed you can create a new web app using the dotnet CLI:
 
-
 ```shell
 # Create a dotnet web app
 # Use the .NET 10 target for this guide. Phoria also supports .NET 8.
@@ -200,12 +199,14 @@ registerComponents({
 })
 ```
 
+> The [component register guide](./component-register.md) covers multi-framework registers and the full shape of this file.
+
 > [!NOTE]
 > You may have noticed/guessed that the `WebApp/ui` folder is the [root](https://vite.dev/config/shared-options.html#root) folder for Vite - this is where we will be placing all of the code related to our UI components. The name and location of the folder is a default used by Phoria that [can be changed](./configuration.md). [Workspaces](./workspaces.md) (e.g. pnpm workspaces) are also supported by Phoria, which can help simplify configuration and may be a better fit for a typical dotnet solution/project directory structure.
 
 ### Add Phoria Server
 
-The Phoria Server is a [h3](https://h3.unjs.io/) server that effectively runs as a "sidecar" to your web app by running inside its own `node` process. It delegates requests to CSR, SSR or static file handlers as required, which use Vite's Dev Server in development and the build output from Vite when in production.
+The [Phoria Server](./phoria-server.md) is the Node.js sidecar that renders your Phoria Island components on the server. Add it and wire it up as follows.
 
 First you will need to add some more dependencies to your repo:
 
@@ -388,11 +389,6 @@ Finally you will need to add an entry to your `scripts` in `package.json` to run
 
 The [Client Entry](./client-entry.md) is the entrypoint for the browser and is responsible for hydrating your registered Phoria Island components using the appropriate CSR strategy provided by your chosen UI framework(s).
 
-You can also choose to initialise other client-side code here, or import "global" CSS, if you wish.
-
-> [!NOTE]
-> Phoria supports client-only, server-only and "isomorphic" rendering of components in Islands. Server-only is the default, but you can opt-in to client-side rendering on an Island-by-Island basis using one or more client [directives](./directives.md) such as "client only", "on load" etc. If an Island is server-only then it will not hydrate on the client and therefore does not request any additional JavaScript.
-
 Add a Client Entry file at `WebApp/ui/src/entry-client.ts`:
 
 ```ts
@@ -402,9 +398,6 @@ import { PhoriaIsland } from "@phoria/phoria/client"
 
 PhoriaIsland.register()
 ```
-
-> [!NOTE]
-> `PhoriaIsland` is a custom HTML element that is used to hydrate the components that you have [registered](#add-a-ui-component) in your component registration file (i.e. `./components/register`) for Islands that you have opted-in to client-side rendering.
 
 ### Add Server Entry
 
@@ -424,14 +417,9 @@ async function renderPhoriaIsland(island: PhoriaIsland) {
 export { renderPhoriaIsland }
 ```
 
-> [!NOTE]
-> `island.render()` will call the associated UI framework plugin's default render strategy, which in the case of React is [`renderToReadableStream`](https://react.dev/reference/react-dom/server/renderToReadableStream).
->
-> The `island.render()` function does accept a custom render strategy if you need further control over it, for example if you are using a library like [styled components](https://styled-components.com/docs/advanced#server-side-rendering).
-
 ### Add Phoria to the dotnet web app
 
-Now you can add Phoria to your dotnet web app. From this point on we will refer to it as the [Phoria Web App](./phoria-web-app.md), which is just a way of saying a dotnet web app with the `Phoria` NuGet package installed and configured.
+Now you can add Phoria to your dotnet web app. From this point on we will refer to it as the [Phoria Web App](./phoria-web-app.md).
 
 First you will need to add the Phoria NuGet package to the web app:
 
@@ -451,9 +439,6 @@ Then add the following section to `WebApp/appsettings.json`:
 }
 ```
 
-> [!NOTE]
-> Any [configuration](./configuration.md) option that is not set explicitly will fallback to a default value except for `entry` and `ssrEntry` because there are no sensible defaults for these options.
-
 And the following to `WebApp/appsettings.Development.json`:
 
 ```json
@@ -467,7 +452,7 @@ And the following to `WebApp/appsettings.Development.json`:
 ```
 
 > [!NOTE]
-> The `https` option will default to `false` so we are setting it here because we want our Phoria Server to use `https` in development.
+> We are setting this because we want our Phoria Server to use `https` in development. The option and its default are covered in [Configuration](./configuration.md).
 
 Then you will need to modify `WebApp/Program.cs` to register Phoria services. Add the following code in the appropriate places (i.e. the below does not represent a complete `Program.cs` file, just the parts you need to add to configure Phoria):
 
