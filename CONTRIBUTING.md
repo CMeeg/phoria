@@ -87,7 +87,9 @@ Publishing is gated end to end: only maintainers can merge to `main`/`canary` (b
 
 ## Documentation
 
-Contributions that change how Phoria works should review whether the README files or [`docs/guides/`](docs/guides/) need to reflect the change, and update them as part of the contribution. Substantial changes should also keep [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) consistent with the code.
+Contributions that change how Phoria works must update the documentation that describes them, in the same contribution. Review the README files and [`docs/guides/`](docs/guides/); where a change alters how Phoria's pieces cooperate, [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) must match the code.
+
+**Every plan carries a documentation review that names the documents it checked.** State which documents were read and what was confirmed about each — the guide documenting a changed export, the package README whose install command or version range moved, the example README whose commands changed. Where a change altered no public surface, say so and give the reason; the entry still exists. A plan without a named documentation review is incomplete.
 
 ## Getting help
 

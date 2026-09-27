@@ -319,6 +319,8 @@ Plan: [`docs/superpowers/plans/2026-09-26-phase-6-docs-structure.md`](superpower
 
 ## 2026-09-26 — The docs-review trigger has two layers, and only one of them is durable
 
+> **Superseded on 2026-09-27.** Layer 2 was applied and then reverted, and the two-layer model is withdrawn — a global tool installation is clobbered by any superpowers update, which is a routine event. See "The trigger is one layer, not two" below. The reasoning about plan artefacts outliving their own phase references, however, was kept and now lives in `AGENTS.md`.
+
 The trigger installed by Phase 6 Plan A is recorded in three places, and they are **not equal**. Keeping the distinction straight matters, because the third is invisible in a diff and vanishes on a rebuild.
 
 - **Layer 1 — the guarantee.** `CONTRIBUTING.md` `## Documentation` and `AGENTS.md` `## Documentation review`. Versioned in this repository, committed, reviewable in a diff, and surviving any machine change. **The slice depends only on this layer.**
@@ -327,3 +329,18 @@ The trigger installed by Phase 6 Plan A is recorded in three places, and they ar
 Losing Layer 2 degrades rather than breaks: a plan author reading this repository's conventions still gets the requirement. But the loss is silent, and it applies to **every project on the machine**, not just this one. The exact snippets are inlined in Plan A's Task 1 Step 3 so re-applying needs no recollection — **that plan is the durable record of a change that itself is not recorded anywhere.** If the skill path has moved, locate it with `find ~ -path '*superpowers/skills/writing-plans/SKILL.md'` rather than creating a stray copy.
 
 **Also outside every plan:** the `canary` → `main` cut, which is the final step of the overall Phase 6 task and cannot be executed from an agent session because `gh` is unavailable. Executing Plan A does **not** finish Phase 6. Plan A extends the cut runbook with step 6 so the deferred verification of the ten `giget` references happens at the right moment, but the cut itself is a maintainer action with no plan behind it.
+
+## 2026-09-27 — The trigger is one layer, not two; the `writing-plans` edit was applied and then reverted
+
+**This supersedes the 2026-09-26 entry "The docs-review trigger has two layers".** That entry described a safety net in the `writing-plans` skill's plan template. It was applied on 2026-09-27 and then **reverted the same day**, and the two-layer model is withdrawn.
+
+**The trigger is one layer: `AGENTS.md` `## Documentation review` and `CONTRIBUTING.md` `## Documentation`.** Both are versioned, reviewable in a diff, and survive any machine change. Nothing depends on the skill edit.
+
+**Why the Layer 2 edit was reverted.** A global tool installation is not a place to hold a project convention. The edit appeared in no commit, was unreviewable in a diff, and — the deciding point — **is clobbered by any update to the superpowers package**, which is a routine occurrence rather than an exceptional one. A safety net that disappears on a routine maintenance event and leaves nothing behind is worse than no net: `AGENTS.md` says the requirement exists, so a plan author reasonably believes the template carries it, and it does not. The earlier framing of this as "Layer 2 raises the floor; nothing depends on it" was right about the dependency and wrong about the durability.
+
+**What was actually removed:** the `## Documentation Review` block in the `## Plan Document Header` template, and item `**0. Documentation review:**` in the `## Self-Review` checklist. `~/.local/share/opencode/packages/superpowers/skills/writing-plans/SKILL.md` is back to its stock content (`grep -c "Documentation Review"` returns `0`). **Nothing was lost** — the requirement is fully carried by the two in-repository records, and the plan's own `## Documentation Review` section shows what it looks like in practice.
+
+**Two further changes to `AGENTS.md` in the same review**, both generalising a single drifted instance into a rule:
+
+- **`AGENTS.md` now states that an agent is a contributor** and must follow [`CONTRIBUTING.md`](CONTRIBUTING.md), which it previously mentioned only once, buried as a release-workflow pointer. The file held agent-specific guidance that a human contributor was never shown, which is the wrong way round.
+- **`AGENTS.md` no longer references the current project plan at all** — no phase numbers, no pointers into `PROJECT.md`'s phase structure. Three references were removed: `(Phase 11)` on the peer-dependency bullet, `tooling lands in Phase 3` in the test-coverage section, and `docs/PROJECT.md Phase 4` in the versioning section. Each was replaced by the durable fact rather than its schedule. The **rationale is now recorded in `AGENTS.md` itself** (a bullet in `## Documentation review`) so the fix is not undone by the next drifted instance: plan artefacts are removed from the repository when the project completes, while `AGENTS.md` outlives them, so a phase reference there becomes a dangling instruction in the one file that cannot be retired with the rest. The **Current focus** line is the one deliberate exception — it names where the current plan lives rather than encoding any part of it.
