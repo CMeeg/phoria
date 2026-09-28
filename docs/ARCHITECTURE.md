@@ -287,6 +287,8 @@ Server-side rendering and client-side mounting per framework:
 
 All SSR services follow the same shape: verify the component belongs to this framework, `importComponent` the entry, call the chosen render helper with the props spread onto the component, and return `{ framework, componentPath, html }` (string or `ReadableStream`).
 
+To add a framework, see [`packages/phoria-islands/docs/framework-plugin.md`](../packages/phoria-islands/docs/framework-plugin.md).
+
 ---
 
 ### The dev-certs plugin (`packages/vite-plugin-dotnet-dev-certs/`)
