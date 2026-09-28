@@ -29,18 +29,18 @@ The failure modes this spec implies but no automated check exercises, most likel
 1. **Prose silently lost in a move.** Extraction under a mechanical test is exactly the operation where a paragraph gets dropped and nobody notices, because it is then absent from both the source and the destination. Expected: every non-empty line of a moved range appears verbatim in its destination — pinned mechanically by the `LOST` detector in Task 0 (Review Focus 3 says how, and every extraction task runs it).
 2. **A link that points at a file whose content is still a placeholder.** Eight links from inside live instructions currently do this. Expected: after this plan, every relative link from `getting-started.md` and `README.md` resolves to a file containing no `work in progress` warning — pinned by the link check in Task 0 and re-run per task.
 3. **A command that looks correct and is not.** The class of defect this slice exists to fix, and reading cannot catch it. Expected: the trialist path is *executed* end to end (Task 8), not read; every other document's commands are checked against the target `package.json` scripts.
-4. **A guide index that advertises content which does not exist.** The current index is honest — it links only the five real guides — and that property is easy to lose while making it journey-shaped. Expected: the index links only guides that are non-placeholder when the slice lands, so `configuration.md`, `workspaces.md` and `supported-ui-frameworks.md` are absent from it — pinned by the Review Focus 2 check run against the index in Task 9.
+4. **A guide index that advertises content which does not exist.** The current index is honest — it links only the five real guides — and that property is easy to lose while making it journey-shaped. Expected: the index links only guides that are non-placeholder when the slice lands, so `configuration.md`, `workspaces.md` and `supported-ui-frameworks.md` are absent from it — pinned by the Review Focus 2 check run against the index in Task 10.
 5. **The declared overlap "fixed" by deleting one side.** `getting-started.md` keeps a minimal component and registration inline while `creating-phoria-island-components.md` keeps the full treatment including `PhoriaIslandComponentFactory`. This is intentional. Expected: both sides still present at the end — pinned by the explicit existence check in Task 5.
 
 ## Sequencing Decisions
 
-Recorded here rather than appended to `docs/MEMORY.md`, because this planning session is not permitted to modify files outside `/home/meeg/.opencode/plan/`. **Task 12 appends these to `docs/MEMORY.md` as its first step.**
+Recorded here rather than appended to `docs/MEMORY.md`, because this planning session is not permitted to modify files outside `/home/meeg/.opencode/plan/`. **Task 13 appends these to `docs/MEMORY.md` as its first step.**
 
 - **The trigger (Task 1) lands before everything else**, so the remaining ten tasks are performed under the mechanism this slice introduces. This is the spec's explicit instruction and it is cheap: the trigger is a convention, and the convention only bites if it exists while the work that could rot documentation is happening.
 - **Tasks 2, 3 and 4 are sequential, not parallel.** They edit disjoint line ranges of `getting-started.md` but the *same file*, so they cannot be delegated concurrently without merge conflicts on every hunk. Their independence is real; their parallelism is not.
 - **Task 7 depends on Task 4.** The `configuration` note at `getting-started.md:455` sits inside the 432-493 range that Task 4 extracts. Task 4 deliberately leaves that one note in place, and Task 7 moves it. If Task 4 swallowed it, Task 7 would have nothing to move and `configuration.md` would lose the only real content extraction can give it.
-- **Task 9 depends on Tasks 2-6.** The journey index may only link guides that are non-placeholder when the slice lands, so it cannot be written until the extraction has decided which those are. Writing it earlier would mean either guessing or advertising dead ends — the exact failure the slice is fixing.
-- **Task 11 depends on Task 10.** The framework recipe's link goes into `ARCHITECTURE.md`, so the recipe must exist before the link does.
+- **Task 10 depends on Tasks 2-6.** The journey index may only link guides that are non-placeholder when the slice lands, so it cannot be written until the extraction has decided which those are. Writing it earlier would mean either guessing or advertising dead ends — the exact failure the slice is fixing.
+- **Task 12 depends on Task 11.** The framework recipe's link goes into `ARCHITECTURE.md`, so the recipe must exist before the link does.
 - **The nine per-example `giget` references move from this plan to Plan B.** The spec assigns all ten references to Plan A, but nine of them live one-per-file in `examples/*/README.md`, which Plan B rewrites wholesale to add the uniform `## Try it` section — which is where the `giget` command belongs. Repairing them here would mean editing a line that Plan B then moves, which is the "two homes for one explanation" failure the seam rule exists to prevent. Net effect is identical: all ten references are repaired across the two plans. **This is a deliberate deviation from the spec's plan decomposition and is the one place this plan does not follow the spec literally.**
 
 ## File Structure
@@ -58,7 +58,7 @@ Recorded here rather than appended to `docs/MEMORY.md`, because this planning se
 | `docs/guides/configuration.md` | reference (incomplete) | `getting-started.md:455` + the incomplete-guide notice |
 | `docs/guides/workspaces.md` | concept (incomplete) | `getting-started.md:204` + the `with-workspace` example |
 | `docs/guides/supported-ui-frameworks.md` | reference (incomplete) | the 3 framework packages and their examples |
-| `packages/phoria-islands/docs/framework-plugin.md` | contributor reference | **new prose** (Task 10) |
+| `packages/phoria-islands/docs/framework-plugin.md` | contributor reference | **new prose** (Task 11) |
 
 **Modified — 6 files.** `docs/guides/getting-started.md` (loses five ranges, gains the trialist route, keeps a documented overlap), `README.md` (trialist block replaces the inline pnpm commands; flat index becomes journey-shaped), `docs/guides/creating-phoria-island-components.md` (its register section yields to the canonical guide), `CONTRIBUTING.md` (trigger + runbook step 6), `AGENTS.md` (trigger + a phase-number fix), `docs/ARCHITECTURE.md` (recipe link, runbook step 6, drift pass).
 
@@ -167,7 +167,7 @@ Nothing to commit — `/tmp/opencode/` is outside the repository. Record instead
 git status --short
 ```
 
-Expected: clean. The three modified/untracked spec files from the scoping sessions are expected to appear (`docs/MEMORY.md` modified; the two spec files untracked) — leave them alone; they are the design record for this plan and Task 12 commits them.
+Expected: clean. The three modified/untracked spec files from the scoping sessions are expected to appear (`docs/MEMORY.md` modified; the two spec files untracked) — leave them alone; they are the design record for this plan and Task 13 commits them.
 
 ---
 
@@ -324,7 +324,7 @@ The largest single move: 180 lines out of the journey and into `phoria-server.md
 
 **Interfaces:**
 - Consumes: `loss_check` and `no_placeholder` from Task 0.
-- Produces: `docs/guides/phoria-server.md` as a concept guide. The journey's `### Add Phoria Server` heading survives, its prose does not; a link replaces it. No later task links to this file except Task 9's index.
+- Produces: `docs/guides/phoria-server.md` as a concept guide. The journey's `### Add Phoria Server` heading survives, its prose does not; a link replaces it. No later task links to this file except Task 10's index.
 
 - [ ] **Step 1: Record the source range before touching anything**
 
@@ -359,7 +359,7 @@ Keep the existing `# Phoria Server` title so the incoming link target is unchang
 
 The file is a cut range plus those three links. The guide needs no `##` sections of its own beyond `## Related` unless Step 2's classification produced a natural break — if it did not, do not invent one.
 
-If Tasks 3, 4 or 6 have not yet run, those three targets are still placeholders; that is expected and does not block this task. Task 9's check confirms every one is real before the slice lands.
+If Tasks 3, 4 or 6 have not yet run, those three targets are still placeholders; that is expected and does not block this task. Task 10's check confirms every one is real before the slice lands.
 
 - [ ] **Step 4: Prove nothing was lost**
 
@@ -410,7 +410,7 @@ Two adjacent ranges, 387-408 and 409-431, producing two guides. The journey alre
 
 **Interfaces:**
 - Consumes: `loss_check`, `no_placeholder` from Task 0.
-- Produces: `docs/guides/client-entry.md` and `docs/guides/server-entry.md` as concept guides. Task 9's index links both. `phoria-server.md`'s `## Related` section (Task 2) links both.
+- Produces: `docs/guides/client-entry.md` and `docs/guides/server-entry.md` as concept guides. Task 10's index links both. `phoria-server.md`'s `## Related` section (Task 2) links both.
 
 - [ ] **Step 1: Record both source ranges**
 
@@ -585,7 +585,7 @@ The one case where two copies of the same explanation already exist. Unlike Task
 
 **Interfaces:**
 - Consumes: `loss_check`, `no_placeholder` from Task 0.
-- Produces: `docs/guides/component-register.md` as the reference for registration. The `## Related` sections written in Tasks 2-4 may link to it; Task 9's index links it.
+- Produces: `docs/guides/component-register.md` as the reference for registration. The `## Related` sections written in Tasks 2-4 may link to it; Task 10's index links it.
 
 - [ ] **Step 1: Read both existing copies**
 
@@ -690,7 +690,7 @@ The only guide with no source prose anywhere. Everything else is moved; this is 
 
 **Interfaces:**
 - Consumes: nothing. Every other extraction task already links to this file; it does not depend on them.
-- Produces: `docs/guides/phoria-islands.md` as the framework-agnostic concept register. Task 9's index links it.
+- Produces: `docs/guides/phoria-islands.md` as the framework-agnostic concept register. Task 10's index links it.
 
 - [ ] **Step 1: Read the three sources that define the concept**
 
@@ -761,7 +761,7 @@ for f in creating-phoria-island-components directives component-register client-
 done
 ```
 
-Expected: `OK` for all five. `directives.md` is real today; the other four are ready only if Tasks 3 and 5 have run. If any reports `NOT READY`, that is ordering, not a defect — Task 9's check is the gate that all are real before the slice lands.
+Expected: `OK` for all five. `directives.md` is real today; the other four are ready only if Tasks 3 and 5 have run. If any reports `NOT READY`, that is ordering, not a defect — Task 10's check is the gate that all are real before the slice lands.
 
 - [ ] **Step 5: Verify the guide is no longer a placeholder**
 
@@ -793,7 +793,7 @@ git commit -m "docs: write the Phoria Islands concept guide"
 
 **Interfaces:**
 - Consumes: Task 4 (which left `:455` in place). `no_placeholder` from Task 0 — but note `no_placeholder` cannot be used as a pass condition for these three files, because they legitimately keep an "incomplete" notice. Their check is that the notice has the required *shape*, below.
-- Produces: the incomplete-guide notice as a reusable three-part form. Task 9 uses knowledge of which guides are incomplete to decide what the index may link.
+- Produces: the incomplete-guide notice as a reusable three-part form. Task 10 uses knowledge of which guides are incomplete to decide what the index may link.
 
 - [ ] **Step 1: Move the `:455` configuration note into `configuration.md`**
 
@@ -918,7 +918,7 @@ The only task in the plan whose deliverable is verified by *running* it. Everyth
 
 **Interfaces:**
 - Consumes: the fact that all nine examples carry a `docker-compose.yml`, a `Dockerfile` and a `.dockerignore` on port 8080, and that `giget` fetch plus a Production container reaching `Healthy` were each verified 9/9 in the examples-parity phase.
-- Produces: the three-command trialist block, the `## Clone an example project` section that expands it, and the `#canary` aside in its two permitted locations. Task 9's index links `getting-started.md`, whose trialist route this task creates.
+- Produces: the three-command trialist block, the `## Clone an example project` section that expands it, and the `#canary` aside in its two permitted locations. Task 10's index links `getting-started.md`, whose trialist route this task creates.
 
 - [ ] **Step 1: Replace `README.md`'s inline pnpm commands with the trialist path**
 
@@ -1051,7 +1051,82 @@ git commit -m "docs: add a three-command Docker trialist path, verified by runni
 
 ---
 
-### Task 9: The journey-shaped guide index
+### Task 9: The examples catalog, for the reader choosing an example
+
+Added after Task 8, on the user's review of that task. `examples/README.md` is a catalog of
+examples, which makes it a user-facing document — it is where someone decides *which* example
+to run. It is written entirely for the person maintaining the examples: a `Layout` column of
+repository paths, a `Primary commands` column listing six or seven `pnpm` scripts per row, and
+a paragraph explaining launch-profile port arithmetic. Its `## Contributor Contract` section is
+correctly labelled and correctly scoped; the problem is the catalog above it.
+
+**Files:**
+- Modify: `examples/README.md` — the `## Catalog` section (`:5`–`:21`), leaving `## Contributor Contract` (`:23`–end) alone.
+
+**Interfaces:**
+- Consumes: Task 8's trialist path. The catalog currently links **no runnable path at all** — a reader who lands on it can read nine descriptions and has no way to start any of them. Task 8's `## Getting started` block is the thing to point at.
+- Produces: a reader-facing catalog, a `## Try it` section, and the port conflict resolved. Plan B's per-example `## Try it` sections become the per-file instance of what this task builds once here.
+
+- [ ] **Step 1: Classify every line of the catalog by audience, and record the classification**
+
+Do this before editing. Two audiences are in this file and neither is going away:
+
+| audience | wants | is served by |
+| --- | --- | --- |
+| a reader choosing an example | what it demonstrates, how to run it, what it needs | the catalog and `## Try it` |
+| a maintainer changing an example | required files, scripts, port map, smoke-test contract | `## Contributor Contract` |
+
+Print the catalog's lines against that table and confirm the classification with the user before
+rewriting. The risk here is deleting a contributor's detail by mistake, so the boundary must be
+agreed rather than inferred.
+
+- [ ] **Step 2: Give the catalog reader-facing columns**
+
+Drop `Layout` (a repository path, meaningless to someone who has not cloned) and `Primary
+commands` (a wall of six `pnpm` scripts per row — that is the Contributor Contract's table, and
+it is already there in the contract's prose). Keep `Example`, `Frameworks and features`, and the
+two ports, for the port conflict in Step 4.
+
+Every fact the dropped columns carried must be asserted to still exist in the `## Contributor
+Contract` before the column is removed. This is the same relocation discipline as the rest of
+the plan: a loss check, not a deletion.
+
+- [ ] **Step 3: Add a `## Try it` section, pointing at Task 8's path**
+
+Between the catalog and the Contributor Contract:
+
+1. One paragraph: every example runs the same way, so the commands are written once.
+2. The same `giget` + `docker compose up --build -d` + `docker compose down` path Task 8 wrote and executed, with the example name as the one thing that changes.
+3. The `#canary` aside must **not** be repeated here. Task 8 placed it in `README.md` and here, two places, and a third is the failure the spec's two-location ruling exists to prevent. This task adds a link to the root `README.md`'s trialist block instead.
+
+Expected: a reader who lands on the catalog can start an example without leaving the file.
+
+- [ ] **Step 4: Resolve the port conflict, which is a real inconsistency, not a wording problem**
+
+The catalog lists `getting-started` as WebApp `5373` / Phoria Server `5273`. Those are the **pnpm** workflow's ports. Task 8's trialist path publishes **`8080`** — verified by execution, and asserted in Task 8's script against `docker-compose.yml`. So a reader who follows the README and then consults this catalog finds that every port in the table is one they will never use.
+
+The catalog's `## Try it` path uses `8080`; the catalog's table does not. Pick one resolution and state it in the prose: either label the columns as the pnpm ports, or add the container's `8080` alongside. Do not leave two port systems in one file with nothing distinguishing them.
+
+- [ ] **Step 5: Remove the example count**
+
+`examples/README.md:19` says "the eight single-WebApp examples". A count needs editing whenever an example is added or removed, and this session has already found one of each in the wrong place. Prefer "every single-WebApp example" and let the table supply the number. Same ruling as the Task 8 review note on "all nine" in the journey.
+
+- [ ] **Step 6: Write a verification script with negative controls**
+
+Follow `/tmp/opencode/ph6-task8-verify.sh` for the shape, and re-derive every line number from a heading — never a fixed offset, because Task 8's edit moved all of them silently. Checks to include, each with a control:
+
+- every column value the dropped columns carried is still in the `## Contributor Contract`
+- the `## Try it` section exists and its command block is byte-identical to `README.md`'s
+- exactly **two** files carry the `#canary` aside, so this task's new section cannot become a third
+- the port resolution is stated: grep the file for both `8080` and the pnpm ports, and fail if nothing distinguishes them
+- no example count survives
+- every relative link resolves, and no hard-wrapped prose
+
+- [ ] **Step 7: Commit** — the user reviews and commits; agents do not.
+
+---
+
+### Task 10: The journey-shaped guide index
 
 Depends on Tasks 2-6. The index may only link guides that are non-placeholder when the slice lands, so it cannot be written until the extraction has decided which those are.
 
@@ -1130,7 +1205,7 @@ git commit -m "docs: shape the guide index as the reader's path, linking only re
 
 ---
 
-### Task 10: The framework-extension recipe
+### Task 11: The framework-extension recipe
 
 `createPhoriaFrameworkPlugin` is exported from `@phoria/phoria/vite` (`packages/phoria-islands/src/vite/framework.ts:154-155`) and consumed by all three framework packages as thin composers. `docs/ARCHITECTURE.md:263-288` describes what the three existing adapters do. Nothing describes how to write a fourth, and the open `TODO.md` item to add `phoria-preact` depends on it.
 
@@ -1140,8 +1215,8 @@ git commit -m "docs: shape the guide index as the reader's path, linking only re
 - Modify: `packages/phoria-islands/README.md` (link the new `docs` folder from **learn more**)
 
 **Interfaces:**
-- Consumes: nothing from earlier tasks. Independent of Tasks 2-9.
-- Produces: the canonical framework recipe, in the package's first `docs` folder. Task 11 completes the `ARCHITECTURE.md` drift pass. Plan B adds links to this recipe from the three framework package READMEs.
+- Consumes: nothing from earlier tasks. Independent of Tasks 2-10.
+- Produces: the canonical framework recipe, in the package's first `docs` folder. Task 12 completes the `ARCHITECTURE.md` drift pass. Plan B adds links to this recipe from the three framework package READMEs.
 
 - [ ] **Step 1: Read the factory and the options type**
 
@@ -1476,13 +1551,13 @@ git commit -m "docs: document how to add a Phoria framework package"
 
 ---
 
-### Task 11: `ARCHITECTURE.md` drift pass and runbook step 6
+### Task 12: `ARCHITECTURE.md` drift pass and runbook step 6
 
 **Files:**
 - Modify: `docs/ARCHITECTURE.md` — the `## Stable-cut runbook` section (`:531-539`), and any claim found to disagree with the code
 
 **Interfaces:**
-- Consumes: Task 10 (the recipe link is already in place; this task does not add it).
+- Consumes: Task 11 (the recipe link is already in place; this task does not add it).
 - Produces: `ARCHITECTURE.md` in agreement with the shipped code, and a stable-cut runbook whose step 6 is the post-cut verification of the ten `giget` references.
 
 - [ ] **Step 1: Add step 6 to the `ARCHITECTURE.md` runbook, matching `CONTRIBUTING.md`**
@@ -1565,7 +1640,7 @@ git commit -m "docs: bring ARCHITECTURE.md back into agreement with the shipped 
 
 ---
 
-### Task 12: Slice close-out
+### Task 13: Slice close-out
 
 **Files:**
 - Modify: `docs/MEMORY.md` (append the sequencing decisions)
@@ -1623,7 +1698,7 @@ git commit -m "docs: record the Phase 6 docs structure sequencing decisions"
 
 - [ ] **Step 5: Hand off to Plan B**
 
-Plan B — `2026-09-26-phase-6-readme-sweep` — covers the seven package READMEs and the nine example READMEs. It depends on this plan's trialist path existing, because each example README's `## Try it` section is the per-file instance of what Task 8 built once in `README.md`. Plan B also carries the nine per-example `giget` reference repairs and the three framework package README links to the recipe from Task 10.
+Plan B — `2026-09-26-phase-6-readme-sweep` — covers the seven package READMEs and the nine example READMEs. It depends on this plan's trialist path existing, because each example README's `## Try it` section is the per-file instance of what Task 8 built once in `README.md`. Plan B also carries the nine per-example `giget` reference repairs and the three framework package README links to the recipe from Task 11.
 
 ---
 
@@ -1631,7 +1706,7 @@ Plan B — `2026-09-26-phase-6-readme-sweep` — covers the seven package README
 
 Four things sit outside this plan and outside Plan B. They are listed here because each one is invisible from inside a task list, and each has a real cost if it is forgotten. The first two are the ones most likely to evaporate.
 
-1. **The `canary` → `main` cut.** This is the final step of the overall Phase 6 task, and no plan can execute it: `gh` is unavailable in this environment, so the version pull request cannot be opened or merged from an agent session. It is a maintainer action following the numbered runbook in `CONTRIBUTING.md` — which Task 11 extends with step 6. Until it happens, `examples/` is absent from `main`, and the ten `giget` references stay unverifiable regardless of how correct they are. **Executing this plan does not finish Phase 6.**
+1. **The `canary` → `main` cut.** This is the final step of the overall Phase 6 task, and no plan can execute it: `gh` is unavailable in this environment, so the version pull request cannot be opened or merged from an agent session. It is a maintainer action following the numbered runbook in `CONTRIBUTING.md` — which Task 12 extends with step 6. Until it happens, `examples/` is absent from `main`, and the ten `giget` references stay unverifiable regardless of how correct they are. **Executing this plan does not finish Phase 6.**
 
 2. **Re-applying the `writing-plans` skill edit on a new machine.** Task 1 Step 3 edits a global tool installation: unversioned, uncommitted, unreviewable, and destroyed by a tool-installation rebuild. `CONTRIBUTING.md` and `AGENTS.md` are the durable guarantee, so nothing in this slice breaks — but the safety net is gone, silently, and across every project on the machine. The snippets are inlined in Task 1 Step 3 precisely so restoring it needs no recollection.
 
@@ -1643,12 +1718,12 @@ Four things sit outside this plan and outside Plan B. They are listed here becau
 
 ## Self-Review
 
-**1. Spec coverage.** Every spec section maps to a task: the seam and its test → Tasks 2-7 (applied per paragraph, Step 2 of each); the concept guide mapping → Tasks 2-7, one guide per task; `phoria-islands` taking the concept register → Task 6; incomplete-guide notices → Task 7; the journey page after extraction → Tasks 2-5, 7, 8; the trialist path and its three-command rule → Task 8; the `#canary` aside in two places → Task 8; the runbook step 6 → Tasks 11 and 1; the journey-shaped index → Task 9; the trigger in three places → Task 1; package README shape → **Plan B** (the `phoria-islands` link is Task 10 Step 5); example README shape → **Plan B**; the framework recipe → Task 10; the placement rule → applied throughout, and stated in Task 10 Step 3; the nine placeholder warnings → Tasks 2-7; the verification table → Task 0's helpers, Task 8's execution, and the per-task read-throughs. The spec's Plan B boundary is respected: no package or example README is rewritten here.
+**1. Spec coverage.** Every spec section maps to a task: the seam and its test → Tasks 2-7 (applied per paragraph, Step 2 of each); the concept guide mapping → Tasks 2-7, one guide per task; `phoria-islands` taking the concept register → Task 6; incomplete-guide notices → Task 7; the journey page after extraction → Tasks 2-5, 7, 8; the trialist path and its three-command rule → Task 8; the `#canary` aside in two places → Task 8; the runbook step 6 → Tasks 11 and 1; the journey-shaped index → Task 10; the trigger in three places → Task 1; package README shape → **Plan B** (the `phoria-islands` link is Task 11 Step 5); example README shape → **Plan B**; the framework recipe → Task 11; the placement rule → applied throughout, and stated in Task 11 Step 3; the nine placeholder warnings → Tasks 2-7; the verification table → Task 0's helpers, Task 8's execution, and the per-task read-throughs. The spec's Plan B boundary is respected: no package or example README is rewritten here.
 
-**2. Placeholder scan.** No `TBD`, `TODO`, or "similar to Task N", and no angle-bracket markers. Task 10's recipe is inlined in full, transcribed from the sources its Steps 1-2 name, with the instruction that the code wins where they disagree. Task 11 Step 5 is a read-against-the-code instruction by nature: it names seven sections, and the spec's non-goal forbids restructuring `ARCHITECTURE.md`, so its output is corrections in place rather than new content.
+**2. Placeholder scan.** No `TBD`, `TODO`, or "similar to Task N", and no angle-bracket markers. Task 11's recipe is inlined in full, transcribed from the sources its Steps 1-2 name, with the instruction that the code wins where they disagree. Task 12 Step 5 is a read-against-the-code instruction by nature: it names seven sections, and the spec's non-goal forbids restructuring `ARCHITECTURE.md`, so its output is corrections in place rather than new content.
 
 **3. Type consistency.** `loss_check` and `no_placeholder` are defined once in Task 0 and called with the same arity throughout (`loss_check <src> <dest> <first> <last>`; `no_placeholder <file>...`). Task 4 establishes the one-line-exception form of `loss_check` and Task 7 Step 2 is the task that closes it — the check's expected output changes from `1` to `0` across those two tasks, and both state which.
 
-**4. Review Focus.** All five lines have a pin: (1) the `LOST` detector, proved in Task 0 Step 2 before being relied on; (2) `no_placeholder` plus per-task link greps; (3) Task 8's executed path; (4) Task 9 Steps 3-4; (5) Task 5 Step 6.
+**4. Review Focus.** All five lines have a pin: (1) the `LOST` detector, proved in Task 0 Step 2 before being relied on; (2) `no_placeholder` plus per-task link greps; (3) Task 8's executed path; (4) Task 10 Steps 3-4; (5) Task 5 Step 6.
 
-**Two findings recorded during planning, not yet in the spec.** The spec's Context table lists seven dead links; there are **eight** — `getting-started.md:63` links to `supported-ui-frameworks.md` and is absent from the table. It does not change the work, since Task 7 covers that file, but the spec's count is wrong. And the ten `giget` references are **not** syntactically broken as the spec implies — they use lowercase owner casing, which GitHub resolves case-insensitively, and fail only because `examples/` is absent from `main`. Task 12 Step 1 records both in `MEMORY.md`.
+**Two findings recorded during planning, not yet in the spec.** The spec's Context table lists seven dead links; there are **eight** — `getting-started.md:63` links to `supported-ui-frameworks.md` and is absent from the table. It does not change the work, since Task 7 covers that file, but the spec's count is wrong. And the ten `giget` references are **not** syntactically broken as the spec implies — they use lowercase owner casing, which GitHub resolves case-insensitively, and fail only because `examples/` is absent from `main`. Task 13 Step 1 records both in `MEMORY.md`.

@@ -1,6 +1,6 @@
 # Contributing to Phoria
 
-Thanks for considering a contribution to [Phoria](https://github.com/CMeeg/phoria), an islands architecture framework for .NET powered by Vite. This guide covers the development setup, the branch model, how to make a change, and how releases work. The architecture is documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — worth reading before diving in.
+Thanks for considering a contribution to [Phoria](https://github.com/CMeeg/phoria), an islands architecture framework for .NET powered by Vite. This guide covers the development setup, the branch model, how to make a change, how to change an example, and how releases work. The architecture is documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — worth reading before diving in.
 
 ## Prerequisites
 
@@ -58,6 +58,34 @@ All work starts with an issue or discussion. Unsolicited contributions are not w
 3. Add a changeset describing your change — `pnpm changeset` at the repo root. Every user-facing change needs one; it is what versions and publishes your work.
 4. Push and open a pull request against `canary`. CI runs build, lint, type-check, unit/browser tests, .NET tests, and the examples-published-versions check; the required checks must pass.
 5. A maintainer reviews and merges. Because `canary` publishes betas automatically, an approved change ships as a `beta` prerelease soon after merge.
+
+## Changing an example
+
+Every single-WebApp example must keep `AppHost/`, `WebApp/`, `WebApp/Properties/launchSettings.json`, `WebApp/package.json`, `WebApp/pnpm-workspace.yaml`, `WebApp/pnpm-lock.yaml`, and the `WebApp` scripts for `build`, `dev`, `dev:server`, `dev:webapp`, `preview`, `preview:server`, `stop`, and `test:e2e`. The alternate workspace must keep `AppHost/`, `apps/WebApp/`, `packages/ui/`, the root `package.json`, `pnpm-workspace.yaml`, and the corresponding `apps/WebApp` scripts.
+
+Run single-WebApp commands from `examples/<name>/WebApp`; Vite discovers `vite.config.ts` and resolves its root from that working directory. Run `with-workspace` install and root build commands from `examples/with-workspace`, then run application commands with `pnpm --dir apps/WebApp ...` because its AppHost resolves `apps/WebApp`.
+
+| Example | WebApp | Phoria Server |
+| --- | ---: | ---: |
+| `getting-started` | `5373` | `5273` |
+| `framework-multiple` | `5573` | `5473` |
+| `framework-react` | `5173` | `5073` |
+| `framework-svelte` | `5473` | `5373` |
+| `framework-vue` | `5273` | `5173` |
+| `with-tailwind` | `5773` | `5673` |
+| `with-styled-components` | `5873` | `5773` |
+| `with-storybook` | `5973` | `5873` |
+| `with-workspace` | `5673` | `5573` |
+
+Keep this port map collision-free. The WebApp port is the URL the smoke tests use, and the Phoria Server port is the sidecar endpoint the .NET application calls. The WebApp column is the `Dev port` in the [examples catalog](examples/README.md); HTTPS launch-profile ports are the WebApp port plus `1000` for every single-WebApp example, and `with-workspace` takes its URLs from its AppHost configuration. Every container publishes the WebApp on the catalog's `Docker port`. Each e2e suite reads `PHORIA_WEBAPP_URL` and defaults to its WebApp port, so a smoke test against another port must set the variable explicitly, for example `PHORIA_WEBAPP_URL=http://localhost:5373 pnpm test:e2e`.
+
+The `/health` endpoint is part of the smoke-test contract. A running example must return HTTP `200` and `Healthy` from its WebApp URL at `/health`; the Aspire AppHost separately checks the Phoria Server at `/hc`.
+
+A committed example must use published registry references for `@phoria/phoria`, its framework integrations, and the other Phoria packages; `link:`, `file:`, and a Phoria `ProjectReference` do not belong in it. Run `pnpm examples:check` from the repository root before opening a change. The `examples:link`/`examples:refresh`/`examples:sync` workflow for working against in-repo packages is in [Development setup](#development-setup).
+
+Verify standalone distribution with giget, not a repository-relative copy. From a temporary directory, run `pnpx giget gh:cmeeg/phoria/examples/<name> <name>`, enter the fetched example, run its documented `pnpm install` and `pnpm build`, and confirm the build succeeds without the source repository or root workspace. For `with-workspace`, run those commands from the fetched example root and confirm the `apps/WebApp` filter build resolves `packages/ui`.
+
+The normal development flow is `pnpm dev`; use `pnpm preview` after `pnpm build` to exercise the production-shaped Aspire flow, and `pnpm stop` to stop all discoverable AppHosts. Run `pnpm test:e2e` against the running WebApp, or set `PHORIA_WEBAPP_URL` when the port is changed.
 
 ## AI-assisted contributions
 

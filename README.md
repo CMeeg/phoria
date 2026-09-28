@@ -20,28 +20,35 @@ Phoria renders [islands of interactivity](https://docs.astro.build/en/concepts/i
 
 ## Getting started
 
-The repository includes two standalone examples:
-
-* [`examples/getting-started`](./examples/getting-started) demonstrates React.
-* [`examples/framework-multiple`](./examples/framework-multiple) demonstrates React, Svelte and Vue together.
-
-Examples are standalone workspaces. Run their commands from the example's `WebApp` directory:
+Run an example with Docker. Docker and Node are the only prerequisites — the multi-stage build compiles the .NET app and the frontend inside the container:
 
 ```shell
-cd examples/getting-started/WebApp
-pnpm install
-pnpm dev
+pnpx giget gh:cmeeg/phoria/examples/getting-started getting-started
+cd getting-started && docker compose up --build -d
 ```
 
-See the [Getting started guide](./docs/guides/getting-started.md) to add Phoria to an existing .NET project.
+Then open <http://localhost:8080>, and stop with `docker compose down`. The first build pulls the .NET and Node base images, so expect it to take a few minutes.
+
+The same two commands fetch any example — swap the name in the path and the directory. [`examples/getting-started`](./examples/getting-started) is React only; [`examples/framework-multiple`](./examples/framework-multiple) shows React, Svelte and Vue together.
+
+> To target the canary branch instead, append `#canary` to the ref — `gh:cmeeg/phoria/examples/getting-started#canary`.
+
+To develop against the source, or to add Phoria to an existing .NET project, see the [Getting started guide](./docs/guides/getting-started.md).
 
 ## Usage
 
-* [Getting started](./docs/guides/getting-started.md)
-* [Creating Phoria Island components](./docs/guides/creating-phoria-island-components.md)
-* [Phoria Island directives](./docs/guides/directives.md)
-* [Building for production](./docs/guides/building-for-production.md)
-* [Deployment](./docs/guides/deployment.md)
+Run it, then build on it, then go deeper:
+
+1. [Getting started](./docs/guides/getting-started.md) — both ways in: clone an example project, or add Phoria to an existing .NET project by hand.
+2. [Creating Phoria Island components](./docs/guides/creating-phoria-island-components.md) — the walkthrough, in React, for creating a UI component, registering it, and rendering it from .NET with the `PhoriaIslandTagHelper` or the `PhoriaIslandComponentFactory`.
+3. [Phoria Islands](./docs/guides/phoria-islands.md) — what an island is, the three rendering modes it can use, and where an island sits in the page.
+4. [Phoria Island directives](./docs/guides/directives.md) — the client directives, from `Client.Load` onwards, and what each one waits for.
+5. [Component register](./docs/guides/component-register.md) — how a component name becomes something Phoria can render, the keys and loaders it holds, and covering more than one framework.
+6. [Client Entry](./docs/guides/client-entry.md) and [Server Entry](./docs/guides/server-entry.md) — the two entry points an island renders through: the browser one hydrating, the server one generating the markup with an SSR strategy.
+7. [Phoria Server](./docs/guides/phoria-server.md) — the Node.js sidecar that renders your islands, serving from Vite's Dev Server in development and from the build output in production.
+8. [Phoria Web App](./docs/guides/phoria-web-app.md) — the .NET app with the `Phoria` package installed: supervising the Phoria Server, and what the app does when the server is unavailable.
+9. [Building for production](./docs/guides/building-for-production.md) — the build scripts and preview scripts a Phoria solution needs in production.
+10. [Deployment](./docs/guides/deployment.md) — deploying a production build to Azure Container Apps.
 
 > [!NOTE]
 > The guides cover the current setup and runtime model. If something is unclear or missing, please raise an issue.

@@ -7,10 +7,22 @@ There are two ways you can get started:
 
 ## Clone an example project
 
-The repository includes `examples/getting-started` for React and `examples/framework-multiple` for React, Svelte and Vue. These examples are standalone workspaces; run `pnpm install` and the example commands from their `WebApp` directory.
+Every example under [`examples/`](../../examples) is a standalone application outside this repository's workspace. Fetch one with `giget` and run it in Docker:
 
-> [!IMPORTANT]
-> If you are starting from a clone of this repository, use one of the local examples. Their package scripts must be run from the example's `WebApp` directory.
+```shell
+pnpx giget gh:cmeeg/phoria/examples/getting-started getting-started
+cd getting-started && docker compose up --build -d
+```
+
+Then open <http://localhost:8080>. The first build pulls and compiles a multi-stage .NET and Node image, so expect a few minutes. Stop with `docker compose down`.
+
+Docker and Node are all you need: `pnpx` fetches the example, and every other step — restoring packages, compiling the .NET app and building the frontend — happens inside the container. No .NET SDK or Aspire CLI is required.
+
+Two are worth telling apart: [`getting-started`](../../examples/getting-started) is React only, while [`framework-multiple`](../../examples/framework-multiple) shows React, Svelte and Vue together. The [examples catalog](../../examples/README.md) lists every example.
+
+> To target the canary branch instead, append `#canary` to the ref — `gh:cmeeg/phoria/examples/getting-started#canary`.
+
+To add Phoria to a new .NET project instead, see [Manually add Phoria to an existing dotnet project](#manually-add-phoria-to-an-existing-dotnet-project).
 
 ## Manually add Phoria to an existing dotnet project
 
