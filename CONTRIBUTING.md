@@ -106,6 +106,7 @@ Stable releases are coordinated cuts, run by a maintainer:
 3. Merge the stable version PR, then merge `main` back into `canary`.
 4. Restore `baseBranch: "canary"`, enter beta mode, and commit the config plus `pre.json`.
 5. Merge the release-specific examples-sync PR separately.
+6. Verify the documentation `giget` references now resolve. An unqualified ref resolves the repository's default branch, and `examples/` is absent from `main` until this cut lands, so every unqualified reference 404s until now. Fetch one unqualified — `pnpx giget gh:cmeeg/phoria/examples/getting-started getting-started` — then run its documented `pnpm install` and `pnpm build` in the fetched copy, with no source repository and no root workspace. The references are the `giget` block in `examples/README.md` and in each `examples/*/README.md`.
 
 Stable package publishing pushes release tags only; it does not push a branch ref. The separate examples-sync step pushes its release-specific `chore/examples-sync-<branch>-<commit>` branch and opens the pull request. Between steps 1 and 4 the beta stream is quiescent — `canary` publishes nothing until pre mode is re-entered. Do not merge feature work to `canary` during this window. A build failure prevents Changesets from running, a publish failure prevents tag and examples-sync steps, and an examples-sync failure cannot republish packages and is independently retryable.
 

@@ -194,8 +194,8 @@ The public API is:
 
 A component entry's `loader` is either:
 
-- a **default-export loader**: `() => import("./Counter.vue")` (the module's `default` export is the component), or
-- a **module/component pair**: `{ module: () => import("./Counter/Counter.tsx"), component: (m) => m.Counter }`.
+- a **default-export loader**: `() => import("./counter/counter.svelte")` (the module's `default` export is the component), or
+- a **module/component pair**: `{ module: () => import("./counter/counter.tsx"), component: (module) => module.Counter }`.
 
 `importComponent` resolves an entry to a live `PhoriaIslandComponent` (`{ component, componentName, framework, componentPath }`). The framework must be registered before its components — in practice the framework package's server/client entry (which calls `registerSsrService`/`registerCsrService`) is imported before the app's `register.ts` in `entry-server.ts`/`entry-client.ts`.
 
@@ -206,12 +206,12 @@ Each framework package's `./vite` entry composes its official framework plugin w
 The transform injects a literal export into each component module at build/dev time (via `MagicString`). The value is the consuming Vite root-relative module key, normalized with `/` separators and without a leading slash:
 
 ```ts
-export const __phoriaComponentPath = "src/components/Counter/Counter.tsx";
+export const __phoriaComponentPath = "src/components/counter/counter.tsx";
 ```
 
 The factory applies only to the `client` and `ssr` environments, never the Phoria Server `server` environment. Normal component filters continue to exclude `node_modules/**`; application-owned workspace packages are included explicitly with `workspacePackages: ["@phoriaexamples/ui"]`. Configured packages are resolved from `node_modules` by walking upward from the configured cwd and realpath-resolved, so linked package modules can be matched using the same paths Vite uses.
 
-`importComponent` picks the export off the loaded module namespace and attaches it to `PhoriaIslandComponent.componentPath`. The framework SSR service bubbles it into its render result, the SSR router emits it as the `x-phoria-island-path` response header, and the .NET side stores it as `island.ComponentPath`. `PhoriaIslandPreloadTagHelper` uses that value directly, after trimming any legacy leading slash, as the key into the `ssr-manifest.json`; it no longer strips the configured Vite root. This root-relative manifest-key format supports both app-root modules such as `src/components/Counter/Counter.tsx` and workspace modules such as `../../../packages/ui/dist/index.js`.
+`importComponent` picks the export off the loaded module namespace and attaches it to `PhoriaIslandComponent.componentPath`. The framework SSR service bubbles it into its render result, the SSR router emits it as the `x-phoria-island-path` response header, and the .NET side stores it as `island.ComponentPath`. `PhoriaIslandPreloadTagHelper` uses that value directly, after trimming any legacy leading slash, as the key into the `ssr-manifest.json`; it no longer strips the configured Vite root. This root-relative manifest-key format supports both app-root modules such as `src/components/counter/counter.tsx` and workspace modules such as `../../../packages/ui/dist/index.js`.
 
 #### Client runtime (`src/client/`)
 
@@ -306,7 +306,7 @@ The app's `src/server.ts` reads those paths from the Vite dev server config to b
 
 ### Examples (`examples/`)
 
-`getting-started` (React only) and `framework-multiple` (React + Svelte + Vue) share the same skeleton: an Aspire **AppHost**, a **WebApp** (.NET), and a **`ui/`** directory (the Vite root). They use different ports (getting-started: web app `5373`, Phoria Server `5273`; framework-multiple: `5573`/ `5473`), and getting-started additionally includes custom component integrations, a Privacy page, and Bootstrap/jQuery assets.
+`getting-started` (React only) and `framework-multiple` (React + Svelte + Vue) share the same skeleton: an Aspire **AppHost**, a **WebApp** (.NET), and a **`ui/`** directory (the Vite root). They use different ports (getting-started: web app `5373`, Phoria Server `5273`; framework-multiple: web app `5573`, Phoria Server `5473`). The web app's port is the HTTP one — each example serves HTTPS 1000 higher, so getting-started's HTTPS port is `6373`. Getting-started additionally includes custom component integrations, a Privacy page, and Bootstrap/jQuery assets.
 
 The **AppHost** (`AppHost/Program.cs`) owns both processes:
 
@@ -319,7 +319,7 @@ The **WebApp** (`WebApp/Program.cs`) configures `AddPhoria()`, and the pipeline 
 
 The **`ui/`** directory contains the Vite project:
 
-- `vite.config.ts` composes `[dotnetDevCerts(), phoria(), phoriaReact(), ...]`.
+- The Vite config sits one level up, at the WebApp root rather than inside `ui/`: `vite.config.ts` composes `[dotnetDevCerts(), phoria(), phoriaReact(), ...]`.
 - `src/entry-client.ts` imports `@phoria/phoria-react/client`, registers components (`./components/register`), and calls `PhoriaIsland.register()`.
 - `src/entry-server.ts` implements the `PhoriaServerEntry`: `async function renderPhoriaIsland(island) { return await island.render() }`.
 - `src/server.ts` (built as the `server` environment) parses appsettings, boots a middleware-mode Vite dev server when not in production, composes the four request handlers into an h3 app, and listens via `listhen` (using the Vite HTTPS config in dev). It also parses the shared `phoria:observability` settings, starts `@phoria/opentelemetry`'s NodeSDK before listening, enriches h3 spans with SSR component/framework or CSR asset data, uses the OTel logger with a console fallback, and flushes observability providers during graceful SIGTERM/SIGINT shutdown. The .NET WebApp independently gates logging, ASP.NET Core and HttpClient tracing/metrics, and the `Phoria` ActivitySource; its SSR span propagates `traceparent` to the Node sidecar, producing a page request -> `phoria.ssr.render` -> HTTP client/server SSR trace shape. The Node sidecar filters `/hc` from spans and metrics, while the .NET WebApp filters `/hc` from client spans only — its `/hc` client metrics (the runtime-built `System.Net.Http` meter) are a residual limitation, as OpenTelemetry .NET 1.17.0 exposes no per-request filter for them.
@@ -431,7 +431,7 @@ In dev, the browser's requests for Vite-served assets and `/@vite/client` hit th
 
 ### Health, startup, and degradation
 
-The `PhoriaServerMonitorService` starts on host startup and blocks until the first successful `GET /hc` — or, when `Server.StartupTimeout` is set, fails startup after that many seconds. `PhoriaServerProcess` (when configured) supervises Node in production, bounding its restart counter with `Server.Process.MaxRestartAttempts` when positive (0 = indefinitely) while unhealthy. After startup the monitor refreshes `PhoriaServerStatus` every `HealthCheckInterval` seconds, preserving the last-known healthy `Mode`/`Frameworks` through a downtime. If the server goes unhealthy, behavior is a consumer choice:
+`PhoriaServerMonitorService` is a hosted background service, so the web app starts serving immediately — it is the monitor's own task, not host startup, that waits for the first successful `GET /hc`. Until that check succeeds the status is `Unknown` and nothing is proxied to the server. `Server.StartupTimeout` bounds the wait, defaults to `0` (wait indefinitely), and a positive value that expires stops the host rather than degrading. `PhoriaServerProcess` (when configured) supervises Node in production, bounding its restart counter with `Server.Process.MaxRestartAttempts` when positive (0 = indefinitely) while unhealthy. After startup the monitor refreshes `PhoriaServerStatus` every `HealthCheckInterval` seconds, preserving the last-known healthy `Mode`/`Frameworks` through a downtime. If the server goes unhealthy, behavior is a consumer choice:
 
 - **`Degrade`** (default): `Isomorphic` islands degrade to `ClientOnly` and resume SSR once healthy; `ServerOnly` islands throw `PhoriaIslandComponentException` (logged, then suppressed by the tag helper); entry tags are suppressed so no dev URLs leak into production; unclaimed GETs fall through to normal 404 handling.
 - **`Fail`**: `Isomorphic` and `ServerOnly` islands throw (page 500s), unclaimed GETs return 503, and a proxy failure mid-request returns 503.
@@ -539,6 +539,7 @@ A maintainer cuts a stable release using this sequence:
 3. Merge the stable version PR, then merge `main` back into `canary`.
 4. Restore `baseBranch: "canary"`, enter beta mode, and commit the config plus `pre.json`.
 5. Merge the release-specific examples-sync PR separately.
+6. Verify the documentation `giget` references now resolve. An unqualified ref resolves the repository's default branch, and `examples/` is absent from `main` until this cut lands, so every unqualified reference 404s until now. Fetch one unqualified — `pnpx giget gh:cmeeg/phoria/examples/getting-started getting-started` — then run its documented `pnpm install` and `pnpm build` in the fetched copy, with no source repository and no root workspace. The references are the `giget` block in `examples/README.md` and in each `examples/*/README.md`.
 
 The window between steps 1 and 4 is quiescent — canary publishes nothing and feature merges should wait. The examples-sync PR is release-owned and independently retryable; it cannot republish packages. A build failure prevents Changesets from running, and a publish failure prevents tag and examples-sync steps.
 
@@ -563,7 +564,7 @@ The central tension to keep in mind: **two runtimes (C# and Node.js) must agree 
 
 ## Related docs
 
-- [`docs/guides/`](guides/) — configuration, creating islands, directives, building for production, deployment, and more.
+- [`docs/guides/`](guides/) — creating islands, directives, building for production, deployment, and more.
 - [`docs/PROJECT.md`](PROJECT.md) — the v1 milestone scope, phases, and open questions.
 - [`docs/MEMORY.md`](MEMORY.md) — dated log of design decisions and the reasoning behind them.
 - [`CONTRIBUTING.md`](../CONTRIBUTING.md) — development setup, contribution flow, and the release workflow.
