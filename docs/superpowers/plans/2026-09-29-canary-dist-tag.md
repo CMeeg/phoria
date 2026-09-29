@@ -12,48 +12,69 @@
 
 ## Why the tag is the only lever
 
-Three facts from the Changesets source, each re-derivable from upstream. File paths are from `changesets/changesets`.
+Three facts from the Changesets source, each re-derivable from upstream. The path citations below were **fabricated in an earlier draft of this plan** — `packages/cli/...` and `packages/assemble-release-plan/...` are not paths in this repository, and no `packages/cli` exists. They are corrected here to the installed package and bundle line numbers, each verified by reading the line.
 
-**1. `--tag` is rejected in pre mode.** `packages/cli/src/commands/publish/index.ts` raises `Releasing under custom tag is not allowed in pre mode!`. The publish script is `changeset publish` (`package.json`), with no tag argument. So the field is the only place the tag can be chosen.
+**1. `--tag` is rejected in pre mode.** `@changesets/cli@2.31.1`, `dist/changesets-cli.cjs.js:1172`, guarded by `if (releaseTag && preState && preState.mode === "pre")` at line 1171. It raises `Releasing under custom tag is not allowed in pre mode`. The publish script is `changeset publish` with no tag argument, so the field is the only place the tag can be chosen. Note the guard's scope: outside pre mode `--tag` is accepted, which is why the stable cut needs no equivalent change.
 
-**2. The field is also the version family.** `packages/assemble-release-plan/src/increment.ts`:
+**2. The field is also the version family.** `@changesets/assemble-release-plan@6.0.10`, `dist/changesets-assemble-release-plan.cjs.js:167`:
 
-```ts
-if (preInfo != null && preInfo.state.mode !== "exit") {
-  const preVersion = mapGetOrThrowInternal(preInfo.preVersions, release.name, /* ... */);
-  // why are we adding this ourselves rather than passing 'pre' + versionType to semver.inc?
-  // because semver.inc with prereleases is confusing and this seems easier
-  version += `-${preInfo.state.tag}.${preVersion}`;
+```js
+function incrementVersion(release, preInfo) {
+  if (release.type === "none") {
+    return release.oldVersion;
+  }
+  let version = semverInc(release.oldVersion, release.type);
+  if (preInfo !== undefined && preInfo.state.mode !== "exit") {
+    let preVersion = mapGetOrThrowInternal(preInfo.preVersions, release.name, `preVersion for ${release.name} does not exist when preState is defined`);
+    // why are we adding this ourselves rather than passing 'pre' + versionType to semver.inc?
+    // because semver.inc with prereleases is confusing and this seems easier
+    version += `-${preInfo.state.tag}.${preVersion}`;
+  }
+  return version;
 }
 ```
 
+(`semverInc` is the bundle's name for the imported `semver.inc`; the import binding is mangled in the `.cjs.js` build.)
+
 So `tag: "canary"` makes the next version PR produce `0.5.0-canary.2` (the pre counter parses `1` from `0.5.0-beta.1` and increments to `2`). There is no Changesets configuration that yields a `canary` dist-tag with `-beta.N` versions. **The tag rename and the version-family rename are one action.** The maintainer has accepted this.
 
-**3. The tag name decides which dist-tag an only-prerelease package gets.** `packages/cli/src/commands/publish-plan/getPublishPlan.ts` classifies a package as `only-pre` when it is in pre mode, already has a `latest` dist-tag, and *every* published version's prerelease identifier equals the pre tag:
+**3. The tag name decides which dist-tag an only-prerelease package gets.** `getUnpublishedPackages` in `@changesets/cli@2.31.1` classifies a package as `only-pre` when it is in pre mode and *every* published version's first prerelease component equals the pre tag. There is **no dist-tag condition** — the test reads the version list only:
 
-```ts
+```js
+let publishedState = "never";
 if (response.published) {
   publishedState = "published";
-  publishedVersions = response.info.versions;
-  if (preState != null &&
-      response.info["dist-tags"].latest &&
-      response.info.versions.every((version) => semverParse(version)!.prerelease[0] === preState.tag)) {
-    publishedState = "only-pre";
+  if (preState !== undefined) {
+    if (response.pkgInfo.versions && response.pkgInfo.versions.every(version => semverParse(version).prerelease[0] === preState.tag)) {
+      publishedState = "only-pre";
+    }
   }
 }
 ```
 
+(`semverParse` is the bundle's name for the imported `semver.parse`; the import binding is mangled in the `.cjs.js` build, the same as `semverInc` above. Note that the test's only inputs are the published version list and `preState.tag`. A stable version parses with an empty `prerelease` array, so `prerelease[0]` is `undefined` and `every` is false — which is why the five mixed packages are not `only-pre`.)
+
 and `getReleaseTag` then returns `latest` — not the pre tag — for such a package:
 
-```ts
-if (tag) return tag;
-if (preState != null && publishedState !== "only-pre") return preState.tag;
-return "latest";
+```js
+function getReleaseTag(pkgInfo, preState, tag) {
+  if (tag) return tag;
+  if (preState !== undefined && pkgInfo.publishedState !== "only-pre") {
+    return preState.tag;
+  }
+  return "latest";
+}
 ```
+
+`getReleaseTag`'s result is passed to `publishAPackage`, which forwards it as `opts.tag`; the CLI then runs `publishFlags.push("--tag", opts.tag)` and spawns `npm publish <dir> --tag <tag>`. So the dist-tag is set by **the client, explicitly, on every publish** — `libnpmpublish` writes `dist-tags[tag] = version` and nothing else.
+
+**Source locations, verified:** both functions are in `node_modules/.pnpm/@changesets+cli@2.31.1_@types+node@24.13.3/node_modules/@changesets/cli/dist/changesets-cli.cjs.js` — `getReleaseTag` at line 1009, the `only-pre` test at line 1093, the `--tag` push at line 887, the `npm publish` spawn at line 908. The version family is composed in `@changesets/assemble-release-plan`: `version += \`-${preInfo.state.tag}.${preVersion}\`` at line 167 of its `.cjs.js`. There is no `packages/cli` in this repository; earlier drafts of this plan cited `packages/cli/src/commands/publish-plan/getPublishPlan.ts`, which does not exist.
 
 ## The defect this repairs
 
-`@phoria/opentelemetry` is the only `only-pre` package. All three of its published versions are `-beta.N`, and it holds a `latest` dist-tag, so every publish after its first was routed to `latest` and its `beta` tag never moved again.
+`@phoria/opentelemetry` is the only `only-pre` package. All three of its published versions are `-beta.N`, so `every(prerelease[0] === "beta")` is true, so every publish **after** the first was routed to `latest` and its `beta` tag never moved again.
+
+The first publish is the exception, and it is where the `latest` tag came from: a never-published package has `publishedState === "never"`, not `"only-pre"`, so Changesets tagged that publish `beta` as intended — and the npm registry auto-assigned `latest` on the package's first publish, landing on `0.2.0-beta.0`. From the second publish on, Changesets itself moved `latest` forward. Two different mechanisms, compounding, which is why the prior plan's "accepted and documented" note was right about the first publish and silent about the rest.
 
 | Package | `beta` | `latest` | Newest | only-pre |
 |---|---|---|---|---|
@@ -70,13 +91,13 @@ Renaming the tag to `canary` makes the `only-pre` test false for that package �
 
 ### A prior plan documented the trigger and missed the consequence
 
-`docs/superpowers/plans/2026-08-15-canary-release-workflow.md` records npm's first-publish auto-assign of `latest` for a never-published package and marks it "accepted and documented". That is accurate about the *first* publish and wrong about what follows: the `latest` it assigns is what makes the package `only-pre`, and `only-pre` routes every *subsequent* publish to `latest` as well. Plan documents are historical records and are not retrofitted; the correction is recorded in `docs/MEMORY.md` by Task 5.
+`docs/superpowers/plans/2026-08-15-canary-release-workflow.md` records npm's first-publish auto-assign of `latest` for a never-published package and marks it "accepted and documented". That is accurate about the *first* publish and silent about the rest, and it is worth being precise about the join: the `latest` tag it records does **not** cause the `only-pre` classification — the version list does. What the auto-assign does is leave the package holding a `latest` that points at a prerelease, which is the consumer-visible half of the bug and the reason the repair removes it. The routing half is a separate mechanism that the auto-assign made possible by giving the package a first publish in the first place. Plan documents are historical records and are not retrofitted; the correction is recorded in `docs/MEMORY.md` by Task 6.
 
 ## What does not change
 
 - **Stable releases already publish to `latest`.** Step 1 of the stable-cut runbook exits pre mode, and outside pre mode `getReleaseTag` falls through to `latest`. No change.
 - **NuGet follows automatically.** `scripts/dotnet/publish.js` packs with `-p:Version=${version}` from the package version, so NuGet prerelease labels become `-canary.N` with no edit.
-- **The peer and example ranges stay as they are.** Verified in Task 4: the projected `0.5.0-canary.2` satisfies all thirteen registry ranges in the repository, and the four `workspace:*` protocol entries are not ranges at all. Lowering a floor to the new family would exclude the versions already in the wild, so the rename stays permissive in one direction only.
+- **The peer and example ranges stay as they are.** Verified in Task 5: the projected `0.5.0-canary.2` satisfies all thirteen registry ranges in the repository, and the four `workspace:*` protocol entries are not ranges at all. Lowering a floor to the new family would exclude the versions already in the wild, so the rename stays permissive in one direction only.
 - **No document in the repository has ever shipped an `@beta` install line.** Plan B is the first slice to write install commands, and it has not run. Deleting the `beta` tag therefore breaks no documented consumer; the maintainer accepted the deletion.
 
 ## Global Constraints

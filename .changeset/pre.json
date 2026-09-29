@@ -1,6 +1,6 @@
 {
   "mode": "pre",
-  "tag": "beta",
+  "tag": "canary",
   "initialVersions": {
     "phoria-dotnet": "0.4.2",
     "@phoria/phoria": "0.4.2",
