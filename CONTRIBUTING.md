@@ -47,7 +47,7 @@ To work on the examples against in-repo packages, run `pnpm build` at the repo r
 
 ## Branch model
 
-All feature work targets the **`canary`** branch. `canary` produces prerelease `beta` builds on every merged change, and `main` receives coordinated stable releases cut from `canary`. Nobody pushes to `main` or `canary` directly — branch protection requires a pull request with passing CI. See the [Release workflow](#release-workflow) section for how this affects what lands where.
+All feature work targets the **`canary`** branch. `canary` produces prerelease `canary`-tagged builds on every merged change, and `main` receives coordinated stable releases cut from `canary`. Nobody pushes to `main` or `canary` directly — branch protection requires a pull request with passing CI. See the [Release workflow](#release-workflow) section for how this affects what lands where.
 
 ## Making a change
 
@@ -57,7 +57,7 @@ All work starts with an issue or discussion. Unsolicited contributions are not w
 2. Make your change, following the existing conventions: Biome-enforced formatting (tabs, as-needed semicolons, no trailing commas), TypeScript strict mode, .NET with nullable reference types enabled, and tests co-located with the code they cover.
 3. Add a changeset describing your change — `pnpm changeset` at the repo root. Every user-facing change needs one; it is what versions and publishes your work.
 4. Push and open a pull request against `canary`. CI runs build, lint, type-check, unit/browser tests, .NET tests, and the examples-published-versions check; the required checks must pass.
-5. A maintainer reviews and merges. Because `canary` publishes betas automatically, an approved change ships as a `beta` prerelease soon after merge.
+5. A maintainer reviews and merges. Because `canary` publishes prereleases automatically, an approved change ships as a `canary` prerelease soon after merge.
 
 ## Changing an example
 
@@ -93,22 +93,32 @@ Contributions completed with the assistance of a coding agent are welcome — ma
 
 ## Release workflow
 
-### Beta stream (canary)
+### The canary stream
 
-Every merged change with a changeset makes the release workflow open a version pull request titled `chore: release` on `canary`. Merging that PR runs the release workflow, which publishes each package at its natural 0.x beta version (npm `beta` dist-tag) and a matching beta to NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request that updates the examples to the released beta versions. Merge that examples-sync PR separately. The workflow never deletes or overwrites a fixed examples branch. Before Changesets runs, the shared workflow normalizes `.changeset/config.json.baseBranch` from `GITHUB_REF_NAME`, so the runtime branch identity is always correct. The four framework peer ranges use a prerelease-aware lower bound matching the upcoming core tuple, for example `>=0.5.0-0 <2.0.0`; update that tuple before a later beta cycle. Betas are safe to consume for integration and production testing of work in progress.
+Every merged change with a changeset makes the release workflow open a version pull request titled `chore: release` on `canary`. Merging that PR runs the release workflow, which publishes each package at its natural 0.x prerelease version (npm `canary` dist-tag) and a matching prerelease to NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request that updates the examples to the released versions. Merge that examples-sync PR separately. The workflow never deletes or overwrites a fixed examples branch. Before Changesets runs, the shared workflow normalizes `.changeset/config.json.baseBranch` from `GITHUB_REF_NAME`, so the runtime branch identity is always correct. The four framework peer ranges use a prerelease-aware lower bound matching the upcoming core tuple, for example `>=0.5.0-0 <2.0.0`; update that tuple before a later prerelease cycle. Prereleases are safe to consume for integration and production testing of work in progress.
+
+### Release tags and version families
+
+Prereleases publish under the npm **`canary`** dist-tag; stable releases publish under **`latest`**. Stable needs no mechanism of its own — leaving pre mode is what produces it.
+
+The tag is the `tag` field of `.changeset/pre.json`. Changesets rejects `--tag` while in pre mode, so that field is the only place it can be set. The same field is also the version family, so prerelease versions read `0.x.y-canary.N`. The dist-tag and the version family are one action and cannot be separated through Changesets.
+
+A bare `npm i <name>` resolves to `latest`, which for these packages is a stable release older than the prerelease stream. Documentation that means the prerelease stream must name the tag.
+
+NuGet has no dist-tags, so the `Phoria` package is pinned by version in documentation for that reason.
 
 ### Stable releases (the canary → main cut)
 
 Stable releases are coordinated cuts, run by a maintainer:
 
-1. On `canary`, exit beta mode and commit with `baseBranch: "canary"`.
+1. On `canary`, exit pre mode and commit with `baseBranch: "canary"`.
 2. Merge `canary` into `main`; the workflow normalizes `baseBranch` to `main` before opening the stable version PR.
 3. Merge the stable version PR, then merge `main` back into `canary`.
-4. Restore `baseBranch: "canary"`, enter beta mode, and commit the config plus `pre.json`.
+4. Restore `baseBranch: "canary"`, enter pre mode, and commit the config plus `pre.json`.
 5. Merge the release-specific examples-sync PR separately.
 6. Verify the documentation `giget` references now resolve. An unqualified ref resolves the repository's default branch, and `examples/` is absent from `main` until this cut lands, so every unqualified reference 404s until now. Fetch one unqualified — `pnpx giget gh:cmeeg/phoria/examples/getting-started getting-started` — then run its documented `pnpm install` and `pnpm build` in the fetched copy, with no source repository and no root workspace. The references are the `giget` block in `examples/README.md` and in each `examples/*/README.md`.
 
-Stable package publishing pushes release tags only; it does not push a branch ref. The separate examples-sync step pushes its release-specific `chore/examples-sync-<branch>-<commit>` branch and opens the pull request. Between steps 1 and 4 the beta stream is quiescent — `canary` publishes nothing until pre mode is re-entered. Do not merge feature work to `canary` during this window. A build failure prevents Changesets from running, a publish failure prevents tag and examples-sync steps, and an examples-sync failure cannot republish packages and is independently retryable.
+Stable package publishing pushes release tags only; it does not push a branch ref. The separate examples-sync step pushes its release-specific `chore/examples-sync-<branch>-<commit>` branch and opens the pull request. Between steps 1 and 4 the canary stream is quiescent — `canary` publishes nothing until pre mode is re-entered. Do not merge feature work to `canary` during this window. A build failure prevents Changesets from running, a publish failure prevents tag and examples-sync steps, and an examples-sync failure cannot republish packages and is independently retryable.
 
 ### Publishing security
 

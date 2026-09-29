@@ -516,15 +516,15 @@ Coverage holes are triaged at the public-contract bar: fix what consumers hit (r
 
 ## Release workflow
 
-Versioning and publishing use **Changesets** with a two-branch model: feature work lands on `canary`, which produces prerelease `beta` builds, and `main` receives coordinated stable cuts from `canary`. The design is in `docs/superpowers/specs/2026-08-15-canary-release-workflow-design.md` (Phase 4).
+Versioning and publishing use **Changesets** with a two-branch model: feature work lands on `canary`, which produces prerelease `canary`-tagged builds, and `main` receives coordinated stable cuts from `canary`. The design is in `docs/superpowers/specs/2026-08-15-canary-release-workflow-design.md` (Phase 4).
 
-### The beta stream
+### The canary stream
 
-`canary` commits `.changeset/pre.json` (`mode: "pre"`, `tag: "beta"`) and a `baseBranch: "canary"` config. The shared release workflow normalizes that config from `GITHUB_REF_NAME` immediately before Changesets runs, so a canary→main merge cannot leave the stable stream pointing at canary. Every merged change with a changeset makes the release workflow open a version pull request titled `chore: release`; merging it runs `changeset publish` and publishes each bumped package as a `beta` prerelease on npm and a matching beta on NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request updating the examples (`pnpm examples:bump`) to the released versions. The workflow never deletes or overwrites a fixed examples branch; the maintainer merges each examples-sync PR separately. Framework peer ranges on `@phoria/phoria` start at the upcoming core tuple with a prerelease marker (`>=0.5.0-0 <2.0.0` for the first stream), so the beta remains in the natural 0.x version family and Changesets does not trigger a peer-range major cascade. Before each later beta cycle, update that lower-bound tuple; reconcile the ranges to `^1.0.0` at the 1.0.0 cut.
+`canary` commits `.changeset/pre.json` (`mode: "pre"`, `tag: "canary"`) and a `baseBranch: "canary"` config. The shared release workflow normalizes that config from `GITHUB_REF_NAME` immediately before Changesets runs, so a canary→main merge cannot leave the stable stream pointing at canary. Every merged change with a changeset makes the release workflow open a version pull request titled `chore: release`; merging it runs `changeset publish` and publishes each bumped package as a `canary` prerelease on npm and a matching prerelease on NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request updating the examples (`pnpm examples:bump`) to the released versions. The workflow never deletes or overwrites a fixed examples branch; the maintainer merges each examples-sync PR separately. Framework peer ranges on `@phoria/phoria` start at the upcoming core tuple with a prerelease marker (`>=0.5.0-0 <2.0.0` for the first stream), so the prerelease remains in the natural 0.x version family and Changesets does not trigger a peer-range major cascade. Before each later prerelease cycle, update that lower-bound tuple; reconcile the ranges to `^1.0.0` at the 1.0.0 cut.
 
 ### A single shared release workflow
 
-One `release.yml` runs on pushes to **both** `main` and `canary`; runtime `baseBranch` normalization establishes the branch identity before Changesets runs, while pre.json presence/exit state determines beta versus stable behavior. The single-file shape is required by npm trusted publishing: npm allows exactly one trusted-publisher config per package, keyed to one workflow filename. A build failure prevents Changesets; a publish failure prevents tag and examples-sync steps; an examples-sync failure cannot republish packages and is independently retryable. Stable package publishing, including the release-tag step, pushes tags only, never a branch ref; the separate examples-sync step pushes the release-specific `chore/examples-sync-<branch>-<commit>` branch and opens its pull request.
+One `release.yml` runs on pushes to **both** `main` and `canary`; runtime `baseBranch` normalization establishes the branch identity before Changesets runs, while pre.json presence/exit state determines prerelease versus stable behavior. The single-file shape is required by npm trusted publishing: npm allows exactly one trusted-publisher config per package, keyed to one workflow filename. A build failure prevents Changesets; a publish failure prevents tag and examples-sync steps; an examples-sync failure cannot republish packages and is independently retryable. Stable package publishing, including the release-tag step, pushes tags only, never a branch ref; the separate examples-sync step pushes the release-specific `chore/examples-sync-<branch>-<commit>` branch and opens its pull request.
 
 ### Publishing security
 
@@ -534,10 +534,10 @@ npm publishes use **trusted publishing (OIDC)**: the workflow carries an `id-tok
 
 A maintainer cuts a stable release using this sequence:
 
-1. On `canary`, exit beta mode and commit with `baseBranch: "canary"`.
+1. On `canary`, exit pre mode and commit with `baseBranch: "canary"`.
 2. Merge `canary` into `main`; the workflow normalizes `baseBranch` to `main` before opening the stable version PR.
 3. Merge the stable version PR, then merge `main` back into `canary`.
-4. Restore `baseBranch: "canary"`, enter beta mode, and commit the config plus `pre.json`.
+4. Restore `baseBranch: "canary"`, enter pre mode, and commit the config plus `pre.json`.
 5. Merge the release-specific examples-sync PR separately.
 6. Verify the documentation `giget` references now resolve. An unqualified ref resolves the repository's default branch, and `examples/` is absent from `main` until this cut lands, so every unqualified reference 404s until now. Fetch one unqualified — `pnpx giget gh:cmeeg/phoria/examples/getting-started getting-started` — then run its documented `pnpm install` and `pnpm build` in the fetched copy, with no source repository and no root workspace. The references are the `giget` block in `examples/README.md` and in each `examples/*/README.md`.
 
