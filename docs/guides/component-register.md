@@ -85,7 +85,7 @@ import { PhoriaIsland } from "@phoria/phoria/client"
 PhoriaIsland.register()
 ```
 
-The [framework-multiple](https://github.com/cmeeg/phoria/tree/main/examples/framework-multiple) example is a working version of this. Adding a framework also means adding it to the server entry, which registers the matching server-side renderer.
+The [framework-multiple](https://github.com/CMeeg/phoria/tree/main/examples/framework-multiple) example is a working version of this. Adding a framework also means adding it to the server entry, which registers the matching server-side renderer.
 
 ## Related
 
