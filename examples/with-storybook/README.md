@@ -8,7 +8,7 @@ pnpm build
 pnpm dev
 ```
 
-The WebApp is at `http://localhost:5973`; the Phoria Server is at `http://localhost:5873`. Use `pnpm preview` after the build and `pnpm stop` to stop the AppHost. With the app running, `pnpm test:e2e` checks the React island, modulepreload output, and `GET /health`. Set `PHORIA_WEBAPP_URL` to override the default `http://localhost:5973`.
+The WebApp is at `http://localhost:5973`; the Phoria Server is at `http://localhost:5873`. In Docker the WebApp is at `http://localhost:8080`. Use `pnpm preview` after the build and `pnpm stop` to stop the AppHost. With the app running, `pnpm test:e2e` checks the React island, modulepreload output, and `GET /health`. Set `PHORIA_WEBAPP_URL` to override the default `http://localhost:5973`.
 
 Build and run Storybook separately with `pnpm build:storybook` and `pnpm storybook`; Storybook listens on port `6006`. This example pins Vite to `~8.0.16` because Storybook currently has a Rolldown regression with later Vite 8.1.x releases. Remove the pin when the Storybook/Vite/Rolldown combination builds and runs without that regression.
 

@@ -2,6 +2,8 @@
 
 Instructions for AI agents working in this repository.
 
+**You are a contributor to this repository.** Follow [`CONTRIBUTING.md`](CONTRIBUTING.md) — it holds the contribution, documentation and release requirements a human contributor is held to, and an agent's change is held to exactly the same standard. Read it before making a change, not after.
+
 ## Project Overview
 
 Phoria is an Islands architecture framework for .NET powered by Vite. It renders islands of interactivity using React, Svelte, or Vue within .NET web apps (Razor Pages or MVC) via both CSR and SSR.
@@ -76,7 +78,7 @@ pnpm test:coverage   # Reporting-only v8 coverage across JS packages
 dotnet test --solution Phoria.sln --configuration Release  # xUnit v3 tests for the Phoria .NET package
 ```
 
-Code coverage is **reporting-only** (no enforced thresholds); tooling lands in Phase 3:
+Code coverage is **reporting-only** (no enforced thresholds):
 
 ```bash
 pnpm --filter <package> exec vitest run --coverage   # Vitest v8 coverage for a JS package
@@ -134,6 +136,14 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - **Don't hard-wrap prose with line breaks** — write each paragraph as an unbroken line and let the reader's editor/viewer soft-wrap it. Applies to `docs/*.md`, `AGENTS.md`, and any other plain-text docs.
 - Markdown structure still follows normal conventions: block elements (headings, tables, fenced code blocks) go on their own lines, and each list item — including nested items and continuation prose — stays on a single line.
 
+## Documentation review
+
+- **Every plan must contain a task named "Documentation review" that lists the documents it checked.** A plan without one is incomplete, and the set of plans can be searched for it.
+- **Name the documents, and say what was confirmed about each** — not "docs updated". The guide that documents a changed export, the package README whose install command or version range moved, the example README whose commands changed.
+- **Where a change altered no public surface, the task still exists** and states that, with the reason. There is no "not applicable" exemption; the entry is what makes "names the documents" coherent when the list is empty.
+- **A document lives in the guides or with its package.** Prose explaining how Phoria's pieces cooperate stays whole in [`docs/guides/`](docs/guides/); a package's own public surface is documented in that package's README or its `docs` folder, never as a page placed beside a source file.
+- **This file is evergreen: never reference the current project plan from it.** No phase numbers, and no pointers into [`docs/PROJECT.md`](docs/PROJECT.md)'s phase structure. Phase numbering belongs to the current plan, and this plan's artefacts — `docs/PROJECT.md`, the specs and the plans — are removed from the repository once the project completes, because they are redundant at that point. A phase reference here would be a dangling instruction in exactly the file that outlives them. Write the durable fact instead of its schedule: state the condition the fact depends on, not the phase that happens to schedule it. The one deliberate exception is the **Current focus** line under `## Project Overview`, which names where the current plan lives rather than encoding any part of it.
+
 ## Gotchas
 
 - **Biome 2 formats `package.json` with `expand: always`**, matching Changesets output — no exclusion needed.
@@ -141,7 +151,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 - **The .NET solution (`Phoria.sln`) only contains the `Phoria` NuGet package**, not the example apps. Build .NET projects via their individual `.csproj` or the example `package.json` scripts.
 - **Each JS package has 4 entry points**: `.` (main), `./client`, `./server`, `./vite`. Changes to one entry don't affect others.
 - **Workspace dependencies** use `workspace:*` protocol and are resolved by pnpm.
-- **Peer dependencies matter**: framework packages peer-depend on `@phoria/phoria` with a prerelease-aware lower bound matching the upcoming core tuple (`>=0.5.0-0 <2.0.0` for the first beta stream). Update that tuple before each later beta cycle to prevent a Changesets peer cascade; reconcile to `^1.0.0` when all packages reach `1.0.0` (Phase 10).
+- **Peer dependencies matter**: framework packages peer-depend on `@phoria/phoria` with a prerelease-aware lower bound matching the upcoming core tuple (`>=0.5.0-0 <2.0.0` for the first beta stream). Update that tuple before each later beta cycle to prevent a Changesets peer cascade; reconcile to `^1.0.0` when all packages reach `1.0.0`.
 - **Vite 8 uses Rolldown/Oxc** — `rollupOptions` is deprecated in favour of `rolldownOptions` in build config.
 - **`resolve.tsconfigPaths: true`** (built into Vite 8) replaces the separate `vite-tsconfig-paths` plugin — do not reintroduce the plugin.
 - **All pnpm settings live in `pnpm-workspace.yaml`**, not `package.json`/`.npmrc` (e.g. `packageExtensions`, `peerDependencyRules`, catalogs).
@@ -149,7 +159,7 @@ Run Biome manually: `pnpm biome check <path>` or `pnpm biome check --write <path
 
 ## Versioning & Publishing
 
-Uses **Changesets** (`pnpm changeset` to create). Feature work targets `canary`, which produces prerelease `beta` builds; `main` receives coordinated stable cuts from `canary`. A single shared `release.yml` runs on pushes to both branches, normalizes `.changeset/config.json.baseBranch` from `GITHUB_REF_NAME`, and opens a version pull request titled `chore: release`. Merging that PR publishes the changed packages and opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request updating the examples. See `docs/PROJECT.md` Phase 4 and `CONTRIBUTING.md`.
+Uses **Changesets** (`pnpm changeset` to create). Feature work targets `canary`, which produces prerelease `beta` builds; `main` receives coordinated stable cuts from `canary`. A single shared `release.yml` runs on pushes to both branches, normalizes `.changeset/config.json.baseBranch` from `GITHUB_REF_NAME`, and opens a version pull request titled `chore: release`. Merging that PR publishes the changed packages and opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request updating the examples. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the release workflow.
 
 npm publishing uses trusted publishing (OIDC), with no npm token in the repository. NuGet publishing uses `scripts/dotnet/publish.js` via `pnpm --filter phoria-dotnet run publish`, with `NUGET_API_KEY` supplied by the short-lived token from `NuGet/login@v1`.
 

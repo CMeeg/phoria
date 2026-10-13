@@ -1,6 +1,6 @@
 # Contributing to Phoria
 
-Thanks for considering a contribution to [Phoria](https://github.com/CMeeg/phoria), an islands architecture framework for .NET powered by Vite. This guide covers the development setup, the branch model, how to make a change, and how releases work. The architecture is documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — worth reading before diving in.
+Thanks for considering a contribution to [Phoria](https://github.com/CMeeg/phoria), an islands architecture framework for .NET powered by Vite. This guide covers the development setup, the branch model, how to make a change, how to change an example, and how releases work. The architecture is documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — worth reading before diving in.
 
 ## Prerequisites
 
@@ -47,7 +47,7 @@ To work on the examples against in-repo packages, run `pnpm build` at the repo r
 
 ## Branch model
 
-All feature work targets the **`canary`** branch. `canary` produces prerelease `beta` builds on every merged change, and `main` receives coordinated stable releases cut from `canary`. Nobody pushes to `main` or `canary` directly — branch protection requires a pull request with passing CI. See the [Release workflow](#release-workflow) section for how this affects what lands where.
+All feature work targets the **`canary`** branch. `canary` produces prerelease `canary`-tagged builds on every merged change, and `main` receives coordinated stable releases cut from `canary`. Nobody pushes to `main` or `canary` directly — branch protection requires a pull request with passing CI. See the [Release workflow](#release-workflow) section for how this affects what lands where.
 
 ## Making a change
 
@@ -57,7 +57,35 @@ All work starts with an issue or discussion. Unsolicited contributions are not w
 2. Make your change, following the existing conventions: Biome-enforced formatting (tabs, as-needed semicolons, no trailing commas), TypeScript strict mode, .NET with nullable reference types enabled, and tests co-located with the code they cover.
 3. Add a changeset describing your change — `pnpm changeset` at the repo root. Every user-facing change needs one; it is what versions and publishes your work.
 4. Push and open a pull request against `canary`. CI runs build, lint, type-check, unit/browser tests, .NET tests, and the examples-published-versions check; the required checks must pass.
-5. A maintainer reviews and merges. Because `canary` publishes betas automatically, an approved change ships as a `beta` prerelease soon after merge.
+5. A maintainer reviews and merges. Because `canary` publishes prereleases automatically, an approved change ships as a `canary` prerelease soon after merge.
+
+## Changing an example
+
+Every single-WebApp example must keep `AppHost/`, `WebApp/`, `WebApp/Properties/launchSettings.json`, `WebApp/package.json`, `WebApp/pnpm-workspace.yaml`, `WebApp/pnpm-lock.yaml`, and the `WebApp` scripts for `build`, `dev`, `dev:server`, `dev:webapp`, `preview`, `preview:server`, `stop`, and `test:e2e`. The alternate workspace must keep `AppHost/`, `apps/WebApp/`, `packages/ui/`, the root `package.json`, `pnpm-workspace.yaml`, and the corresponding `apps/WebApp` scripts.
+
+Run single-WebApp commands from `examples/<name>/WebApp`; Vite discovers `vite.config.ts` and resolves its root from that working directory. Run `with-workspace` install and root build commands from `examples/with-workspace`, then run application commands with `pnpm --dir apps/WebApp ...` because its AppHost resolves `apps/WebApp`.
+
+| Example | WebApp | Phoria Server |
+| --- | ---: | ---: |
+| `getting-started` | `5373` | `5273` |
+| `framework-multiple` | `5573` | `5473` |
+| `framework-react` | `5173` | `5073` |
+| `framework-svelte` | `5473` | `5373` |
+| `framework-vue` | `5273` | `5173` |
+| `with-tailwind` | `5773` | `5673` |
+| `with-styled-components` | `5873` | `5773` |
+| `with-storybook` | `5973` | `5873` |
+| `with-workspace` | `5673` | `5573` |
+
+Keep this port map collision-free. The WebApp port is the URL the smoke tests use, and the Phoria Server port is the sidecar endpoint the .NET application calls. The WebApp column is the `Dev port` in the [examples catalog](examples/README.md); HTTPS launch-profile ports are the WebApp port plus `1000` for every single-WebApp example, and `with-workspace` takes its URLs from its AppHost configuration. Every container publishes the WebApp on the catalog's `Docker port`. Each e2e suite reads `PHORIA_WEBAPP_URL` and defaults to its WebApp port, so a smoke test against another port must set the variable explicitly, for example `PHORIA_WEBAPP_URL=http://localhost:5373 pnpm test:e2e`.
+
+The `/health` endpoint is part of the smoke-test contract. A running example must return HTTP `200` and `Healthy` from its WebApp URL at `/health`; the Aspire AppHost separately checks the Phoria Server at `/hc`.
+
+A committed example must use published registry references for `@phoria/phoria`, its framework integrations, and the other Phoria packages; `link:`, `file:`, and a Phoria `ProjectReference` do not belong in it. Run `pnpm examples:check` from the repository root before opening a change. The `examples:link`/`examples:refresh`/`examples:sync` workflow for working against in-repo packages is in [Development setup](#development-setup).
+
+Verify standalone distribution with giget, not a repository-relative copy. From a temporary directory, run `pnpx giget gh:cmeeg/phoria/examples/<name> <name>`, enter the fetched example, run its documented `pnpm install` and `pnpm build`, and confirm the build succeeds without the source repository or root workspace. For `with-workspace`, run those commands from the fetched example root and confirm the `apps/WebApp` filter build resolves `packages/ui`.
+
+The normal development flow is `pnpm dev`; use `pnpm preview` after `pnpm build` to exercise the production-shaped Aspire flow, and `pnpm stop` to stop all discoverable AppHosts. Run `pnpm test:e2e` against the running WebApp, or set `PHORIA_WEBAPP_URL` when the port is changed.
 
 ## AI-assisted contributions
 
@@ -65,21 +93,32 @@ Contributions completed with the assistance of a coding agent are welcome — ma
 
 ## Release workflow
 
-### Beta stream (canary)
+### The canary stream
 
-Every merged change with a changeset makes the release workflow open a version pull request titled `chore: release` on `canary`. Merging that PR runs the release workflow, which publishes each package at its natural 0.x beta version (npm `beta` dist-tag) and a matching beta to NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request that updates the examples to the released beta versions. Merge that examples-sync PR separately. The workflow never deletes or overwrites a fixed examples branch. Before Changesets runs, the shared workflow normalizes `.changeset/config.json.baseBranch` from `GITHUB_REF_NAME`, so the runtime branch identity is always correct. The four framework peer ranges use a prerelease-aware lower bound matching the upcoming core tuple, for example `>=0.5.0-0 <2.0.0`; update that tuple before a later beta cycle. Betas are safe to consume for integration and production testing of work in progress.
+Every merged change with a changeset makes the release workflow open a version pull request titled `chore: release` on `canary`. Merging that PR runs the release workflow, which publishes each package at its natural 0.x prerelease version (npm `canary` dist-tag) and a matching prerelease to NuGet, then opens a release-specific `chore/examples-sync-<branch>-<commit>` pull request that updates the examples to the released versions. Merge that examples-sync PR separately. The workflow never deletes or overwrites a fixed examples branch. Before Changesets runs, the shared workflow normalizes `.changeset/config.json.baseBranch` from `GITHUB_REF_NAME`, so the runtime branch identity is always correct. The four framework peer ranges use a prerelease-aware lower bound matching the upcoming core tuple, for example `>=0.5.0-0 <2.0.0`; update that tuple before a later prerelease cycle. Prereleases are safe to consume for integration and production testing of work in progress.
+
+### Release tags and version families
+
+Prereleases publish under the npm **`canary`** dist-tag; stable releases publish under **`latest`**. Stable needs no mechanism of its own — leaving pre mode is what produces it.
+
+The tag is the `tag` field of `.changeset/pre.json`. Changesets rejects `--tag` while in pre mode, so that field is the only place it can be set. The same field is also the version family, so prerelease versions read `0.x.y-canary.N`. The dist-tag and the version family are one action and cannot be separated through Changesets.
+
+A bare `npm i <name>` resolves to `latest`, which for these packages is a stable release older than the prerelease stream. Documentation that means the prerelease stream must name the tag.
+
+NuGet has no dist-tags, so the `Phoria` package is pinned by version in documentation for that reason.
 
 ### Stable releases (the canary → main cut)
 
 Stable releases are coordinated cuts, run by a maintainer:
 
-1. On `canary`, exit beta mode and commit with `baseBranch: "canary"`.
+1. On `canary`, exit pre mode and commit with `baseBranch: "canary"`.
 2. Merge `canary` into `main`; the workflow normalizes `baseBranch` to `main` before opening the stable version PR.
 3. Merge the stable version PR, then merge `main` back into `canary`.
-4. Restore `baseBranch: "canary"`, enter beta mode, and commit the config plus `pre.json`.
+4. Restore `baseBranch: "canary"`, enter pre mode, and commit the config plus `pre.json`.
 5. Merge the release-specific examples-sync PR separately.
+6. Verify the documentation `giget` references now resolve. An unqualified ref resolves the repository's default branch, and `examples/` is absent from `main` until this cut lands, so every unqualified reference 404s until now. Fetch one unqualified — `pnpx giget gh:cmeeg/phoria/examples/getting-started getting-started` — then run its documented `pnpm install` and `pnpm build` in the fetched copy, with no source repository and no root workspace. The references are the `giget` block in `examples/README.md` and in each `examples/*/README.md`.
 
-Stable package publishing pushes release tags only; it does not push a branch ref. The separate examples-sync step pushes its release-specific `chore/examples-sync-<branch>-<commit>` branch and opens the pull request. Between steps 1 and 4 the beta stream is quiescent — `canary` publishes nothing until pre mode is re-entered. Do not merge feature work to `canary` during this window. A build failure prevents Changesets from running, a publish failure prevents tag and examples-sync steps, and an examples-sync failure cannot republish packages and is independently retryable.
+Stable package publishing pushes release tags only; it does not push a branch ref. The separate examples-sync step pushes its release-specific `chore/examples-sync-<branch>-<commit>` branch and opens the pull request. Between steps 1 and 4 the canary stream is quiescent — `canary` publishes nothing until pre mode is re-entered. Do not merge feature work to `canary` during this window. A build failure prevents Changesets from running, a publish failure prevents tag and examples-sync steps, and an examples-sync failure cannot republish packages and is independently retryable.
 
 ### Publishing security
 
@@ -87,7 +126,9 @@ Publishing is gated end to end: only maintainers can merge to `main`/`canary` (b
 
 ## Documentation
 
-Contributions that change how Phoria works should review whether the README files or [`docs/guides/`](docs/guides/) need to reflect the change, and update them as part of the contribution. Substantial changes should also keep [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) consistent with the code.
+Contributions that change how Phoria works must update the documentation that describes them, in the same contribution. Review the README files and [`docs/guides/`](docs/guides/); where a change alters how Phoria's pieces cooperate, [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) must match the code.
+
+**Every plan carries a documentation review that names the documents it checked.** State which documents were read and what was confirmed about each — the guide documenting a changed export, the package README whose install command or version range moved, the example README whose commands changed. Where a change altered no public surface, say so and give the reason; the entry still exists. A plan without a named documentation review is incomplete.
 
 ## Getting help
 

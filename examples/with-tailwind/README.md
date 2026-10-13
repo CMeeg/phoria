@@ -10,7 +10,7 @@ pnpm build
 pnpm dev
 ```
 
-The WebApp is at `http://localhost:5773`; the Phoria Server is at `http://localhost:5673`. Use `pnpm preview` after the build and `pnpm stop` to stop the AppHost. With the app running, `pnpm test:e2e` checks the React island, Tailwind-rendered page, modulepreload output, and `GET /health`. Set `PHORIA_WEBAPP_URL` to override the default `http://localhost:5773`.
+The WebApp is at `http://localhost:5773`; the Phoria Server is at `http://localhost:5673`. In Docker the WebApp is at `http://localhost:8080`. Use `pnpm preview` after the build and `pnpm stop` to stop the AppHost. With the app running, `pnpm test:e2e` checks the React island, Tailwind-rendered page, modulepreload output, and `GET /health`. Set `PHORIA_WEBAPP_URL` to override the default `http://localhost:5773`.
 
 Fetch a standalone copy with:
 

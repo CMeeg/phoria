@@ -10,7 +10,7 @@ pnpm build
 pnpm --dir apps/WebApp dev
 ```
 
-The WebApp is at `http://localhost:5673`; the Phoria Server is at `http://localhost:5573`. Use `pnpm --dir apps/WebApp preview` after the build and `pnpm --dir apps/WebApp stop` to stop the AppHost. With the app running, use `pnpm --dir apps/WebApp test:e2e`; the suite checks the shared-package island, modulepreload output, and `GET /health`. Set `PHORIA_WEBAPP_URL` to override the default `http://localhost:5673`.
+The WebApp is at `http://localhost:5673`; the Phoria Server is at `http://localhost:5573`. In Docker the WebApp is at `http://localhost:8080`. Use `pnpm --dir apps/WebApp preview` after the build and `pnpm --dir apps/WebApp stop` to stop the AppHost. With the app running, use `pnpm --dir apps/WebApp test:e2e`; the suite checks the shared-package island, modulepreload output, and `GET /health`. Set `PHORIA_WEBAPP_URL` to override the default `http://localhost:5673`.
 
 Fetch a standalone copy with:
 
