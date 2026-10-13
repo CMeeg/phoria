@@ -1,10 +1,9 @@
 # Building for production
 
-This guide will walk you through adding `scripts` to `package.json` that will [build](#build-scripts) the three parts of a Phoria solution that are required when running in production:
+This guide will walk you through adding `scripts` to `package.json` that will [build](#build-scripts) the parts of a Phoria solution that are required when running in production:
 
-* Phoria Islands
+* Phoria Islands (client, SSR and Phoria Server bundles)
 * Phoria Web App
-* Phoria Server
 
 Also included in this guide are instructions for adding [preview](#preview-scripts) `scripts` so that you can run the production build in the local environment for testing purposes.
 
@@ -18,10 +17,9 @@ These are the `scripts` that you will need to add to build your Phoria solution 
 ```json
 {
   "scripts": {
-    "build": "run-p build:* -c",
+    "build": "concurrently \"pnpm:build:*\"",
     "build:islands": "vite build --app",
-    "build:webapp": "dotnet build --configuration Release",
-    "build:server": "vite build --config vite.server.config.ts"
+    "build:webapp": "dotnet build --configuration Release"
   }
 }
 ```
@@ -36,26 +34,38 @@ pnpm run build
 
 ### `build`
 
-This script is a convenience script that uses the [`npm-run-all`](https://github.com/mysticatea/npm-run-all) package to run the other three build scripts in parallel.
+This script is a convenience script that uses the [`concurrently`](https://github.com/open-cli-tools/concurrently) package to run the other two build scripts in parallel.
 
 ```shell
-pnpm add -D npm-run-all
+pnpm add -D concurrently
 ```
 
 > [!NOTE]
-> `npm-run-all` is not required and you can use some other package or tool or shell feature (e.g. `&`) to do the same thing, if you prefer. The reason it is used here is because `&` doesn't work consistently on Windows and we want our scripts to be platform-agnostic.
+> The `pnpm:build:*` shorthand runs every `build:*` script in parallel via `pnpm run`. `concurrently` is not required and you can use some other package or tool or shell feature (e.g. `&`) to do the same thing, if you prefer. The reason it is used here is because `&` doesn't work consistently on Windows and we want our scripts to be platform-agnostic.
 
 ### `build:islands`
 
-This script uses [Vite's Environment API](https://vite.dev/guide/api-environment.html) to build the optimised CSR and SSR bundles that will be used in production and it also produces a [manifest](https://main.vite.dev/config/build-options.html#build-manifest) for Phoria to use:
+This script uses [Vite's Environment API](https://vite.dev/guide/api-environment.html) and the [`builder.buildApp`](https://vite.dev/guide/api-environment.html#buildapp-hook) hook to build the client, SSR and Phoria Server bundles as three separate Vite environments, in that order:
 
-* The CSR bundles are used by Phoria Islands to load component assets on the client
-* The SSR bundles are used by the Phoria Server to load component assets on the server
-* The manifest is used by the Phoria Web App to [generate preload directives](https://main.vite.dev/guide/ssr#generating-preload-directives)
+* The client bundles are used by Phoria Islands to load component assets in the browser
+* The SSR bundles are used by the Phoria Server to render Islands to markup on the server
+* The Phoria Server bundle is the [h3](https://h3.unjs.io/) server that Phoria runs as a sidecar process
+* A [manifest](https://main.vite.dev/config/build-options.html#build-manifest) is also produced, which the Phoria Web App uses to [generate preload directives](https://main.vite.dev/guide/ssr#generating-preload-directives)
+
+The `phoria` Vite plugin builds the client environment first because it emits the `ssr-manifest.json` that the Phoria Server and Phoria Web App rely on, then the `ssr` environment, then the `server` environment — so you don't need a separate Vite config file or build script for the Phoria Server.
 
 The build configuration for Vite is provided via your Vite config file (e.g. `vite.config.ts`), and the configuration for Phoria specifically is provided via the `phoria*` Vite plugins.
 
-By default, the build output will be placed in the `<Vite root>/dist` directory.
+By default, the build output will be placed in the `<Vite root>/dist` directory, with the Phoria Server bundle at `<Vite root>/dist/server/server.js`.
+
+> [!TIP]
+> By default, the `phoria` plugin looks for the Phoria Server entry at `<Vite root>/src/server.ts`. If your entry lives elsewhere, or you don't want Phoria to build the Phoria Server at all, set the `serverEntry` plugin option:
+>
+> ```ts
+> phoria({ serverEntry: "src/my-server.ts" })
+> // or
+> phoria({ serverEntry: false })
+> ```
 
 ### `build:webapp`
 
@@ -66,51 +76,6 @@ By default, the build output will be placed in the `<WebApp root>/bin/Release/<T
 > [!WARNING]
 > You may need to [adjust this command](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build#arguments) depending on the structure of your project to point to a specific solution (`.sln`) or project (`.csproj`) file.
 
-### `build:server`
-
-This script uses Vite to build the Phoria Server. It uses a different Vite config file (`vite.server.config.ts`) because it does not share its configuration with Phoria Islands and needs specific configuration options.
-
-Below is an example of a `vite.server.config.ts` that you can use:
-
-```ts
-import { join } from "node:path"
-import { parsePhoriaAppSettings } from "@phoria/phoria/server"
-import { type UserConfig, defineConfig } from "vite"
-
-export default defineConfig(async () => {
-  const dotnetEnv = process.env.DOTNET_ENVIRONMENT ?? process.env.ASPNETCORE_ENVIRONMENT ?? "Development"
-  const appsettings = await parsePhoriaAppSettings({
-    environment: dotnetEnv,
-    cwd: join(process.cwd(), "WebApp")
-  })
-
-  return {
-    root: appsettings.root,
-    base: appsettings.base,
-    build: {
-      ssr: true,
-      target: "es2022",
-      copyPublicDir: false,
-      emptyOutDir: true,
-      outDir: `${appsettings.build.outDir}/server`,
-      rollupOptions: {
-        input: `${appsettings.root}/src/server.ts`
-      }
-    }
-  } satisfies UserConfig
-})
-```
-
-If you use the configuration above, the build output will be placed in the `<Vite root>/dist/server` directory.
-
-> [!TIP]
-> The `parsePhoriaAppSettings` function is provided by the `@phoria/phoria` package and is used to read the `appsettings` file(s) in the `WebApp` project and provide the configuration to Vite. This is useful for sharing configuration between the Phoria Server and the Phoria Web App.
-
-> [!NOTE]
-> You don't need to use Vite to build the Phoria Server. You could use something like [`tsup`](https://github.com/egoist/tsup) or any other TypeScript to JavaScript transpiler or bundler if you prefer. It is just convenient to use Vite because we are already using it to build our Phoria Islands and means that we don't need to add another dependency.
->
-> You could also decide to just use JavaScript for your Phoria Server and avoid a build step entirely if that's what you want to do.
-
 ## Preview scripts
 
 These are the `scripts` that you will need to preview the production build of our Phoria solution locally:
@@ -118,9 +83,7 @@ These are the `scripts` that you will need to preview the production build of ou
 ```json
 {
   "scripts": {
-    "preview": "run-p preview:* -c",
-    "preview:webapp": "cross-env DOTNET_ENVIRONMENT=Preview dotnet run --project ./WebApp/WebApp.csproj -c Release --launch-profile Preview",
-    "preview:server": "cross-env NODE_ENV=production DOTNET_ENVIRONMENT=Preview node ./WebApp/ui/dist/server/server.js"
+    "preview": "aspire start --environment Preview"
   }
 }
 ```
@@ -137,53 +100,23 @@ pnpm run build
 pnpm run preview
 ```
 
-### `preview`
+### Aspire preview
 
-This script is a convenience script that uses the [`npm-run-all`](https://github.com/mysticatea/npm-run-all) package to run the other three preview scripts in parallel.
+The `preview` script starts the Aspire AppHost. The AppHost starts the Web App, the compiled Phoria Server as a sibling process, and the Aspire dashboard. The AppHost runs the WebApp package's `preview:server` script, so the Node command and arguments are defined with the example's package scripts rather than duplicated in `appsettings.Preview.json`.
 
-> [!NOTE]
-> This guide will assume that you are using `npm-run-all` in your `build` script so there is no need to install it again, but if you did choose to use something else for your `build` script you will need to make the same adjustments here.
-
-### `preview:webapp`
-
-This script uses the [dotnet CLI](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-run) to run the Phoria Web App produced by the [`build:webapp`](#buildwebapp) script.
-
-The [`cross-env`](https://github.com/kentcdodds/cross-env) package is used to set the `DOTNET_ENVIRONMENT` environment variable so you can use specific configuration or conditional branching in your code etc that targets the `Preview` environment if you wish.
+Install the [Aspire CLI](https://aspire.dev/get-started/install-cli/) and run the build before starting the preview:
 
 ```shell
-pnpm add -D cross-env
+# Build the Phoria solution
+pnpm run build
+
+# Start the AppHost and dashboard
+pnpm run preview
 ```
 
-> [!NOTE]
-> `cross-env` is used because we want our scripts to be platform-agnostic, but is not required if you do not need to support Windows environments.
+The AppHost sets `DOTNET_ENVIRONMENT=Preview` for the Web App and `NODE_ENV=production` for the Phoria Server. Use the dashboard URL printed by `aspire start` to inspect both resources and their OpenTelemetry logs. When you are done, stop the preview with `aspire stop` so that no managed resources are left running.
 
-This script also uses a launch profile named `Preview`, which you can add to your `launchSettings.json` file:
-
-```json
-{
-  "profiles": {
-    "Preview": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "http://localhost:5245",
-      "environmentVariables": {
-        "DOTNET_ENVIRONMENT": "Preview"
-      }
-    }
-  }
-}
-```
-
-> [!WARNING]
-> You may need to adjust this command depending on the structure of your project to point to the actual location of your Phoria Web App's `.csproj` file.
-
-### `preview:server`
-
-This script uses `node` to run the Phoria Server produced by the [`build:server`](#buildserver) script. `cross-env` is used again to set environment variables used by the script.
-
-> [!WARNING]
-> You may need to adjust this command depending on your configuration to point to the location of the Phoria Server output produced by the `build:server` script.
+Because ASP.NET Core only auto-loads static web assets in the `Development` environment, a Preview app must opt in for `MapStaticAssets` to serve the assets that live in the build output rather than `wwwroot` (e.g. the generated `<app>.styles.css` and fingerprinted files). Call `builder.WebHost.UseStaticWebAssets()` guarded by the Preview environment before the app is configured — as the example apps' `Program.cs` do — otherwise those requests fail with `Could not find file` errors.
 
 ## Next steps
 

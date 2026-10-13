@@ -1,10 +1,11 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using CliWrap;
 using CliWrap.EventStream;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Phoria.Logging;
+using EventId = Phoria.Logging.EventId;
 
 namespace Phoria.Server;
 
@@ -14,20 +15,53 @@ public interface IPhoriaServerProcess
 	Task StopServer();
 }
 
-public sealed class PhoriaServerProcess(
-	ILogger<PhoriaServerProcess> logger,
-	IPhoriaServerMonitor serverMonitor,
-	IHostEnvironment environment,
-	IOptions<PhoriaOptions> options)
+public sealed class PhoriaServerProcess
 	: IPhoriaServerProcess, IDisposable
 {
-	private readonly ILogger<PhoriaServerProcess> logger = logger;
-	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
-	private readonly IHostEnvironment environment = environment;
-	private readonly PhoriaOptions options = options.Value;
+	internal static readonly TimeSpan StopGracePeriod = TimeSpan.FromSeconds(6);
+
+	private readonly ILogger<PhoriaServerProcess> logger;
+	private readonly IPhoriaServerMonitor serverMonitor;
+	private readonly IHostEnvironment environment;
+	private readonly PhoriaOptions options;
+	private readonly Action<int>? beforeProcessIdAssignment;
+	private readonly TimeSpan stopGracePeriod;
+	private readonly object sync = new();
 	private SemaphoreSlim? semaphore;
 	private PeriodicTimer? periodicTimer;
 	private int? processId;
+	private int restartAttempts;
+	private TaskCompletionSource<int?>? processStartCompletion;
+	private Task? stopTask;
+	private CancellationTokenSource? stopSignal;
+	private bool stopping;
+
+	public PhoriaServerProcess(
+		ILogger<PhoriaServerProcess> logger,
+		IPhoriaServerMonitor serverMonitor,
+		IHostEnvironment environment,
+		IOptions<PhoriaOptions> options)
+		: this(logger, serverMonitor, environment, options, null, StopGracePeriod)
+	{
+	}
+
+	public PhoriaServerProcess(
+		ILogger<PhoriaServerProcess> logger,
+		IPhoriaServerMonitor serverMonitor,
+		IHostEnvironment environment,
+		IOptions<PhoriaOptions> options,
+		int? processId,
+		TimeSpan stopGracePeriod,
+		Action<int>? beforeProcessIdAssignment = null)
+	{
+		this.logger = logger;
+		this.serverMonitor = serverMonitor;
+		this.environment = environment;
+		this.options = options.Value;
+		this.processId = processId;
+		this.stopGracePeriod = stopGracePeriod;
+		this.beforeProcessIdAssignment = beforeProcessIdAssignment;
+	}
 
 	public async Task StartServer(CancellationToken stoppingToken)
 	{
@@ -38,72 +72,188 @@ public sealed class PhoriaServerProcess(
 			return;
 		}
 
-		if (periodicTimer != null)
+		SemaphoreSlim serverSemaphore;
+		lock (sync)
 		{
-			return;
+			if (semaphore != null || periodicTimer != null)
+			{
+				return;
+			}
+
+			serverSemaphore = new(1, 1);
+			semaphore = serverSemaphore;
 		}
 
-		semaphore = new(1, 1);
-
-		// Start the process
-
-		await EnsureProcessIsRunning(options.Server.Process, stoppingToken);
-
-		// Start a periodic timer to keep the process running
-
-		periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.Process.HealthCheckInterval));
-
-		while (await periodicTimer.WaitForNextTickAsync(stoppingToken))
+		// Host shutdown is driven by StopServer rather than by cancelling ListenAsync: CliWrap registers
+		// process.Kill() (SIGKILL) on the forceful token passed to ListenAsync, which would pre-empt
+		// StopServer's graceful SIGTERM sequence. The callback runs StopServer (SIGTERM -> grace period ->
+		// process-tree kill) when the host requests shutdown.
+		using var serverStopSignal = new CancellationTokenSource();
+		using CancellationTokenSource linkedStopping = CancellationTokenSource.CreateLinkedTokenSource(
+			stoppingToken,
+			serverStopSignal.Token);
+		lock (sync)
 		{
-			await EnsureProcessIsRunning(options.Server.Process, stoppingToken);
+			stopSignal = serverStopSignal;
+		}
+
+		using CancellationTokenRegistration stopRegistration = stoppingToken.Register(() => _ = StopServer());
+
+		PeriodicTimer? timer = null;
+		bool restartLimitReached = false;
+
+		try
+		{
+			// Start the process
+
+			restartLimitReached = !await EnsureProcessIsRunning(options.Server.Process, serverSemaphore, linkedStopping.Token);
+
+			if (!restartLimitReached)
+			{
+				lock (sync)
+				{
+					if (stopping)
+					{
+						linkedStopping.Token.ThrowIfCancellationRequested();
+						return;
+					}
+
+					periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(options.Server.Process.HealthCheckInterval));
+					timer = periodicTimer;
+				}
+
+				while (await timer.WaitForNextTickAsync(linkedStopping.Token))
+				{
+					restartLimitReached = !await EnsureProcessIsRunning(options.Server.Process, serverSemaphore, linkedStopping.Token);
+
+					if (restartLimitReached)
+					{
+						break;
+					}
+				}
+			}
+		}
+		finally
+		{
+			if (!restartLimitReached)
+			{
+				await StopServer();
+			}
+
+			lock (sync)
+			{
+				if (ReferenceEquals(stopSignal, serverStopSignal))
+				{
+					stopSignal = null;
+				}
+
+				if (ReferenceEquals(semaphore, serverSemaphore))
+				{
+					semaphore = null;
+				}
+
+				if (ReferenceEquals(periodicTimer, timer))
+				{
+					periodicTimer = null;
+				}
+			}
+
+			timer?.Dispose();
+			serverSemaphore.Dispose();
 		}
 	}
 
-	private async Task EnsureProcessIsRunning(
+	private async Task<bool> EnsureProcessIsRunning(
 		PhoriaServerOptions.ProcessOptions processOptions,
+		SemaphoreSlim serverSemaphore,
 		CancellationToken cancellationToken)
 	{
 		if (serverMonitor.ServerStatus.Health == PhoriaServerHealth.Healthy)
 		{
+			restartAttempts = 0;
 			logger.LogServerProcessIsHealthy();
 
-			return;
+			return true;
 		}
 
-		if (processId.HasValue)
+		int? currentProcessId;
+		lock (sync)
 		{
-			var process = Process.GetProcessById(processId.Value);
+			currentProcessId = processId;
+		}
+
+		if (currentProcessId.HasValue)
+		{
+			var process = Process.GetProcessById(currentProcessId.Value);
 
 			if (process.HasExited)
 			{
-				processId = null;
+				lock (sync)
+				{
+					processId = null;
+				}
 			}
 			else
 			{
-				logger.LogServerProcessIsRunning(processId.Value);
+				logger.LogServerProcessIsRunning(currentProcessId.Value);
 
-				return;
+				return true;
 			}
 		}
 
-		if (await semaphore!.WaitAsync(0, cancellationToken))
+		if (processOptions.MaxRestartAttempts > 0
+			&& restartAttempts > processOptions.MaxRestartAttempts)
 		{
-			logger.LogServerProcessIsStarting(processOptions.Command, string.Join(" ", processOptions.Arguments ?? []));
+			logger.LogServerRestartLimitExceeded(processOptions.MaxRestartAttempts);
+
+			return false;
+		}
+
+		if (await serverSemaphore.WaitAsync(0, cancellationToken))
+		{
+			TaskCompletionSource<int?>? startCompletion = null;
+
+			if (logger.IsEnabled(LogLevel.Information))
+			{
+				logger.LogServerProcessIsStarting(processOptions.Command, string.Join(" ", processOptions.Arguments ?? []));
+			}
 
 			try
 			{
+				lock (sync)
+				{
+					if (stopping)
+					{
+						return true;
+					}
+
+					startCompletion = new TaskCompletionSource<int?>(TaskCreationOptions.RunContinuationsAsynchronously);
+					processStartCompletion = startCompletion;
+				}
+
 				Command cmd = Cli.Wrap(processOptions.Command)
 					.WithArguments(processOptions.Arguments ?? [])
 					.WithWorkingDirectory(environment.ContentRootPath)
 					.WithValidation(CommandResultValidation.None);
 
-				await foreach (CommandEvent cmdEvent in cmd.ListenAsync(cancellationToken))
+				// Deliberately no cancellation tokens: the host stopping token must not reach ListenAsync,
+				// where CliWrap would register process.Kill() (SIGKILL, forceful token) or process.Interrupt()
+				// (SIGINT, graceful token) on it and pre-empt StopServer's SIGTERM sequence. Termination is
+				// owned by StopServer (see the stop registration in StartServer); ListenAsync unwinds when
+				// the process exits.
+				await foreach (CommandEvent cmdEvent in cmd.ListenAsync(CancellationToken.None))
 				{
 					switch (cmdEvent)
 					{
 						case StartedCommandEvent started:
-							processId = started.ProcessId;
-							logger.LogServerProcessIsRunning(processId.Value);
+							beforeProcessIdAssignment?.Invoke(started.ProcessId);
+							lock (sync)
+							{
+								processId = started.ProcessId;
+								startCompletion.TrySetResult(processId);
+							}
+
+							logger.LogServerProcessIsRunning(started.ProcessId);
 							break;
 						case StandardOutputCommandEvent stdOut:
 							logger.LogServerProcessStdOut(stdOut.Text);
@@ -112,81 +262,156 @@ public sealed class PhoriaServerProcess(
 							logger.LogServerProcessStdErr(stdErr.Text);
 							break;
 						case ExitedCommandEvent exited:
-							processId = null;
+							lock (sync)
+							{
+								processId = null;
+								startCompletion.TrySetResult(null);
+								if (serverMonitor.ServerStatus.Health != PhoriaServerHealth.Healthy)
+								{
+									restartAttempts++;
+								}
+							}
+
 							logger.LogServerProcessExited(exited.ExitCode);
 							break;
 					}
 				}
 			}
-			catch (OperationCanceledException ex)
-			{
-				logger.LogServerProcessException(ex);
-			}
 			catch (Exception ex)
 			{
 				logger.LogServerProcessException(ex);
 			}
 			finally
 			{
-				semaphore.Release();
+				lock (sync)
+				{
+					startCompletion?.TrySetResult(processId);
+					if (ReferenceEquals(processStartCompletion, startCompletion))
+					{
+						processStartCompletion = null;
+					}
 
-				await StopServer();
+					serverSemaphore.Release();
+				}
 			}
+		}
+
+		return true;
+	}
+
+	private const int TermSignal = 15;
+
+	[DllImport("libc", EntryPoint = "kill")]
+	private static extern int SendSignal(int pid, int signal);
+
+	private async Task StopProcess(int pid)
+	{
+		try
+		{
+			using var process = Process.GetProcessById(pid);
+
+			if (process.HasExited)
+			{
+				return;
+			}
+
+			if (OperatingSystem.IsWindows())
+			{
+				process.Kill(entireProcessTree: true);
+			}
+			else if (SendSignal(pid, TermSignal) != 0)
+			{
+				logger.LogServerProcessException(
+					new InvalidOperationException($"Failed to send termination signal to process {pid}."));
+
+				process.Kill(entireProcessTree: true);
+			}
+			else
+			{
+				logger.LogServerProcessTerminationSignalSent(pid);
+			}
+
+			using var waitTimeout = new CancellationTokenSource(stopGracePeriod);
+
+			try
+			{
+				await process.WaitForExitAsync(waitTimeout.Token);
+			}
+			catch (OperationCanceledException) when (waitTimeout.IsCancellationRequested)
+			{
+				logger.LogServerProcessForceStopped(pid);
+
+				process.Kill(entireProcessTree: true);
+
+				await process.WaitForExitAsync();
+			}
+		}
+		catch (Exception ex)
+		{
+			logger.LogServerProcessException(ex);
 		}
 	}
 
 	public Task StopServer()
 	{
-		if (processId.HasValue)
+		lock (sync)
 		{
-			try
+			if (stopTask is not null)
 			{
-				var process = Process.GetProcessById(processId.Value);
-				process.Kill();
-				process.WaitForExit(10000);
+				return stopTask;
 			}
-			catch (Exception ex)
-			{
-				logger.LogServerProcessException(ex);
-			}
-			finally
-			{
-				processId = null;
-			}
+
+			stopping = true;
+			stopTask = StopServerCore(processStartCompletion);
+			return stopTask;
+		}
+	}
+
+	private async Task StopServerCore(TaskCompletionSource<int?>? startCompletion)
+	{
+		if (startCompletion is not null)
+		{
+			await startCompletion.Task;
 		}
 
-		Dispose();
+		int? processIdToStop;
 
-		semaphore = null;
-		periodicTimer = null;
-		processId = null;
+		lock (sync)
+		{
+			stopSignal?.Cancel();
+			processIdToStop = processId;
+			processId = null;
+		}
 
-		return Task.CompletedTask;
+		if (processIdToStop.HasValue)
+		{
+			await StopProcess(processIdToStop.Value);
+		}
+
 	}
 
 	public void Dispose()
 	{
-		semaphore?.Dispose();
-		periodicTimer?.Dispose();
+		// StartServer owns the semaphore and timer for the duration of its lifecycle.
 	}
 }
 
 internal static partial class PhoriaServerProcessLogMessages
 {
 	[LoggerMessage(
-		EventId = EventFeature.Server + 7,
+		EventId = EventId.Server.ProcessNotConfigured,
 		Message = "Phoria server process will not start. Process is not configured.",
 		Level = LogLevel.Information)]
 	internal static partial void LogServerProcessNotConfigured(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + 8,
+		EventId = EventId.Server.ProcessIsHealthy,
 		Message = "Phoria server process is healthy.",
 		Level = LogLevel.Debug)]
 	internal static partial void LogServerProcessIsHealthy(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + 14,
+		EventId = EventId.Server.ProcessStarting,
 		Message = "Phoria server process starting {Command} {Args}.",
 		Level = LogLevel.Information)]
 	internal static partial void LogServerProcessIsStarting(
@@ -195,7 +420,7 @@ internal static partial class PhoriaServerProcessLogMessages
 		string args);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + 9,
+		EventId = EventId.Server.ProcessIsRunning,
 		Message = "Phoria server process is running on pid {ProcessId}.",
 		Level = LogLevel.Debug)]
 	internal static partial void LogServerProcessIsRunning(
@@ -203,7 +428,7 @@ internal static partial class PhoriaServerProcessLogMessages
 		int processId);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + 10,
+		EventId = EventId.Server.ProcessStdOut,
 		Message = "Phoria server out: {StdOut}",
 		Level = LogLevel.Information)]
 	internal static partial void LogServerProcessStdOut(
@@ -211,7 +436,7 @@ internal static partial class PhoriaServerProcessLogMessages
 		string stdOut);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + 11,
+		EventId = EventId.Server.ProcessStdErr,
 		Message = "Phoria server err: {StdErr}",
 		Level = LogLevel.Error)]
 	internal static partial void LogServerProcessStdErr(
@@ -219,16 +444,40 @@ internal static partial class PhoriaServerProcessLogMessages
 		string stdErr);
 
 	[LoggerMessage(
-		EventId = EventFeature.Server + 12,
+		EventId = EventId.Server.ProcessExited,
 		Message = "Phoria server process exited with code {ExitCode}.",
 		Level = LogLevel.Debug)]
 	internal static partial void LogServerProcessExited(
 		this ILogger logger,
 		int exitCode);
 
+	[LoggerMessage(
+		EventId = EventId.Server.ServerRestartLimitExceeded,
+		Message = "Phoria server process restart limit of {MaxRestartAttempts} exceeded; stopping supervision.",
+		Level = LogLevel.Error)]
+	internal static partial void LogServerRestartLimitExceeded(
+		this ILogger logger,
+		int maxRestartAttempts);
+
+	[LoggerMessage(
+		EventId = EventId.Server.ProcessTerminationSignalSent,
+		Message = "Phoria server process {ProcessId} was sent a termination signal.",
+		Level = LogLevel.Debug)]
+	internal static partial void LogServerProcessTerminationSignalSent(
+		this ILogger logger,
+		int processId);
+
+	[LoggerMessage(
+		EventId = EventId.Server.ProcessForceStopped,
+		Message = "Phoria server process {ProcessId} did not exit within the grace period and was forcefully terminated.",
+		Level = LogLevel.Warning)]
+	internal static partial void LogServerProcessForceStopped(
+		this ILogger logger,
+		int processId);
+
 	private static readonly Action<ILogger, Exception?> logServerProcessException = LoggerMessage.Define(
 		LogLevel.Error,
-		EventFeature.Server + 13,
+		EventId.Server.ProcessException,
 		"Phoria server process caused exception.");
 	internal static void LogServerProcessException(
 		this ILogger logger,

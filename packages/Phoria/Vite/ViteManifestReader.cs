@@ -7,7 +7,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
-using Phoria.Logging;
+using EventId = Phoria.Logging.EventId;
 using Phoria.Server;
 
 namespace Phoria.Vite;
@@ -181,19 +181,19 @@ public sealed class ViteManifestReader(
 internal static partial class ViteManifestReaderLogMessages
 {
 	[LoggerMessage(
-		EventId = EventFeature.Vite + 1,
+		EventId = EventId.Vite.ManifestFileWontBeRead,
 		Message = "The manifest file won't be read because the vite development service is enabled. The service will always return null chunks",
 		Level = LogLevel.Information)]
 	internal static partial void LogManifestFileWontBeRead(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = EventFeature.Vite + 2,
+		EventId = EventId.Vite.DetectedChangeInManifest,
 		Message = "Detected change in Vite manifest - refreshing",
 		Level = LogLevel.Information)]
 	internal static partial void LogDetectedChangeInManifest(this ILogger logger);
 
 	[LoggerMessage(
-		EventId = EventFeature.Vite + 3,
+		EventId = EventId.Vite.ManifestFileNotFound,
 		Message = "The manifest file was not found. Has the build process been executed?",
 		Level = LogLevel.Error)]
 	internal static partial void LogManifestFileNotFound(this ILogger logger);

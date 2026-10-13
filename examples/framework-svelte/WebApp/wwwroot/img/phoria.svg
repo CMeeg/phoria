@@ -1,0 +1,8 @@
+<svg width="674" height="745" viewBox="0 0 674 745" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Phoria">
+<path d="M337 635C502.685 635 637 500.685 637 335C637 169.315 502.685 35 337 35C171.315 35 37 169.315 37 335V705H152C185.137 705 212 678.137 212 645V607.798C250.053 625.263 292.389 635 337 635Z" fill="url(#paint0_linear_0_1)" stroke="#6E99FF" stroke-width="20"/>
+<path d="M442 130H258.25L179.5 366.25H284.5L232 576.25L520.75 287.5H379L442 130Z" fill="url(#paint1_linear_0_1)"/>
+<defs>
+<linearGradient id="paint0_linear_0_1" x1="37" y1="700.807" x2="637" y2="39.1932" gradientUnits="userSpaceOnUse"><stop stop-color="#47C9FF"/><stop offset="1" stop-color="#6E99FF"/></linearGradient>
+<linearGradient id="paint1_linear_0_1" x1="350.125" y1="130" x2="350.125" y2="576.25" gradientUnits="userSpaceOnUse"><stop offset="0.31" stop-color="#FFE14D"/><stop offset="1" stop-color="#FFB70F"/></linearGradient>
+</defs>
+</svg>

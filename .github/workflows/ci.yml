@@ -5,9 +5,13 @@ on:
   push:
     branches:
       - main
+      - canary
+    paths-ignore:
+      - "examples/**"
   pull_request:
     branches:
       - main
+      - canary
 
 # Automatically cancel older in-progress jobs on the same branch
 concurrency:
@@ -15,90 +19,158 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: "./global.json"
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build packages
-        run: pnpm lerna run build
-
-      - name: Lint source code
-        run: pnpm lerna run lint
-
-      - name: Check source code
-        run: pnpm lerna run check
-
-      - name: Test packages (unit)
-        run: pnpm lerna run test
-
-      - name: Test dotnet
-        run: dotnet test Phoria.sln --configuration Release
-
-  test-browser:
-    name: Browser & smoke tests
+  build-and-test:
+    name: Build and test
+    if: ${{ github.event_name != 'pull_request' || !startsWith(github.event.pull_request.head.ref, 'chore/examples-sync-') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
+          dotnet-version: |
+            8.0.x
+          global-json-file: "./global.json"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Check examples reference published versions
+        run: pnpm examples:check
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Lint source code
+        run: pnpm lint
+
+      - name: Check source code
+        run: pnpm check
+
+      - name: Test packages (unit)
+        run: pnpm test
+
+      - name: Test dotnet
+        run: dotnet test --solution Phoria.sln --configuration Release
+
+      - name: Test packages (coverage)
+        run: pnpm test:coverage
+
+      - name: Test dotnet (coverage)
+        run: dotnet test --solution Phoria.sln --configuration Release --coverlet --coverlet-output-format cobertura --coverlet-file-prefix ""
+
+      - name: Prepare coverage reports for Codecov
+        run: node scripts/coverage.js
+
+      - name: Upload coverage to Codecov (JS)
+        if: env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v6
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: packages/phoria-islands/coverage/lcov.info,packages/phoria-react/coverage/lcov.info,packages/phoria-svelte/coverage/lcov.info,packages/phoria-vue/coverage/lcov.info,packages/phoria-opentelemetry/coverage/lcov.info,packages/vite-plugin-dotnet-dev-certs/coverage/lcov.info
+          flags: js
+          fail_ci_if_error: true
+
+      - name: Upload coverage to Codecov (.NET)
+        if: env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v6
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: TestResults/net8.0.cobertura.xml,TestResults/net10.0.cobertura.xml
+          flags: dotnet
+          fail_ci_if_error: true
+
+      - name: Upload bundle analysis to Codecov
+        if: env.CODECOV_TOKEN != ''
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          for pkg in phoria-islands phoria-react phoria-svelte phoria-vue phoria-opentelemetry vite-plugin-dotnet-dev-certs; do
+            [ -d "packages/$pkg/dist" ] || continue
+            pnpm exec bundle-analyzer "packages/$pkg/dist" \
+              --bundle-name="$pkg" \
+              --upload-token="$CODECOV_TOKEN" \
+              --ignore-patterns '*.d.ts' '*.map'
+          done
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v5
+        with:
+          name: coverage-reports
+          path: |
+            **/coverage/**
+            **/TestResults/*cobertura*.xml
+
+  test-browser:
+    name: Browser tests
+    if: ${{ github.event_name != 'pull_request' || !startsWith(github.event.pull_request.head.ref, 'chore/examples-sync-') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            8.0.x
           global-json-file: "./global.json"
 
       - name: Install dependencies
         run: pnpm install
 
       - name: Build packages
-        run: pnpm lerna run build
+        run: pnpm build
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Browser-mode component tests
-        run: pnpm lerna run test:browser
+        run: pnpm test:browser
 
-      - name: Build e2e app
-        run: pnpm --filter framework-multiple build
-
-      - name: Start preview and run smoke test
+  ci:
+    name: CI
+    if: ${{ always() }}
+    needs:
+      - build-and-test
+      - test-browser
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check required jobs
+        env:
+          BUILD_AND_TEST_RESULT: ${{ needs.build-and-test.result }}
+          BROWSER_TEST_RESULT: ${{ needs.test-browser.result }}
         run: |
-          pnpm --filter framework-multiple preview &
-          PREVIEW_PID=$!
-          for i in $(seq 1 60); do
-            curl -sf http://localhost:5247 > /dev/null 2>&1 && break
-            sleep 1
-          done
-          pnpm --filter framework-multiple test:smoke
-          kill $PREVIEW_PID
+          if [[ "$BUILD_AND_TEST_RESULT" == "failure" || "$BUILD_AND_TEST_RESULT" == "cancelled" ]]; then
+            exit 1
+          fi
+
+          if [[ "$BROWSER_TEST_RESULT" == "failure" || "$BROWSER_TEST_RESULT" == "cancelled" ]]; then
+            exit 1
+          fi

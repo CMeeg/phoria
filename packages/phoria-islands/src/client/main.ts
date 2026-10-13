@@ -1,17 +1,16 @@
 import {
+	csrMountMode,
 	type PhoriaIslandComponentCsrService,
 	type PhoriaIslandCsrMountMode,
-	type PhoriaIslandCsrOptions,
-	csrMountMode
+	type PhoriaIslandCsrOptions
 } from "./csr"
 import type { PhoriaIslandClientDirective } from "./directives"
 import { PhoriaIsland } from "./phoria-island"
 
-export { csrMountMode, PhoriaIsland }
-
 export type {
+	PhoriaIslandClientDirective,
 	PhoriaIslandComponentCsrService,
 	PhoriaIslandCsrMountMode,
-	PhoriaIslandCsrOptions,
-	PhoriaIslandClientDirective
+	PhoriaIslandCsrOptions
 }
+export { csrMountMode, PhoriaIsland }

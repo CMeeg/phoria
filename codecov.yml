@@ -1,0 +1,33 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        informational: true
+    patch:
+      default:
+        target: auto
+        informational: true
+comment:
+  layout: "reach,diff,flags,files"
+  require_changes: true
+  require_bundle_changes: true
+  bundle_change_threshold: "1Kb"
+flags:
+  js:
+    paths:
+      - packages/phoria-islands/
+      - packages/phoria-react/
+      - packages/phoria-svelte/
+      - packages/phoria-vue/
+      - packages/phoria-opentelemetry/
+      - packages/vite-plugin-dotnet-dev-certs/
+  dotnet:
+    paths:
+      - packages/Phoria/
+      - packages/Phoria.Tests/
+bundle_analysis:
+  status: informational
+ignore:
+  - "**/client/csr.*"

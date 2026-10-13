@@ -1,4 +1,5 @@
 using Phoria;
+using Phoria.Server;
 using Xunit;
 
 namespace Phoria.Tests;
@@ -27,6 +28,22 @@ public class PhoriaOptionsTests
 		Assert.False(options.Server.Https);
 		Assert.Equal(5, options.Server.HealthCheckTimeout);
 		Assert.Equal(5, options.Server.HealthCheckInterval);
+		Assert.Equal(0, options.Server.StartupTimeout);
+		Assert.Equal(PhoriaServerUnavailableBehavior.Degrade, options.Server.UnavailableBehavior);
+	}
+
+	[Fact]
+	public void DefaultProcessOptions_RestartUnlimitedByDefault()
+	{
+		var options = new PhoriaOptions
+		{
+			Server = new PhoriaServerOptions
+			{
+				Process = new PhoriaServerOptions.ProcessOptions { Command = "node" }
+			}
+		};
+
+		Assert.Equal(0, options.Server.Process.MaxRestartAttempts);
 	}
 
 	[Fact]

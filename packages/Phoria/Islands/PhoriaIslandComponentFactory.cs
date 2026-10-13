@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using EventId = Phoria.Logging.EventId;
 using Phoria.Server;
 
 namespace Phoria.Islands;
@@ -15,13 +17,16 @@ public class PhoriaIslandComponentFactory(
 	IPhoriaServerMonitor serverMonitor,
 	IPhoriaIslandScopedContext scopedContext,
 	IPhoriaIslandSsr phoriaIslandSsr,
-	IOptions<PhoriaOptions> options)
-	: IPhoriaIslandComponentFactory
+	IOptions<PhoriaOptions> options,
+	ILogger<PhoriaIslandComponentFactory> logger)
+	: IPhoriaIslandComponentFactory, IDisposable
 {
 	private readonly IPhoriaServerMonitor serverMonitor = serverMonitor;
 	private readonly IPhoriaIslandScopedContext scopedContext = scopedContext;
 	private readonly IPhoriaIslandSsr phoriaIslandSsr = phoriaIslandSsr;
 	private readonly PhoriaOptions options = options.Value;
+	private readonly ILogger<PhoriaIslandComponentFactory> logger = logger;
+	private readonly List<PhoriaIslandHtmlContent> contents = [];
 
 	public async Task<PhoriaIslandHtmlContent> CreateAsync(
 		string component,
@@ -39,12 +44,29 @@ public class PhoriaIslandComponentFactory(
 			renderMode = PhoriaIslandRenderMode.ClientOnly;
 		}
 
-		if (renderMode != PhoriaIslandRenderMode.ServerOnly
-			&& serverMonitor.ServerStatus.Health != PhoriaServerHealth.Healthy)
+		if (serverMonitor.ServerStatus.Health != PhoriaServerHealth.Healthy)
 		{
-			// We have to render the component on the server, but the server is not healthy
+			bool isFail = options.Server.UnavailableBehavior == PhoriaServerUnavailableBehavior.Fail;
 
-			throw new PhoriaIslandComponentException($"Cannot render component '{component}' on the server because the server is not healthy. Server status is '{serverMonitor.ServerStatus.Health}'.");
+			if (renderMode == PhoriaIslandRenderMode.Isomorphic)
+			{
+				if (isFail)
+				{
+					throw new PhoriaIslandComponentException($"Cannot render component '{component}' on the server because the server is not healthy. Server status is '{serverMonitor.ServerStatus.Health}'.");
+				}
+
+				logger.LogServerUnhealthyDegradingToClient(component);
+				renderMode = PhoriaIslandRenderMode.ClientOnly;
+			}
+			else if (renderMode == PhoriaIslandRenderMode.ServerOnly)
+			{
+				if (!isFail)
+				{
+					logger.LogServerUnhealthySuppressingComponent(component);
+				}
+
+				throw new PhoriaIslandComponentException($"Cannot render component '{component}' on the server because the server is not healthy. Server status is '{serverMonitor.ServerStatus.Health}'.");
+			}
 		}
 
 		var island = new PhoriaIsland
@@ -57,13 +79,55 @@ public class PhoriaIslandComponentFactory(
 
 		scopedContext.AddIsland(island);
 
-		PhoriaIslandSsrResult? ssrResult = island.RenderMode != PhoriaIslandRenderMode.ClientOnly
-			? await phoriaIslandSsr.RenderIsland(island)
-			: null;
+		PhoriaIslandSsrResult? ssrResult = null;
+		try
+		{
+			ssrResult = island.RenderMode != PhoriaIslandRenderMode.ClientOnly
+				? await phoriaIslandSsr.RenderIsland(island)
+				: null;
 
-		return new PhoriaIslandHtmlContent(
-			island,
-			ssrResult,
-			options);
+			var content = new PhoriaIslandHtmlContent(
+				island,
+				ssrResult,
+				options);
+
+			contents.Add(content);
+			return content;
+		}
+		catch
+		{
+			ssrResult?.Dispose();
+			throw;
+		}
 	}
+
+	public void Dispose()
+	{
+		foreach (PhoriaIslandHtmlContent content in contents)
+		{
+			content.Dispose();
+		}
+
+		contents.Clear();
+		GC.SuppressFinalize(this);
+	}
+}
+
+internal static partial class PhoriaIslandComponentFactoryLogMessages
+{
+	[LoggerMessage(
+		EventId = EventId.Islands.ServerUnhealthyDegradingToClient,
+		Message = "Phoria server is unhealthy; degrading isomorphic component {Component} to client-only rendering.",
+		Level = LogLevel.Warning)]
+	internal static partial void LogServerUnhealthyDegradingToClient(
+		this ILogger logger,
+		string component);
+
+	[LoggerMessage(
+		EventId = EventId.Islands.ServerUnhealthySuppressingComponent,
+		Message = "Phoria server is unhealthy; suppressing server-only component {Component}.",
+		Level = LogLevel.Warning)]
+	internal static partial void LogServerUnhealthySuppressingComponent(
+		this ILogger logger,
+		string component);
 }

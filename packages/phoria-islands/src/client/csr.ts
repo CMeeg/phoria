@@ -20,6 +20,5 @@ interface PhoriaIslandComponentCsrService<F extends string, T> {
 	) => Promise<void>
 }
 
+export type { PhoriaIslandComponentCsrService, PhoriaIslandCsrMountMode, PhoriaIslandCsrOptions }
 export { csrMountMode }
-
-export type { PhoriaIslandCsrMountMode, PhoriaIslandCsrOptions, PhoriaIslandComponentCsrService }

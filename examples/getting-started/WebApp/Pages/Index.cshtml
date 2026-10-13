@@ -1,0 +1,32 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+<h2 class="pb-2 border-bottom">Phoria Islands</h2>
+
+<div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+    <div class="feature col">
+        <h3 class="fs-2 text-body-emphasis">Basic usage</h3>
+        <p>The Phoria library provides a TagHelper to render components from your framework of choice.</p>
+        <phoria-island component="Counter" client="Client.Load" props="new { StartAt = 1 }"></phoria-island>
+    </div>
+
+    <div class="feature col">
+        <h3 class="fs-2 text-body-emphasis">Tag helper</h3>
+        <p>You can create your own TagHelper to encapsulate any behaviour required to render the Island e.g. data fetching.</p>
+        <react-counter start-at="2" />
+    </div>
+
+    <div class="feature col">
+        <h3 class="fs-2 text-body-emphasis">View component</h3>
+        <p>Or create your own ViewComponent as an alternative to a TagHelper.</p>
+        <vc:react-counter start-at="3" />
+    </div>
+</div>

@@ -1,0 +1,14 @@
+.azure/
+.nuget/
+.vite-config/
+.vite-inspect/
+bin/
+dist/
+node_modules/
+obj/
+WebApp/storybook-static/
+
+*.tmp
+*.tsbuildinfo
+TODO.md
+vite.config.ts.*

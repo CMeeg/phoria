@@ -14,6 +14,12 @@ public enum PhoriaServerMode
 	Production
 }
 
+public enum PhoriaServerUnavailableBehavior
+{
+	Degrade,
+	Fail
+}
+
 public record PhoriaServerStatus
 {
 	public PhoriaServerHealth Health { get; init; } = PhoriaServerHealth.Unknown;
